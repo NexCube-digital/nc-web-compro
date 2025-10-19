@@ -67,7 +67,7 @@ export const Home: React.FC = () => {
               <h1 
                 className={`text-3xl sm:text-4xl md:text-5xl font-heading font-bold leading-tight text-slate-900 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}
               >
-                NexCube Digital — Solusi Digital Premium untuk Bisnis Anda
+                Solusi Digital Premium untuk Bisnis Anda
               </h1>
               <p 
                 className={`mt-4 sm:mt-6 text-base sm:text-lg text-slate-600 leading-relaxed ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-200'}`}

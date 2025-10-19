@@ -88,9 +88,9 @@ export default function App() {
                 alt="NexCube Digital Logo" 
                 className="w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 object-contain transition-transform duration-300 group-hover:scale-105" 
               />
-              <div className="hidden xs:block">
-                <div className="text-lg sm:text-xl font-heading font-semibold">NexCube Digital</div>
-                <div className="text-xs sm:text-sm text-slate-500 line-clamp-1">Premium website · undangan · desain · katalog</div>
+              <div className="block max-w-[180px] xxs:max-w-none">
+                <div className="text-sm xs:text-lg sm:text-xl font-heading font-semibold truncate">NexCube</div>
+                <div className="text-2xs xs:text-xs sm:text-sm text-slate-500 line-clamp-1">digital.</div>
               </div>
             </Link>
 
