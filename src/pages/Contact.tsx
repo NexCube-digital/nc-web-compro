@@ -247,7 +247,7 @@ export const Contact: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="font-medium">Email</h3>
-                    <p className="text-slate-500 mt-1">info@nexcube.id</p>
+                    <p className="text-slate-500 mt-1">info@nexcube.com</p>
                   </div>
                 </div>
               </div>
@@ -262,7 +262,7 @@ export const Contact: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="font-medium">Lokasi</h3>
-                    <p className="text-slate-500 mt-1">Jl. Contoh No.1, Jakarta</p>
+                    <p className="text-slate-500 mt-1">Jl. Bukit Jarian dlm VI, Bandung</p>
                   </div>
                 </div>
               </div>
