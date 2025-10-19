@@ -1,0 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Smooth scrolling behavior for entire site */
+html {
+  scroll-behavior: smooth;
+}
+
+/* small helper */
+.container { @apply max-w-6xl mx-auto px-6 }
+
+/* Fix for special tier cards */
+.text-special { @apply text-white }
+.bg-special-dot { @apply bg-white/80 }
+
+/* Premium components */
+@layer components {
+  .btn-primary {
+    @apply px-6 py-3 rounded-md bg-accent text-white font-medium shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5;
+  }
+  
+  .btn-secondary {
+    @apply px-6 py-3 rounded-md border border-slate-200 hover:border-slate-300 font-medium shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-card hover:shadow-premium transition-all duration-300;
+  }
+  
+  .heading-xl {
+    @apply text-4xl md:text-5xl font-heading font-bold leading-tight;
+  }
+  
+  .heading-lg {
+    @apply text-3xl font-heading font-semibold;
+  }
+  
+  .input-premium {
+    @apply p-4 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all duration-200;
+  }
+}
