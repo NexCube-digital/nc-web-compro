@@ -16,7 +16,7 @@ html {
 .text-special { @apply text-white }
 .bg-special-dot { @apply bg-white/80 }
 
-/* Custom animations */
+/* Custom animations - Improved */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -73,7 +73,7 @@ html {
   }
 }
 
-/* Animation utility classes */
+/* Animation utility classes - Fixed */
 .animate-fadeInUp {
   animation: fadeInUp 0.8s ease-out forwards;
 }
@@ -94,36 +94,37 @@ html {
   animation: float 3s ease-in-out infinite;
 }
 
+/* Explicit delay classes with !important to ensure they're applied */
 .delay-100 {
-  animation-delay: 100ms;
+  animation-delay: 100ms !important;
 }
 
 .delay-200 {
-  animation-delay: 200ms;
+  animation-delay: 200ms !important;
 }
 
 .delay-300 {
-  animation-delay: 300ms;
+  animation-delay: 300ms !important;
 }
 
 .delay-400 {
-  animation-delay: 400ms;
+  animation-delay: 400ms !important;
 }
 
 .delay-500 {
-  animation-delay: 500ms;
+  animation-delay: 500ms !important;
 }
 
 .delay-600 {
-  animation-delay: 600ms;
+  animation-delay: 600ms !important;
 }
 
 .delay-700 {
-  animation-delay: 700ms;
+  animation-delay: 700ms !important;
 }
 
 .delay-800 {
-  animation-delay: 800ms;
+  animation-delay: 800ms !important;
 }
 
 .hidden-initially {

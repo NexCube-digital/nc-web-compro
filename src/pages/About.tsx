@@ -5,9 +5,13 @@ import { Link } from 'react-router-dom';
 export const About: React.FC = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   
-  // Set animasi entrance pada page load
+  // Set animasi entrance pada page load dengan delay
   useEffect(() => {
-    setIsLoaded(true);
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   const teamMembers = [
@@ -19,9 +23,9 @@ export const About: React.FC = () => {
     },
     {
       name: 'Bela Amelia Nuralfiani',
-      position: 'UI/UX Designer',
+      position: 'Project Manager',
       image: '/images/team/team-2.jpg',
-      bio: 'Expert dalam Desain UI/UX serta berkomunikasi dengan Client.'
+      bio: 'Berpengalaman dalam managenent mengatur Tim.'
     },
     {
       name: 'Budi Santoso',
@@ -40,7 +44,7 @@ export const About: React.FC = () => {
       
       <div className="container">
         {/* Hero Section */}
-        <div className={`text-center max-w-3xl mx-auto mb-16 hidden-initially ${isLoaded ? 'animate-fadeInUp' : ''}`}>
+        <div className={`text-center max-w-3xl mx-auto mb-16 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}>
           <h1 className="heading-lg text-slate-900">Tentang NexCube Digital</h1>
           <p className="text-slate-500 mt-6 text-lg leading-relaxed">
             PT NexCube Digital adalah studio kreatif yang fokus pada solusi web dan desain premium untuk perusahaan dan UMKM. 
@@ -53,8 +57,8 @@ export const About: React.FC = () => {
           {["Visi", "Misi", "Tim"].map((title, index) => (
             <div 
               key={title}
-              className={`bg-white p-8 rounded-xl shadow-card hover:shadow-premium transition-all hidden-initially ${isLoaded ? 'animate-fadeInUp' : ''}`}
               style={{ animationDelay: `${200 + (index * 150)}ms` }}
+              className={`bg-white p-8 rounded-xl shadow-card hover:shadow-premium transition-all ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}
             >
               <div className="bg-accent/10 text-accent p-3 w-14 h-14 flex items-center justify-center rounded-lg mb-5">
                 {title === "Visi" && (
@@ -90,11 +94,14 @@ export const About: React.FC = () => {
         
         {/* Team Members */}
         <div className="mb-20">
-          <h2 className="text-2xl font-heading font-semibold mb-8 text-center">Tim Profesional Kami</h2>
+          <h2 className={`text-2xl font-heading font-semibold mb-8 text-center ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-600'}`}>Tim Profesional Kami</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {teamMembers.map((member, index) => (
-              <div key={index} className="bg-white rounded-xl overflow-hidden shadow-card hover:shadow-premium transition-all">
-                {/* Ganti div placeholder dengan tag img */}
+              <div 
+                key={index} 
+                style={{ animationDelay: `${700 + (index * 150)}ms` }}
+                className={`bg-white rounded-xl overflow-hidden shadow-card hover:shadow-premium transition-all ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}
+              >
                 <img 
                   src={member.image} 
                   alt={`Foto ${member.name}`} 
@@ -111,7 +118,7 @@ export const About: React.FC = () => {
         </div>
         
         {/* CTA */}
-        <div className="bg-gradient-premium rounded-xl p-8 text-white text-center">
+        <div className={`bg-gradient-premium rounded-xl p-8 text-white text-center ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-800'}`}>
           <h2 className="text-2xl font-heading font-semibold mb-4">Siap Bekerja Sama?</h2>
           <p className="text-slate-300 mb-6 max-w-2xl mx-auto">
             Diskusikan proyek Anda dengan tim kami dan dapatkan konsultasi gratis untuk kebutuhan digital bisnis Anda.

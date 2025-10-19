@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async';
 
@@ -90,6 +90,16 @@ const services = [
 ];
 
 export const Services: React.FC = () => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50/50 to-white py-8 sm:py-14">
       <Helmet>
@@ -98,7 +108,7 @@ export const Services: React.FC = () => {
       </Helmet>
       
       <div className="container">
-        <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-16">
+        <div className={`text-center max-w-3xl mx-auto mb-8 sm:mb-16 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}>
           <h1 className="text-2xl sm:text-3xl font-heading font-semibold text-slate-900">Layanan Kami</h1>
           <p className="text-slate-500 mt-3 sm:mt-4 text-base sm:text-lg">
             Kami menyediakan berbagai layanan digital premium yang dapat disesuaikan dengan kebutuhan bisnis Anda.
@@ -106,8 +116,12 @@ export const Services: React.FC = () => {
         </div>
 
         <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-          {services.map((service) => (
-            <div key={service.title} className="bg-white rounded-xl shadow-card overflow-hidden group h-full flex flex-col">
+          {services.map((service, index) => (
+            <div 
+              key={service.title} 
+              className={`bg-white rounded-xl shadow-card overflow-hidden group h-full flex flex-col ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}
+              style={{ animationDelay: `${300 + (index * 150)}ms` }}
+            >
               <div className="p-5 sm:p-8 flex-grow">
                 <div className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
                   <div className="p-2 sm:p-3 bg-accent/10 text-accent rounded-xl transition-colors group-hover:bg-accent group-hover:text-white">
@@ -160,7 +174,7 @@ export const Services: React.FC = () => {
           ))}
         </div>
         
-        <div className="mt-16 bg-gradient-premium rounded-xl p-8 md:p-12 text-white">
+        <div className={`mt-16 bg-gradient-premium rounded-xl p-8 md:p-12 text-white ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-800'}`}>
           <div className="md:flex justify-between items-center">
             <div className="md:max-w-lg">
               <h2 className="text-2xl font-heading font-semibold mb-4">Butuh Solusi Custom?</h2>

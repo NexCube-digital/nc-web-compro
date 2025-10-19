@@ -10,6 +10,16 @@ export const Home: React.FC = () => {
   // State untuk mengontrol animasi
   const [isLoaded, setIsLoaded] = useState(false);
   
+  // Set animasi entrance pada page load yang lebih tegas
+  useEffect(() => {
+    // Sedikit delay untuk memastikan DOM telah selesai dirender
+    const timer = setTimeout(() => {
+      setIsLoaded(true);
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
   // Fungsi scrolling yang lebih presisi
   const handleScrollToSection = (ref: React.RefObject<HTMLElement>, e?: React.MouseEvent) => {
     if (e) e.preventDefault();
@@ -25,11 +35,6 @@ export const Home: React.FC = () => {
       });
     }
   };
-  
-  // Set animasi entrance pada page load
-  useEffect(() => {
-    setIsLoaded(true);
-  }, []);
   
   // Sesuaikan tinggi hero section saat window resize
   useEffect(() => {
@@ -60,18 +65,18 @@ export const Home: React.FC = () => {
           <div className="space-y-6 sm:space-y-8">
             <div>
               <h1 
-                className={`text-3xl sm:text-4xl md:text-5xl font-heading font-bold leading-tight text-slate-900 hidden-initially ${isLoaded ? 'animate-fadeInUp' : ''}`}
+                className={`text-3xl sm:text-4xl md:text-5xl font-heading font-bold leading-tight text-slate-900 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}
               >
                 NexCube Digital — Solusi Digital Premium untuk Bisnis Anda
               </h1>
               <p 
-                className={`mt-4 sm:mt-6 text-base sm:text-lg text-slate-600 leading-relaxed hidden-initially ${isLoaded ? 'animate-fadeInUp delay-200' : ''}`}
+                className={`mt-4 sm:mt-6 text-base sm:text-lg text-slate-600 leading-relaxed ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-200'}`}
               >
                 Kami menyediakan pembuatan website profesional, undangan digital, desain grafis, menu digital, katalog produk, dan banyak lagi — dengan paket Bronze hingga Platinum.
               </p>
             </div>
 
-            <div className={`flex flex-wrap gap-3 sm:gap-4 hidden-initially ${isLoaded ? 'animate-fadeInUp delay-300' : ''}`}>
+            <div className={`flex flex-wrap gap-3 sm:gap-4 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-300'}`}>
               <button 
                 onClick={(e) => handleScrollToSection(pricingSectionRef, e)} 
                 className="btn-primary text-sm sm:text-base relative overflow-hidden group"
@@ -84,7 +89,7 @@ export const Home: React.FC = () => {
               </Link>
             </div>
 
-            <div className={`flex flex-wrap items-center gap-4 sm:gap-8 text-sm text-slate-500 hidden-initially ${isLoaded ? 'animate-fadeInUp delay-400' : ''}`}>
+            <div className={`flex flex-wrap items-center gap-4 sm:gap-8 text-sm text-slate-500 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-400'}`}>
               <div className="flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -101,7 +106,7 @@ export const Home: React.FC = () => {
             </div>
           </div>
 
-          <div className={`bg-white rounded-2xl p-4 sm:p-8 shadow-premium mt-6 md:mt-0 hidden-initially ${isLoaded ? 'animate-scaleIn delay-200 animate-float' : ''}`}>
+          <div className={`bg-white rounded-2xl p-4 sm:p-8 shadow-premium mt-6 md:mt-0 ${!isLoaded ? 'opacity-0' : 'animate-scaleIn delay-200 animate-float'}`}>
             <div className="grid grid-cols-1 xs:grid-cols-2 gap-4 sm:gap-6">
               <div className={`p-6 border rounded-xl bg-gradient-to-br from-slate-50 to-white shadow-card hover:shadow-premium transition-all duration-300 hover:-translate-y-1 hidden-initially ${isLoaded ? 'animate-fadeInUp delay-300' : ''}`}>
                 <div className="flex items-center gap-3 mb-2">
