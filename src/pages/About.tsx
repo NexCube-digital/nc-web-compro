@@ -35,6 +35,13 @@ export const About: React.FC = () => {
       image: '/images/team/team-3.jpg',
       bio: 'Spesialis dalam branding dan strategi kreatif untuk berbagai industri.',
       portfolioUrl: 'https://example.com/regi'
+    }, 
+    {
+      name: 'Muhammad Regi Taryana',
+      position: 'Backend Developer',
+      image: '/images/team/team-3.jpg',
+      bio: 'Spesialis dalam branding dan strategi kreatif untuk berbagai industri.',
+      portfolioUrl: 'https://example.com/regi'
     }
   ];
 
