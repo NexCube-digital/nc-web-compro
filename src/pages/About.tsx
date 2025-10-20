@@ -46,11 +46,19 @@ export const About: React.FC = () => {
       </Helmet>
       
       <div className="container">
-        {/* Hero Section */}
+        {/* Hero Section with Logo */}
         <div className={`text-center max-w-3xl mx-auto mb-16 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}>
+          {/* Added Logo */}
+          <div className="flex justify-center mb-8">
+            <img 
+              src="/images/NexCube-full.png" 
+              alt="NexCube Digital Logo" 
+              className="w-40 h-40 object-contain animate-float"
+            />
+          </div>
           <h1 className="heading-lg text-slate-900">Tentang NexCube Digital</h1>
           <p className="text-slate-500 mt-6 text-lg leading-relaxed">
-            PT NexCube Digital adalah studio kreatif yang fokus pada solusi web dan desain premium untuk perusahaan dan UMKM. 
+            NexCube Digital adalah studio kreatif yang fokus pada solusi web dan desain premium untuk perusahaan dan UMKM. 
             Kami menyediakan paket lengkap dari desain sampai deploy dengan pendekatan yang profesional dan hasil yang berkualitas.
           </p>
         </div>
