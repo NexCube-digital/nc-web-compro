@@ -16,6 +16,11 @@ html {
 .text-special { @apply text-white }
 .bg-special-dot { @apply bg-white/80 }
 
+/* Glass effect */
+.glass-effect {
+  @apply backdrop-blur-md bg-white/70 dark:bg-slate-900/70 border border-white/20 dark:border-slate-700/20;
+}
+
 /* Custom animations - Improved */
 @keyframes fadeInUp {
   from {
@@ -73,6 +78,15 @@ html {
   }
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
 /* Animation utility classes - Fixed */
 .animate-fadeInUp {
   animation: fadeInUp 0.8s ease-out forwards;
@@ -92,6 +106,12 @@ html {
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
 }
 
 /* Explicit delay classes with !important to ensure they're applied */
@@ -134,26 +154,38 @@ html {
 /* Premium components */
 @layer components {
   .btn-primary {
-    @apply px-6 py-3 rounded-md bg-accent text-white font-medium shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5;
+    @apply px-6 py-3 rounded-xl bg-gradient-modern text-white font-medium shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden;
   }
   
   .btn-secondary {
-    @apply px-6 py-3 rounded-md border border-slate-200 hover:border-slate-300 font-medium shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5;
+    @apply px-6 py-3 rounded-xl border border-slate-200 hover:border-slate-300 font-medium shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 bg-white hover:bg-slate-50;
+  }
+  
+  .btn-premium {
+    @apply px-6 py-3 rounded-xl bg-gradient-premium text-white font-medium shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden;
   }
   
   .card {
     @apply bg-white rounded-xl shadow-card hover:shadow-premium transition-all duration-300;
   }
   
+  .card-glass {
+    @apply backdrop-blur-md bg-white/70 rounded-xl border border-white/20 shadow-glass transition-all duration-300;
+  }
+  
+  .card-premium {
+    @apply bg-gradient-premium-light rounded-xl shadow-premium hover:shadow-premium-hover transition-all duration-300;
+  }
+  
   .heading-xl {
-    @apply text-4xl md:text-5xl font-heading font-bold leading-tight;
+    @apply text-4xl md:text-5xl font-heading font-bold leading-tight drop-shadow-text;
   }
   
   .heading-lg {
-    @apply text-3xl font-heading font-semibold;
+    @apply text-3xl font-heading font-semibold drop-shadow-sm;
   }
   
   .input-premium {
-    @apply p-4 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all duration-200;
+    @apply p-4 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-premium-700/20 focus:border-premium-700 transition-all duration-200;
   }
 }

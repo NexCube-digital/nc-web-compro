@@ -53,10 +53,11 @@ export const About: React.FC = () => {
             <img 
               src="/images/NexCube-full.png" 
               alt="NexCube Digital Logo" 
-              className="w-40 h-40 object-contain animate-float"
+              className="w-40 h-40 object-contain animate-float drop-shadow-premium"
             />
           </div>
-          <h1 className="heading-lg text-slate-900">Tentang NexCube Digital</h1>
+          <h1 className="heading-lg text-slate-900 mb-2">Tentang NexCube Digital</h1>
+          <div className="w-20 h-1 bg-gradient-modern mx-auto mb-6 rounded-full"></div>
           <p className="text-slate-500 mt-6 text-lg leading-relaxed">
             NexCube Digital adalah studio kreatif yang fokus pada solusi web dan desain premium untuk perusahaan dan UMKM. 
             Kami menyediakan paket lengkap dari desain sampai deploy dengan pendekatan yang profesional dan hasil yang berkualitas.
@@ -69,9 +70,9 @@ export const About: React.FC = () => {
             <div 
               key={title}
               style={{ animationDelay: `${200 + (index * 150)}ms` }}
-              className={`bg-white p-8 rounded-xl shadow-card hover:shadow-premium transition-all ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}
+              className={`card-glass p-8 rounded-xl hover:shadow-premium transition-all ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}
             >
-              <div className="bg-accent/10 text-accent p-3 w-14 h-14 flex items-center justify-center rounded-lg mb-5">
+              <div className="bg-premium-100 text-premium-700 p-3 w-14 h-14 flex items-center justify-center rounded-xl mb-5">
                 {title === "Visi" && (
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
@@ -105,7 +106,8 @@ export const About: React.FC = () => {
         
         {/* Team Members */}
         <div className="mb-20">
-          <h2 className={`text-2xl font-heading font-semibold mb-8 text-center ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-600'}`}>Tim Profesional Kami</h2>
+          <h2 className={`text-2xl font-heading font-semibold mb-2 text-center ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-600'}`}>Tim Profesional Kami</h2>
+          <div className="w-20 h-1 bg-gradient-modern mx-auto mb-8 rounded-full"></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {teamMembers.map((member, index) => (
               <a 
@@ -114,22 +116,22 @@ export const About: React.FC = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ animationDelay: `${700 + (index * 150)}ms` }}
-                className={`bg-white rounded-xl overflow-hidden shadow-card hover:shadow-premium transition-all group ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}
+                className={`bg-gradient-premium-light rounded-2xl overflow-hidden shadow-card hover:shadow-premium-hover transition-all duration-500 group ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}
               >
                 <div className="relative overflow-hidden">
                   <img 
                     src={member.image} 
                     alt={`Foto ${member.name}`} 
-                    className="w-full h-48 object-cover object-center transition-transform duration-300 group-hover:scale-105" 
+                    className="w-full h-60 object-cover object-center transition-transform duration-500 group-hover:scale-105" 
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-4">
-                    <span className="text-white font-medium px-4 py-2 rounded-full bg-accent/80 text-sm">Lihat Portofolio</span>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-end justify-center pb-6">
+                    <span className="text-white font-medium px-6 py-2.5 rounded-xl bg-premium-700/90 text-sm shadow-premium-dark backdrop-blur-sm">Lihat Portofolio</span>
                   </div>
                 </div>
-                <div className="p-6">
-                  <h3 className="font-heading font-semibold text-lg group-hover:text-accent transition-colors">{member.name}</h3>
-                  <p className="text-accent text-sm mb-3">{member.position}</p>
-                  <p className="text-slate-600 text-sm">{member.bio}</p>
+                <div className="p-8">
+                  <h3 className="font-heading font-semibold text-lg group-hover:text-premium-700 transition-colors">{member.name}</h3>
+                  <p className="text-premium-700 text-sm mb-3">{member.position}</p>
+                  <p className="text-slate-600 text-sm leading-relaxed">{member.bio}</p>
                 </div>
               </a>
             ))}
@@ -137,12 +139,12 @@ export const About: React.FC = () => {
         </div>
         
         {/* CTA */}
-        <div className={`bg-gradient-premium rounded-xl p-8 text-white text-center ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-800'}`}>
-          <h2 className="text-2xl font-heading font-semibold mb-4">Siap Bekerja Sama?</h2>
-          <p className="text-slate-300 mb-6 max-w-2xl mx-auto">
+        <div className={`bg-gradient-modern rounded-2xl p-10 text-white text-center ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-800'}`}>
+          <h2 className="text-2xl font-heading font-semibold mb-4 drop-shadow-text">Siap Bekerja Sama?</h2>
+          <p className="text-slate-100 mb-8 max-w-2xl mx-auto">
             Diskusikan proyek Anda dengan tim kami dan dapatkan konsultasi gratis untuk kebutuhan digital bisnis Anda.
           </p>
-          <Link to="/contact" className="btn-primary bg-white text-primary hover:bg-white/90">
+          <Link to="/contact" className="btn-premium bg-white text-premium-700 hover:bg-white/90 px-8 py-3.5 rounded-xl">
             Hubungi Kami
           </Link>
         </div>

@@ -98,22 +98,22 @@ export default function App() {
         {/* Komponen untuk scroll ke atas pada setiap navigasi */}
         <ScrollToTop />
         
-        <header className={`sticky top-0 z-40 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-md shadow-md' : 'bg-white shadow-sm'}`}>
+        <header className={`sticky top-0 z-40 transition-all duration-300 ${scrolled ? 'bg-white/85 backdrop-blur-lg shadow-premium border-b border-white/40' : 'bg-white shadow-sm'}`}>
           <div className="container flex items-center justify-between h-16 sm:h-20 md:h-24">
             <Link to="/" className="flex items-center gap-2 sm:gap-4 group">
               <img 
                 src="/images/NexCube-full.png" 
                 alt="NexCube Digital Logo" 
-                className="w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 object-contain transition-transform duration-300 group-hover:scale-105" 
+                className="w-16 h-16 sm:w-20 sm:h-20 md:w-28 md:h-28 object-contain transition-all duration-300 group-hover:scale-105 drop-shadow-md" 
               />
               <div className="block max-w-[180px] xxs:max-w-none">
                 <div className="text-sm xs:text-lg sm:text-xl font-heading font-semibold truncate">NexCube</div>
-                <div className="text-2xs xs:text-xs sm:text-sm text-slate-500 line-clamp-1">digital.</div>
+                <div className="text-2xs xs:text-xs sm:text-sm text-premium-700 line-clamp-1 font-medium">digital.</div>
               </div>
             </Link>
 
             <button 
-              className="md:hidden p-2 rounded-full hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-accent/30"
+              className="md:hidden p-2 rounded-full hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-premium-700/30"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle menu"
             >
@@ -130,13 +130,13 @@ export default function App() {
             </button>
 
             <nav className="hidden md:flex gap-6 lg:gap-8 items-center text-sm">
-              <Link to="/" className={`hover:text-accent font-medium transition-colors py-2 px-1 ${location.pathname === '/' ? 'text-accent' : ''}`}>
+              <Link to="/" className={`hover:text-premium-700 font-medium transition-colors py-2 px-1 ${location.pathname === '/' ? 'text-premium-700' : ''}`}>
                 Home
               </Link>
-              <Link to="/services" className={`hover:text-accent font-medium transition-colors py-2 px-1 ${location.pathname === '/services' ? 'text-accent' : ''}`}>
+              <Link to="/services" className={`hover:text-premium-700 font-medium transition-colors py-2 px-1 ${location.pathname === '/services' ? 'text-premium-700' : ''}`}>
                 Services
               </Link>
-              <Link to="/about" className={`hover:text-accent font-medium transition-colors py-2 px-1 ${location.pathname === '/about' ? 'text-accent' : ''}`}>
+              <Link to="/about" className={`hover:text-premium-700 font-medium transition-colors py-2 px-1 ${location.pathname === '/about' ? 'text-premium-700' : ''}`}>
                 About
               </Link>
               <Link to="/contact" className="btn-primary text-sm">Hubungi Kami</Link>
@@ -144,15 +144,15 @@ export default function App() {
           </div>
 
           {/* Mobile menu with animation */}
-          <div className={`md:hidden bg-white border-t overflow-hidden transition-all duration-300 ${mobileMenuOpen ? 'max-h-64' : 'max-h-0'}`}>
+          <div className={`md:hidden backdrop-blur-lg bg-white/80 border-t overflow-hidden transition-all duration-300 ${mobileMenuOpen ? 'max-h-64' : 'max-h-0'}`}>
             <div className="container flex flex-col gap-2 py-2">
-              <Link to="/" className={`hover:bg-slate-50 px-4 py-3 rounded font-medium ${location.pathname === '/' ? 'text-accent' : ''}`}>
+              <Link to="/" className={`hover:bg-premium-50 px-4 py-3 rounded-lg font-medium ${location.pathname === '/' ? 'text-premium-700' : ''}`}>
                 Home
               </Link>
-              <Link to="/services" className={`hover:bg-slate-50 px-4 py-3 rounded font-medium ${location.pathname === '/services' ? 'text-accent' : ''}`}>
+              <Link to="/services" className={`hover:bg-premium-50 px-4 py-3 rounded-lg font-medium ${location.pathname === '/services' ? 'text-premium-700' : ''}`}>
                 Services
               </Link>
-              <Link to="/about" className={`hover:bg-slate-50 px-4 py-3 rounded font-medium ${location.pathname === '/about' ? 'text-accent' : ''}`}>
+              <Link to="/about" className={`hover:bg-premium-50 px-4 py-3 rounded-lg font-medium ${location.pathname === '/about' ? 'text-premium-700' : ''}`}>
                 About
               </Link>
               <Link to="/contact" className="mt-2 mb-2 btn-primary text-center">Hubungi Kami</Link>
