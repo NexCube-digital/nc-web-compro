@@ -202,11 +202,18 @@ export const Home: React.FC = () => {
           <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-10">
             <h2 className="text-2xl sm:text-3xl font-heading font-semibold">Paket Website</h2>
             <p className="text-slate-500 mt-3 sm:mt-4 text-base sm:text-lg">
-              Pilih paket sesuai kebutuhan — dari landing page cepat sampai solusi lengkap berskala.
+              Pilih paket sesuai kebutuhan — dari paket mahasiswa hingga solusi lengkap berskala.
             </p>
           </div>
 
-          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+          <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 mb-8">
+            <PricingCard 
+              tier="Student" 
+              price="Rp 300.000" 
+              features={["Paket khusus untuk mahasiswa. Ideal untuk portofolio personal atau tugas kuliah dengan kebutuhan website sederhana."]} 
+              accent="bg-gradient-to-br from-blue-50 to-white" 
+              badge="Khusus Mahasiswa"
+            />
             <PricingCard 
               tier="Bronze" 
               price="Rp 800.000" 

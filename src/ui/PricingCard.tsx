@@ -7,12 +7,14 @@ export const PricingCard: React.FC<{
   features: string[]; 
   accent?: string;
   popular?: boolean;
+  badge?: string;
 }> = ({ 
   tier, 
   price, 
   features, 
   accent,
-  popular = false
+  popular = false,
+  badge
 }) => {
   // Extract price value safely
   const priceValue = price.includes(' ') ? price.split(' ')[0] : price;
@@ -20,6 +22,7 @@ export const PricingCard: React.FC<{
   // Determine styling based on tier
   const isSpecialTier = accent?.includes('from-slate-800') || tier === 'Platinum';
   const isGoldTier = tier === 'Gold';
+  const isStudentTier = tier === 'Student';
   
   // Card hover effect
   const [isHovered, setIsHovered] = useState(false);
@@ -32,9 +35,13 @@ export const PricingCard: React.FC<{
     >
       {popular && (
         <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 px-4 py-1 bg-accent text-white text-xs font-medium rounded-full">
-          <span className="relative inline-flex overflow-hidden">
-            <span className={`${isHovered ? 'animate-pulse' : ''} inline-block`}>Popular</span>
-          </span>
+          <span className={`${isHovered ? 'animate-pulse' : ''} inline-block`}>Popular</span>
+        </div>
+      )}
+      
+      {badge && (
+        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 px-4 py-1 bg-blue-500 text-white text-xs font-medium rounded-full">
+          <span className={`${isHovered ? 'animate-pulse' : ''} inline-block`}>{badge}</span>
         </div>
       )}
       
@@ -43,7 +50,7 @@ export const PricingCard: React.FC<{
           <div className={`text-lg sm:text-xl font-heading font-semibold ${isSpecialTier ? 'text-white' : ''}`}>{tier}</div>
           <div className={`text-xs sm:text-sm mt-1 ${isSpecialTier ? 'text-slate-300' : 'text-slate-500'}`}>{price}</div>
         </div>
-        <div className={`text-2xl sm:text-3xl font-bold ${isSpecialTier ? 'text-white' : ''} ${isGoldTier ? 'text-gold' : ''} transition-all duration-300 ${isHovered ? 'scale-110' : ''}`}>
+        <div className={`text-2xl sm:text-3xl font-bold ${isSpecialTier ? 'text-white' : ''} ${isGoldTier ? 'text-gold' : ''} ${isStudentTier ? 'text-blue-500' : ''} transition-all duration-300 ${isHovered ? 'scale-110' : ''}`}>
           {priceValue}
         </div>
       </div>

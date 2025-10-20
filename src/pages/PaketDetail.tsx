@@ -4,6 +4,49 @@ import { Helmet } from 'react-helmet-async';
 
 // Template data untuk paket-paket
 const paketData = {
+  student: {
+    title: 'Student',
+    price: 'Rp 300.000',
+    description: 'Paket khusus untuk mahasiswa dengan kebutuhan digital sederhana',
+    includes: [
+        '✔️Harga Include Domain dan Hosting.',
+        '❌Akses WP Admin.',
+        '❌Akses C-Panel.',
+        '✔️Halaman Maks. 2 Menu/Artikel.',
+        '❌Bonus Halaman Menu/Artikel.',
+        '✔️Gratis Pembuatan Konten.',
+        '❌Gratis Design Logo.',
+        '✔️Gratis Domain .my.id.',
+        '❌Gratis E-mail bisnis.',
+        '✔️10 Foto Quota Kerja.',
+        '❌Video Quota Kerja.',
+        '✔️Gratis SSL 1 Tahun.',
+        '✔️Loading Cepat.',
+        '✔️Halaman Responsif.',
+        '✔️Mobile Friendly.',
+        '✔️Terintegrasi Dengan WhatsApp dan Telpon.',
+        '✔️Terintegrasi Dengan Media Sosial.',
+        '✔️Standar Kontak Form.',
+        '✔️1 Kali Revisi.',
+        '✔️Garansi 6 Bulan.',
+    ],
+    benefits: [
+      'Setup cepat dalam 2 hari kerja',
+      'Template responsif',
+      'Optimasi untuk pencarian Google'
+    ],
+    idealFor: 'Mahasiswa, portofolio personal, atau project tugas kuliah',
+    timeline: '2-3 hari pengerjaan',
+    process: [
+      'Konsultasi kebutuhan',
+      'Pemilihan template',
+      'Implementasi konten',
+      'Review dan revisi',
+      'Deployment'
+    ],
+    color: 'bg-gradient-to-br from-blue-50 to-white',
+    specialRequirement: '* Perlu menunjukkan kartu mahasiswa aktif'
+  },
   bronze: {
     title: 'Bronze',
     price: 'Rp 800.000',
@@ -52,14 +95,14 @@ const paketData = {
     description: 'Paket menengah untuk website yang lebih lengkap',
     includes: [
         '✔️Harga Include Domain dan Hosting.',
-        '❌Akses WP Admin.',
+        '✔️Akses WP Admin.',
         '❌Akses C-Panel.',
         '✔️Halaman Maks. 5 Menu/Artikel.',
         '✔️Bonus 1 Halaman Menu/Artikel.',
         '✔️Gratis Pembuatan Konten.',
         '✔️Gratis Design Logo.',
         '✔️Gratis Domain .com/.id.',
-        '❌Gratis E-mail bisnis.',
+        '✔️Gratis E-mail bisnis.',
         '✔️50 Foto Quota Kerja.',
         '✔️1 Video Quota Kerja.',
         '✔️Gratis SSL 1 Tahun.',
@@ -97,7 +140,7 @@ const paketData = {
     includes: [
         '✔️Harga Include Domain dan Hosting.',
         '✔️Akses WP Admin.',
-        '❌Akses C-Panel.',
+        '✔️Akses C-Panel.',
         '✔️Halaman Maks. 10 Menu/Artikel.',
         '✔️Bonus 1 Halaman Menu/Artikel.',
         '✔️Gratis Pembuatan Konten.',

@@ -20,6 +20,7 @@ const services = [
       'SEO friendly',
       'CMS dasar untuk update konten',
       'Integrasi formulir kontak',
+      'Paket khusus mahasiswa tersedia'
     ],
     linkTo: '/paket/bronze'
   },
