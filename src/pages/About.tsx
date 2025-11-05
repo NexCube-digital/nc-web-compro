@@ -43,13 +43,7 @@ export const About: React.FC = () => {
       bio: 'Spesialis dalam pengembangan antarmuka pengguna yang responsif dan interaktif.',
       portfolioUrl: 'https://example.com/alif'
     },
-    {
-      name: 'Okta Ramdani',
-      position: 'Backend Developer',
-      image: '/images/team/team-5.png',
-      bio: 'Spesialis dalam pengembangan backend dan optimasi server untuk performa maksimal.',
-      portfolioUrl: 'https://oktaramdani.netlify.app/'
-    },
+    
   ];
 
   return (
