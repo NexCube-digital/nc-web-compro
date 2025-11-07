@@ -155,7 +155,7 @@ export default function App() {
               <Link to="/about" className={`hover:bg-premium-50 px-4 py-3 rounded-lg font-medium ${location.pathname === '/about' ? 'text-premium-700' : ''}`}>
                 About
               </Link>
-              <Link to="/contact" className="mt-2 mb-2 btn-primary text-center">Hubungi Kami</Link>
+              <Link to="https://wa.me/qr/B7H5SIV33KOUM1" className="mt-2 mb-2 btn-primary text-center">Hubungi Kami</Link>
             </div>
           </div>
         </header>

@@ -84,7 +84,7 @@ export const Home: React.FC = () => {
                 <span className="relative z-10">Lihat Paket</span>
                 <span className="absolute inset-0 bg-white/20 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300"></span>
               </button>
-              <Link to="/contact" className="btn-secondary text-sm sm:text-base">
+              <Link to="https://wa.me/qr/B7H5SIV33KOUM1" className="btn-secondary text-sm sm:text-base">
                 Hubungi Kami
               </Link>
             </div>

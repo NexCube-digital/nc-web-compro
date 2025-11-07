@@ -152,7 +152,7 @@ export const About: React.FC = () => {
           <p className="text-slate-100 mb-8 max-w-2xl mx-auto">
             Diskusikan proyek Anda dengan tim kami dan dapatkan konsultasi gratis untuk kebutuhan digital bisnis Anda.
           </p>
-          <Link to="/contact" className="btn-premium bg-white text-premium-700 hover:bg-white/90 px-8 py-3.5 rounded-xl">
+          <Link to="https://wa.me/qr/B7H5SIV33KOUM1" className="btn-premium bg-white text-premium-700 hover:bg-white/90 px-8 py-3.5 rounded-xl">
             Hubungi Kami
           </Link>
         </div>
