@@ -32,16 +32,16 @@ export const About: React.FC = () => {
     {
       name: 'Muhammad Regi Taryana',
       position: 'Backend Developer',
-      image: '/images/team/an.jpeg',
+      image: '/images/team/team-3.jpg',
       bio: 'Spesialis dalam pengembangan backend dan manajemen database untuk aplikasi skala besar.',
       portfolioUrl: 'https://example.com/regi'
     }, 
     {
       name: 'Alif Alfarizi',
-      position: 'Frontend Developer',
-      image: '/images/team/an.jpeg',
-      bio: 'Spesialis dalam pengembangan antarmuka pengguna yang responsif dan interaktif.',
-      portfolioUrl: 'https://example.com/alif'
+      position: 'Web Developer',
+      image: '/images/team/team-4.jpg',
+      bio: 'Berpengalaman dalam pengembangan website responsif dan aplikasi web modern.',
+      portfolioUrl: 'https://alifalfariziportfolio.netlify.app/'
     },
     
   ];
