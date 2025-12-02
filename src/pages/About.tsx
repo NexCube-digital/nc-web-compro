@@ -315,7 +315,7 @@ export const About: React.FC = () => {
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <Link 
-                  to="https://wa.me/qr/B7H5SIV33KOUM1" 
+                  to="https://wa.me/6285950313360?text=Halo%20NexCube%20Digital%2C%20saya%20ingin%20berkonsultasi%20tentang%20kebutuhan%20digital%20saya" 
                   className="group inline-flex items-center gap-3 bg-white text-blue-700 hover:bg-blue-50 font-bold px-8 py-4 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-xl"
                 >
                   <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 24 24">
