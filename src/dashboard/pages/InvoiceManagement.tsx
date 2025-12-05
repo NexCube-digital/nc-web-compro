@@ -89,9 +89,20 @@ export const InvoiceManagement: React.FC = () => {
       setLoading(true)
       setError('')
 
+      // Prepare data with priceBreakdown as JSON string
+      const submitData = {
+        ...formData,
+        // Ensure priceBreakdown is a JSON string or empty string
+        priceBreakdown: formData.priceBreakdown && typeof formData.priceBreakdown === 'string' 
+          ? formData.priceBreakdown 
+          : (formData.priceBreakdown && typeof formData.priceBreakdown === 'object'
+              ? JSON.stringify(formData.priceBreakdown)
+              : '')
+      }
+
       if (editingId) {
         // Update existing invoice
-        const response = await apiClient.updateInvoice(editingId, formData)
+        const response = await apiClient.updateInvoice(editingId, submitData)
         if (response.success) {
           setToast({ message: 'Invoice berhasil diperbarui', type: 'success' })
           await loadInvoices()
@@ -105,6 +116,7 @@ export const InvoiceManagement: React.FC = () => {
               amount: 0,
               status: 'draft',
               service: 'website',
+              priceBreakdown: '',
               notes: '',
               description: ''
             })
@@ -114,7 +126,7 @@ export const InvoiceManagement: React.FC = () => {
         }
       } else {
         // Create new invoice
-        const response = await apiClient.createInvoice(formData)
+        const response = await apiClient.createInvoice(submitData)
         if (response.success) {
           setToast({ message: 'Invoice berhasil dibuat', type: 'success' })
           await loadInvoices()
@@ -128,6 +140,7 @@ export const InvoiceManagement: React.FC = () => {
               amount: 0,
               status: 'draft',
               service: 'website',
+              priceBreakdown: '',
               notes: '',
               description: ''
             })

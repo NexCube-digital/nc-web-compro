@@ -376,6 +376,10 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
           <button
             type="submit"
             disabled={loading}
+            onClick={() => {
+              // Update priceBreakdown in formData before submit
+              onPriceBreakdownChange?.(priceBreakdown)
+            }}
             className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition-all disabled:opacity-50"
           >
             {loading ? 'Menyimpan...' : editingId ? 'Perbarui Invoice' : 'Buat Invoice'}
