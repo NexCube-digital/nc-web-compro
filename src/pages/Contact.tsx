@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Helmet } from 'react-helmet-async';
 import { Layout } from '../components/layout/Layout';
+import apiClient from '../services/api';
 
 export const Contact: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -9,6 +10,7 @@ export const Contact: React.FC = () => {
     name: '',
     email: '',
     company: '',
+    phone: '',
     message: '',
     budget: '',
     service: ''
@@ -87,27 +89,36 @@ export const Contact: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) return;
     
     setIsSubmitting(true);
 
-    // Simulate form submission - replace with actual API call in production
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      await apiClient.submitContact(formData);
+      
       setSubmitted(true);
-      // Reset form
       setFormData({
         name: '',
         email: '',
         company: '',
+        phone: '',
         message: '',
         budget: '',
         service: ''
       });
-    }, 1500);
+      
+      // Show success notification
+      setTimeout(() => {
+        setSubmitted(false);
+      }, 5000);
+    } catch (error: any) {
+      setErrors({ form: error.message || 'Terjadi kesalahan saat mengirim pesan' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -148,6 +159,12 @@ export const Contact: React.FC = () => {
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="card-glass rounded-2xl p-6 sm:p-10 shadow-premium">
+                    {errors.form && (
+                      <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                        {errors.form}
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <label htmlFor="name" className="block text-sm font-medium text-slate-700">
@@ -192,6 +209,21 @@ export const Contact: React.FC = () => {
                           className="input-premium w-full"
                         />
                       </div>
+
+                      <div className="space-y-2">
+                        <label htmlFor="phone" className="block text-sm font-medium text-slate-700">
+                          Nomor Telepon
+                        </label>
+                        <input
+                          id="phone"
+                          name="phone"
+                          type="tel"
+                          value={formData.phone}
+                          onChange={handleChange}
+                          className="input-premium w-full"
+                          placeholder="+62 812 3456 7890"
+                        />
+                      </div>
                       
                       <div className="space-y-2">
                         <label htmlFor="service" className="block text-sm font-medium text-slate-700">
@@ -213,7 +245,7 @@ export const Contact: React.FC = () => {
                         </select>
                       </div>
                       
-                      <div className="space-y-2 md:col-span-2">
+                      <div className="space-y-2">
                         <label htmlFor="budget" className="block text-sm font-medium text-slate-700">
                           Budget
                         </label>
@@ -244,6 +276,7 @@ export const Contact: React.FC = () => {
                           value={formData.message}
                           onChange={handleChange}
                           className={`input-premium w-full ${errors.message ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`}
+                          placeholder="Jelaskan kebutuhan proyek Anda..."
                         />
                         {errors.message && <p className="text-red-500 text-xs">{errors.message}</p>}
                       </div>

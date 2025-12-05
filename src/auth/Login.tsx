@@ -1,30 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
-
-// Dummy credentials untuk demo
-const DEMO_CREDENTIALS = {
-  email: 'admin@nexcube.com',
-  password: 'demo123'
-}
-
-// Dummy users database
-const DUMMY_USERS = [
-  {
-    id: '1',
-    name: 'Admin NexCube',
-    email: 'admin@nexcube.com',
-    role: 'Admin',
-    avatar: 'A'
-  },
-  {
-    id: '2',
-    name: 'Manager',
-    email: 'manager@nexcube.com',
-    role: 'Manager',
-    avatar: 'M'
-  }
-]
+import apiClient, { AuthResponse } from '../services/api'
 
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('')
@@ -38,32 +15,19 @@ export const Login: React.FC = () => {
     setError('')
     setIsLoading(true)
 
-    // Simulasi delay loading
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
     try {
-      // Validasi input
       if (!email || !password) {
         setError('Email dan password harus diisi')
         setIsLoading(false)
         return
       }
 
-      // Dummy authentication - hanya check email dan password
-      if (email === DEMO_CREDENTIALS.email && password === DEMO_CREDENTIALS.password) {
-        // Cari user berdasarkan email
-        const user = DUMMY_USERS.find(u => u.email === email)
-        
-        if (user) {
-          // Simpan ke localStorage
-          const token = `dummy-token-${Date.now()}`
-          localStorage.setItem('authToken', token)
-          localStorage.setItem('user', JSON.stringify(user))
-          
-          navigate('/dashboard')
-        }
-      } else {
-        setError('Email atau password salah')
+      const response = await apiClient.login(email, password)
+      
+      if (response.success && response.data) {
+        localStorage.setItem('user', JSON.stringify(response.data.user))
+        localStorage.setItem('token', response.data.token)
+        navigate('/dashboard')
       }
     } catch (err: any) {
       setError(err.message || 'Terjadi kesalahan saat login')
@@ -72,10 +36,9 @@ export const Login: React.FC = () => {
     }
   }
 
-  // Auto-fill demo credentials
   const handleDemoLogin = () => {
-    setEmail(DEMO_CREDENTIALS.email)
-    setPassword(DEMO_CREDENTIALS.password)
+    setEmail('admin@nexcube.digital')
+    setPassword('admin123456')
   }
 
   return (
@@ -85,14 +48,12 @@ export const Login: React.FC = () => {
         <meta name="description" content="Login ke dashboard admin NexCube Digital" />
       </Helmet>
 
-      {/* Animated background elements */}
+      {/* Background elements */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2 animate-pulse"></div>
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl translate-x-1/2 translate-y-1/2 animate-pulse" style={{ animationDelay: '1s' }}></div>
 
       <div className="w-full max-w-md relative z-10">
-        {/* Card */}
         <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-white/20 hover:border-white/40 transition-all duration-300">
-          {/* Logo */}
           <div className="text-center mb-8">
             <img 
               src="/images/NexCube-full.png" 
@@ -103,7 +64,6 @@ export const Login: React.FC = () => {
             <p className="text-blue-100 text-sm">Dashboard Manajemen</p>
           </div>
 
-          {/* Error Message */}
           {error && (
             <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-200 text-sm animate-shake">
               <div className="flex items-start gap-3">
@@ -115,7 +75,6 @@ export const Login: React.FC = () => {
             </div>
           )}
 
-          {/* Form */}
           <form onSubmit={handleLogin} className="space-y-6">
             <div>
               <label className="block text-white text-sm font-semibold mb-2">
@@ -126,7 +85,7 @@ export const Login: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition-all duration-300"
-                placeholder="admin@nexcube.com"
+                placeholder="admin@nexcube.digital"
                 disabled={isLoading}
               />
             </div>
@@ -169,15 +128,14 @@ export const Login: React.FC = () => {
             </button>
           </form>
 
-          {/* Demo Credentials Box */}
           <div className="mt-8 p-4 bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-xl backdrop-blur-sm">
             <p className="text-blue-100 text-xs font-black mb-3 uppercase tracking-wider">📝 Demo Credentials:</p>
             <div className="space-y-2 mb-4 text-sm">
               <div className="flex items-center gap-2">
-                <span className="text-blue-300 font-mono text-xs bg-white/10 px-2 py-1 rounded">{DEMO_CREDENTIALS.email}</span>
+                <span className="text-blue-300 font-mono text-xs bg-white/10 px-2 py-1 rounded">admin@nexcube.digital</span>
                 <button
                   type="button"
-                  onClick={() => setEmail(DEMO_CREDENTIALS.email)}
+                  onClick={() => setEmail('admin@nexcube.digital')}
                   className="text-blue-200 hover:text-blue-100 text-xs font-semibold transition-colors"
                   title="Copy email"
                 >
@@ -185,10 +143,10 @@ export const Login: React.FC = () => {
                 </button>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-blue-300 font-mono text-xs bg-white/10 px-2 py-1 rounded">{DEMO_CREDENTIALS.password}</span>
+                <span className="text-blue-300 font-mono text-xs bg-white/10 px-2 py-1 rounded">change_this_password</span>
                 <button
                   type="button"
-                  onClick={() => setPassword(DEMO_CREDENTIALS.password)}
+                  onClick={() => setPassword('change_this_password')}
                   className="text-blue-200 hover:text-blue-100 text-xs font-semibold transition-colors"
                   title="Copy password"
                 >
@@ -205,51 +163,17 @@ export const Login: React.FC = () => {
             </button>
           </div>
 
-          {/* Info Banner */}
           <div className="mt-6 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg">
             <p className="text-amber-100 text-xs leading-relaxed">
-              💡 <span className="font-semibold">Ini adalah mode DEMO</span>. Gunakan kredensial demo di atas atau masukkan email dan password Anda sendiri untuk login.
+              💡 <span className="font-semibold">Ini adalah mode DEMO</span>. Gunakan kredensial demo di atas untuk login ke dashboard.
             </p>
           </div>
         </div>
 
-        {/* Footer Link */}
         <p className="text-center text-white/60 mt-8 text-sm">
           Kembali ke <Link to="/" className="text-blue-400 hover:text-blue-300 font-semibold transition-colors">Website</Link>
         </p>
-
-        {/* Alternative Login Methods */}
-        <div className="mt-8 text-center">
-          <p className="text-white/40 text-xs mb-4">atau coba dengan email lain:</p>
-          <div className="space-y-2">
-            {DUMMY_USERS.map((user) => (
-              <button
-                key={user.id}
-                type="button"
-                onClick={() => {
-                  setEmail(user.email)
-                  setPassword(DEMO_CREDENTIALS.password)
-                }}
-                className="w-full text-xs text-blue-200 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 px-4 py-2 rounded-lg transition-all duration-200"
-              >
-                {user.name} ({user.role})
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
-
-      {/* Add animations */}
-      <style>{`
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-5px); }
-          75% { transform: translateX(5px); }
-        }
-        .animate-shake {
-          animation: shake 0.5s ease-in-out;
-        }
-      `}</style>
     </div>
   )
 }

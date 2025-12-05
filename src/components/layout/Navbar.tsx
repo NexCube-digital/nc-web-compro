@@ -122,8 +122,25 @@ export const Navbar: React.FC = () => {
             ))}
           </div>
 
-          {/* Premium CTA Button - Gen-Z Style */}
-          <div className="hidden lg:flex items-center space-x-4 relative z-10">
+          {/* Login & CTA Buttons - Gen-Z Style */}
+          <div className="hidden lg:flex items-center space-x-3 relative z-10">
+            {/* Login Button */}
+            <Link
+              to="/login"
+              className="group relative inline-flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg border-2 border-slate-200 hover:border-blue-300"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-50 to-white opacity-100 group-hover:opacity-0 transition-all duration-300"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 opacity-0 group-hover:opacity-100 transition-all duration-300"></div>
+              
+              <svg className="w-4 h-4 text-slate-600 group-hover:text-blue-600 relative z-10 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              <span className="text-slate-700 group-hover:text-blue-700 relative z-10 transition-colors duration-300">
+                Login
+              </span>
+            </Link>
+
+            {/* WhatsApp CTA Button */}
             <Link
               to="https://wa.me/6285950313360?text=Halo%20NexCube%20Digital%2C%20saya%20ingin%20berkonsultasi%20tentang%20kebutuhan%20digital%20saya"
               target="_blank"
@@ -198,7 +215,22 @@ export const Navbar: React.FC = () => {
               </Link>
             ))}
             
-            <div className="pt-6 border-t border-slate-200/50">
+            <div className="pt-6 border-t border-slate-200/50 space-y-3">
+              {/* Login Button Mobile */}
+              <Link
+                to="/login"
+                onClick={() => setIsMenuOpen(false)}
+                className="block w-full bg-gradient-to-r from-slate-100 to-slate-50 text-slate-700 text-center px-6 py-3 rounded-xl font-semibold hover:from-blue-50 hover:to-purple-50 hover:text-blue-700 transition-all duration-300 hover:shadow-md active:scale-95 border-2 border-slate-200 hover:border-blue-300 text-sm"
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  Login
+                </div>
+              </Link>
+
+              {/* WhatsApp CTA Button Mobile */}
               <Link
                 to="https://wa.me/6285950313360?text=Halo%20NexCube%20Digital%2C%20saya%20ingin%20berkonsultasi%20tentang%20kebutuhan%20digital%20saya"
                 target="_blank"
