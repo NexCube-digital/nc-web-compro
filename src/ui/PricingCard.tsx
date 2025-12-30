@@ -8,6 +8,7 @@ export const PricingCard: React.FC<{
   accent?: string;
   popular?: boolean;
   badge?: string;
+  detailUrl?: string;
 }> = ({ 
   tier, 
   price, 
@@ -15,6 +16,7 @@ export const PricingCard: React.FC<{
   accent,
   popular = false,
   badge
+  , detailUrl
 }) => {
   // Extract price value safely
   const priceValue = price.includes(' ') ? price.split(' ')[0] : price;
@@ -76,7 +78,7 @@ export const PricingCard: React.FC<{
 
       <div className="mt-6 md:mt-8">
         <Link 
-          to={`/paket/${tier.toLowerCase()}`} 
+          to={detailUrl || `/paket/${tier.toLowerCase()}`} 
           className={`block w-full py-3 sm:py-3.5 rounded-xl font-medium transition-all duration-300 hover:shadow-lg text-center overflow-hidden relative ${
             isSpecialTier 
               ? 'bg-white text-primary hover:bg-slate-100' 

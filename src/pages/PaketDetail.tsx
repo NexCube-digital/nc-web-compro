@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { getPricingTierById } from '../data/pricingData';
 import { Layout } from '../components/layout/Layout';
@@ -235,24 +235,31 @@ const paketDetailData = {
   }
 };
 
-// Fungsi untuk memproses teks includes dengan ikon yang konsisten
-const processIncludeItem = (item: string) => {
-  if (item.startsWith('✔️')) {
-    return {
-      included: true,
-      text: item.replace('✔️', '').trim()
-    };
-  } else if (item.startsWith('❌')) {
-    return {
-      included: false,
-      text: item.replace('❌', '').trim()
-    };
+// Normalize include item which may be a string (with ✔️/❌) or an object { included, text }
+type RawInclude = string | { included?: boolean; text?: string };
+const getIncludeText = (item: RawInclude) => {
+  if (typeof item === 'string') {
+    return item.replace(/^✔️|^❌/, '').trim();
   }
-  return { included: true, text: item };
+  return (item.text || '').trim();
+};
+
+const processIncludeItem = (item: RawInclude) => {
+  if (typeof item === 'string') {
+    const trimmed = item.trim();
+    if (trimmed.startsWith('✔️')) return { included: true, text: trimmed.replace('✔️', '').trim() };
+    if (trimmed.startsWith('❌')) return { included: false, text: trimmed.replace('❌', '').trim() };
+    return { included: true, text: trimmed };
+  }
+  return { included: Boolean(item.included ?? true), text: item.text || '' };
 };
 
 export const PaketDetail: React.FC = () => {
-  const { tier = '' } = useParams<{ tier: string }>();
+  // Support routes: /paket/:tier  OR /paket/:category/:id
+  const params = useParams<{ tier?: string; id?: string }>();
+  const location = useLocation()
+  const tierParam = params.tier || ''
+  const idParam = params.id || ''
   const [isLoaded, setIsLoaded] = useState(false);
   
   useEffect(() => {
@@ -263,14 +270,33 @@ export const PaketDetail: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
   
-  // Get basic pricing info from shared data
-  const basicPaketInfo = getPricingTierById(tier);
-  
-  // Get detailed info from local data
-  const detailedPaketInfo = paketDetailData[tier as keyof typeof paketDetailData];
-  
-  // Merge both data sources
-  const paket = detailedPaketInfo || {
+  // State for backend-driven package detail
+  const [remotePackage, setRemotePackage] = useState<any | null>(null)
+
+  // Get basic pricing info from shared data (tier-based fallback)
+  const basicPaketInfo = getPricingTierById(tierParam || '') || null;
+
+  // When an ID is present, fetch package from backend; otherwise try to map tier to local detail
+  useEffect(() => {
+    const load = async () => {
+      if (idParam) {
+        try {
+          const res = await (await import('../services/api')).default.getPackage(idParam)
+          if (res && res.success && res.data) {
+            setRemotePackage(res.data)
+          }
+        } catch (e) {
+          console.error('Failed to fetch package detail from backend', e)
+        }
+      }
+    }
+    load()
+  }, [idParam, tierParam, location.pathname])
+
+  // Determine paket to render: prefer remotePackage, then local detailed mapping by tier, then basic info
+  const detailedPaketInfo = !idParam ? paketDetailData[tierParam as keyof typeof paketDetailData] : null
+
+  const paket = remotePackage || detailedPaketInfo || {
     title: basicPaketInfo?.title || 'Paket Tidak Ditemukan',
     price: basicPaketInfo?.price || '',
     description: basicPaketInfo?.description || 'Detail paket tidak tersedia',
@@ -282,29 +308,13 @@ export const PaketDetail: React.FC = () => {
     color: basicPaketInfo?.accent || 'bg-white'
   };
   
-  const isSpecialTier = paket.color?.includes('from-slate-800') || false;
-  const isGoldTier = tier === 'gold';
+  const isSpecialTier = Boolean(paket.color && String(paket.color).includes('from-slate-800'));
+  const isGoldTier = tierParam === 'gold';
 
-  // Organize includes into categories for better display
-  const groupedIncludes = {
-    core: [] as string[],
-    features: [] as string[],
-    design: [] as string[],
-    support: [] as string[]
-  };
+  // (Optional) We could group includes here if desired. For now normalize texts when rendering.
 
-  // Group includes by category if needed
-  paket.includes.forEach((item) => {
-    if (item.includes('Domain') || item.includes('Hosting') || item.includes('Halaman')) {
-      groupedIncludes.core.push(item);
-    } else if (item.includes('Akses') || item.includes('Gratis')) {
-      groupedIncludes.features.push(item);
-    } else if (item.includes('Design') || item.includes('Responsif') || item.includes('Friendly')) {
-      groupedIncludes.design.push(item);
-    } else {
-      groupedIncludes.support.push(item);
-    }
-  });
+  // Compute a sensible back link: prefer category/tier when present
+  const backLink = tierParam ? `/paket/${tierParam}` : '/paket/website';
 
   return (
     <Layout>
@@ -339,7 +349,7 @@ export const PaketDetail: React.FC = () => {
                 <h2 className={`text-xl font-heading font-semibold mb-6 ${isSpecialTier ? 'text-white' : ''}`}>Fitur Paket</h2>
                 
                 <div className="space-y-6">
-                  {paket.includes.map((item, index) => {
+                  {Array.isArray(paket.includes) && paket.includes.map((item: RawInclude, index: number) => {
                     const { included, text } = processIncludeItem(item);
                     return (
                       <div key={index} className="flex items-start gap-3">
@@ -359,7 +369,7 @@ export const PaketDetail: React.FC = () => {
                             </svg>
                           )}
                         </span>
-                        <span className={`${isSpecialTier ? 'text-white' : ''} ${!included && 'text-opacity-70'}`}>
+                        <span className={`${isSpecialTier ? 'text-white' : ''} ${!included ? 'text-opacity-70' : ''}`}>
                           {text}
                         </span>
                       </div>
@@ -376,7 +386,7 @@ export const PaketDetail: React.FC = () => {
                 <div className="mb-10">
                   <h2 className={`text-xl font-heading font-semibold mb-6 ${isSpecialTier ? 'text-white' : ''}`}>Benefit Tambahan</h2>
                   <ul className="space-y-3">
-                    {paket.benefits.map((item, index) => (
+                    {paket.benefits.map((item: string, index: number) => (
                       <li key={index} className="flex items-start gap-3">
                         <span className={`inline-flex mt-1 items-center justify-center w-5 h-5 rounded-full ${
                           isSpecialTier ? 'bg-white/20' : 'bg-gold-light/30'
@@ -400,7 +410,7 @@ export const PaketDetail: React.FC = () => {
                   </div>
                   
                   <ol className={`relative border-l ${isSpecialTier ? 'border-white/30' : 'border-slate-200'} space-y-6 pl-6`}>
-                    {paket.process.map((step, index) => (
+                    {paket.process.map((step: string, index: number) => (
                       <li key={index} className="relative">
                         <div className={`absolute -left-[31px] flex items-center justify-center w-6 h-6 rounded-full bg-white ${isSpecialTier ? 'border-2 border-white/70' : 'border-2 border-accent'}`}>
                           <span className={`text-xs font-medium ${isSpecialTier ? 'text-slate-800' : 'text-accent'}`}>{index + 1}</span>
@@ -462,7 +472,11 @@ export const PaketDetail: React.FC = () => {
                   </span>
                 </summary>
                 <p className="text-slate-500 mt-4">
-                  Ya, paket {paket.title} sudah termasuk {paket.includes.find(item => item.includes('revisi')) || '2 revisi'}.
+                  Ya, paket {paket.title} sudah termasuk {(
+                    Array.isArray(paket.includes)
+                      ? paket.includes.find((it: RawInclude) => getIncludeText(it).toLowerCase().includes('revisi'))
+                      : null
+                  ) || '2 revisi'}.
                 </p>
               </details>
               

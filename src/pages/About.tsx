@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { Layout } from '../components/layout/Layout';
+import apiClient from '../services/api'
 
 export const About: React.FC = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -15,7 +16,8 @@ export const About: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const teamMembers = [
+  // Default static data (fallback)
+  const defaultTeamMembers = [
     {
       name: 'Aslam Mushtafa Karim',
       position: 'CEO & Founder',
@@ -42,7 +44,7 @@ export const About: React.FC = () => {
       portfolioUrl: 'https://example.com/regi',
       expertise: ['System Architecture', 'Database Design', 'API Development'],
       experience: '4+ Years'
-    }, 
+    },
     {
       name: 'Alif Alfarizi',
       position: 'Frontend Specialist',
@@ -54,14 +56,56 @@ export const About: React.FC = () => {
     },
     {
       name: 'Okta Ramdani',
-      position: 'Full Stack Developer',
+      position: 'Backend Developer',
       image: '/images/team/team-5.png',
-      bio: 'Developer serbaguna yang menguasai teknologi frontend dan backend untuk solusi end-to-end.',
+      bio: 'Pengembang backend yang berdedikasi dalam membangun solusi server-side yang efisien dan andal.',
       portfolioUrl: 'https://oktaramdani.netlify.app/',
       expertise: ['Full Stack Development', 'DevOps', 'Cloud Solutions'],
       experience: '3+ Years'
     },
   ];
+
+  type TeamPublic = {
+    id?: number
+    name: string
+    position: string
+    image?: string
+    bio?: string
+    expertise?: string[] | string
+    portfolioUrl?: string
+    experience?: string
+  }
+
+  const [teams, setTeams] = useState<TeamPublic[]>([])
+  const API_MEDIA_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '')
+
+  useEffect(() => {
+    let mounted = true
+    const load = async () => {
+      try {
+        const res = await apiClient.getTeams()
+        if (res.success && res.data && !Array.isArray(res.data) && Array.isArray((res.data as any).teams)) {
+          const items = (res.data as any).teams.map((t: any) => ({
+            id: t.id,
+            name: t.name,
+            position: t.position,
+            image: typeof t.image === 'string' && t.image.startsWith('/uploads') ? `${API_MEDIA_BASE}${t.image}` : t.image || '/images/team/team-1.jpg',
+            bio: t.bio,
+            portfolioUrl: t.portfolioUrl,
+            experience: t.experience,
+            expertise: t.expertise ? (Array.isArray(t.expertise) ? t.expertise : (t.expertise as string).split(',').map((s: string) => s.trim())) : []
+          }))
+          if (mounted) setTeams(items)
+          return
+        }
+      } catch (e) {
+        // ignore, fallback to defaults
+      }
+      if (mounted) setTeams(defaultTeamMembers)
+    }
+    load()
+    return () => { mounted = false }
+  }, [])
 
   const stats = [
     { 
@@ -233,7 +277,7 @@ export const About: React.FC = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {teamMembers.map((member, index) => (
+              {teams.map((member, index) => (
                 <a 
                   key={index} 
                   href={member.portfolioUrl}
@@ -256,7 +300,7 @@ export const About: React.FC = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-6">
                       <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
                         <div className="flex flex-wrap gap-2 mb-4">
-                          {member.expertise.slice(0, 2).map((skill, idx) => (
+                          {member.expertise && Array.isArray(member.expertise) && member.expertise.slice(0, 2).map((skill, idx) => (
                             <span key={idx} className="text-xs bg-white/20 backdrop-blur-sm text-white px-2 py-1 rounded-full">
                               {skill}
                             </span>
@@ -281,7 +325,7 @@ export const About: React.FC = () => {
                     
                     {/* Expertise Tags */}
                     <div className="flex flex-wrap gap-2">
-                      {member.expertise.map((skill, idx) => (
+                      {member.expertise && Array.isArray(member.expertise) && member.expertise.map((skill, idx) => (
                         <span key={idx} className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded-lg font-medium">
                           {skill}
                         </span>

@@ -26,6 +26,15 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
       )
     },
     {
+      id: 'team',
+      label: 'Tim',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11c1.657 0 3-1.343 3-3S17.657 5 16 5s-3 1.343-3 3 1.343 3 3 3zM8 11c1.657 0 3-1.343 3-3S9.657 5 8 5 5 6.343 5 8s1.343 3 3 3zM8 13c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.98.05 1.16.84 1.98 1.98 1.98 3.45V19h6v-2.5C23 14.17 18.33 13 16 13z" />
+        </svg>
+      )
+    },
+    {
       id: 'clients',
       label: 'Klien',
       icon: (
@@ -58,6 +67,58 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
       icon: (
         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      )
+    }
+  ]
+
+  // Split menu into Admin Management and Content Management
+  const adminItems = [
+    menuItems[1], // team
+    menuItems[5], // reports
+  ]
+
+  const contentItems = [
+    menuItems[2], // clients
+    menuItems[3], // invoices
+    menuItems[4], // finances
+  ]
+
+  const packageItems = [
+    {
+      id: 'paket/website',
+      label: 'Website',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2l3 6 6 .5-4.5 4 1 6L12 16l-5.5 3.5 1-6L3 8.5 9 8 12 2z" />
+        </svg>
+      )
+    },
+    {
+      id: 'paket/desain',
+      label: 'Desain Grafis',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21l18-18M7 7l10 10" />
+        </svg>
+      )
+    },
+    {
+      id: 'paket/event',
+      label: 'Event',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h16v11a2 2 0 01-2 2H6a2 2 0 01-2-2V7z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11a3 3 0 100 6 3 3 0 000-6z" />
+        </svg>
+      )
+    },
+    {
+      id: 'paket/katalog',
+      label: 'Katalog Digital',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       )
     }
@@ -106,26 +167,99 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
           </div>
 
           {/* Menu Items */}
-          <nav className="flex-1 px-4 py-6 space-y-2">
-            {menuItems.map((item) => (
+          <nav className="flex-1 px-4 py-6 space-y-4">
+            {/* Overview */}
+            <div>
               <button
-                key={item.id}
                 onClick={() => {
-                  const path = item.id === 'overview' ? '/dashboard' : `/dashboard/${item.id}`
-                  navigate(path)
+                  navigate('/dashboard')
                   setOpen(false)
                 }}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                  (item.id === 'overview' && (activeTab === '' || activeTab === 'overview')) || 
-                  (item.id !== 'overview' && activeTab === item.id)
+                  (activeTab === '' || activeTab === 'overview')
                     ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
                     : 'text-slate-400 hover:text-white hover:bg-white/5'
                 }`}
               >
-                {item.icon}
-                <span className="font-semibold">{item.label}</span>
+                {menuItems[0].icon}
+                <span className="font-semibold">{menuItems[0].label}</span>
               </button>
-            ))}
+            </div>
+
+            {/* Admin Management */}
+            <div>
+              <div className="text-xs text-slate-300 uppercase font-semibold px-2 mb-2">Manajemen Admin</div>
+              <div className="space-y-2">
+                {adminItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      const path = item.id === 'overview' ? '/dashboard' : `/dashboard/${item.id}`
+                      navigate(path)
+                      setOpen(false)
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                      activeTab === item.id
+                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    {item.icon}
+                    <span className="font-semibold">{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Content Management */}
+            <div>
+              <div className="text-xs text-slate-300 uppercase font-semibold px-2 mb-2">Manajemen Konten</div>
+              <div className="space-y-2">
+                {contentItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      const path = item.id === 'overview' ? '/dashboard' : `/dashboard/${item.id}`
+                      navigate(path)
+                      setOpen(false)
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                      activeTab === item.id
+                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    {item.icon}
+                    <span className="font-semibold">{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Package Management */}
+            <div>
+              <div className="text-xs text-slate-300 uppercase font-semibold px-2 mb-2">Manajemen Paket</div>
+              <div className="space-y-2">
+                {packageItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      const path = item.id === 'overview' ? '/dashboard' : `/dashboard/${item.id}`
+                      navigate(path)
+                      setOpen(false)
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                      activeTab === item.id
+                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    {item.icon}
+                    <span className="font-semibold">{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </nav>
           <div className="mt-8 text-center">
           <p className="text-white/60 text-sm">

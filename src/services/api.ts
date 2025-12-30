@@ -280,6 +280,27 @@ class ApiClient {
     return this.request<Portfolio[]>(url, 'GET');
   }
 
+  // Team endpoints
+  async getTeams(): Promise<ApiResponse<any[]>> {
+    return this.request<any[]>('/teams', 'GET');
+  }
+
+  async getTeam(id: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/teams/${id}`, 'GET');
+  }
+
+  async createTeam(data: any): Promise<ApiResponse<any>> {
+    return this.request<any>('/teams', 'POST', data);
+  }
+
+  async updateTeam(id: string, data: any): Promise<ApiResponse<any>> {
+    return this.request<any>(`/teams/${id}`, 'PUT', data);
+  }
+
+  async deleteTeam(id: string): Promise<ApiResponse<void>> {
+    return this.request<void>(`/teams/${id}`, 'DELETE');
+  }
+
   async createPortfolio(data: Omit<Portfolio, 'id' | 'createdAt' | 'updatedAt'>): Promise<ApiResponse<Portfolio>> {
     return this.request<Portfolio>('/portfolios', 'POST', data);
   }
@@ -376,6 +397,38 @@ class ApiClient {
 
   async deleteReport(id: string): Promise<ApiResponse<void>> {
     return this.request<void>(`/reports/${id}`, 'DELETE');
+  }
+
+  // Package endpoints
+  async getPackages(type?: string): Promise<ApiResponse<any[]>> {
+    let url = '/packages';
+    if (type) url += `?type=${encodeURIComponent(type)}`;
+    return this.request<any[]>(url, 'GET');
+  }
+
+  async getPackage(id: string): Promise<ApiResponse<any>> {
+    return this.request<any>(`/packages/${id}`, 'GET');
+  }
+
+  async createPackage(data: any): Promise<ApiResponse<any>> {
+    return this.request<any>('/packages', 'POST', data);
+  }
+
+  async updatePackage(id: string, data: any): Promise<ApiResponse<any>> {
+    return this.request<any>(`/packages/${id}`, 'PUT', data);
+  }
+
+  async deletePackage(id: string): Promise<ApiResponse<void>> {
+    return this.request<void>(`/packages/${id}`, 'DELETE');
+  }
+
+  async uploadPackageImages(id: string, files: File[]): Promise<ApiResponse<any>> {
+    const form = new FormData()
+    files.forEach((f) => form.append('images', f))
+    const response = await this.axiosInstance.post(`/packages/${id}/images`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return response.data
   }
 }
 

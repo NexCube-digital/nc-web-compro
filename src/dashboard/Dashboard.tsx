@@ -9,6 +9,9 @@ import InvoiceManagement from './pages/InvoiceManagement'
 import FinanceManagement from './pages/FinanceManagement'
 import ReportManagement from './pages/ReportManagement'
 import ProfilePage from './pages/ProfilePage'
+import TeamManagement from './pages/TeamManagement'
+import PackageManagement from './pages/PackageManagement'
+import PackageForm from './pages/PackageForm'
 import apiClient, { User } from '../services/api'
 
 export const Dashboard: React.FC = () => {
@@ -85,6 +88,17 @@ export const Dashboard: React.FC = () => {
     switch(activeTab) {
       case 'overview':
         return <DashboardStats />
+      case 'paket':
+      case 'paket/website':
+      case 'paket/desain':
+      case 'paket/event':
+      case 'paket/katalog':
+        return <PackageManagement />
+      case 'paket/form':
+      case 'paket/formpaket':
+        return <PackageForm />
+      case 'team':
+        return <TeamManagement />
       case 'clients':
       case 'clients/formclient':
         return <ClientManagement />

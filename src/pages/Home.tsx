@@ -177,7 +177,7 @@ export const Home: React.FC = () => {
                 </button>
                 
                 <Link 
-                  to="https://wa.me/qr/B7H5SIV33KOUM1" 
+                  to="https://wa.me/6285950313360?text=Halo%20NexCube%20Digital%2C%20saya%20ingin%20berkonsultasi%20tentang%20kebutuhan%20digital%20saya" 
                   className="group bg-white text-slate-700 px-8 py-4 rounded-xl font-semibold border-2 border-slate-200 hover:border-blue-300 hover:text-blue-700 transition-all duration-300 hover:scale-105 hover:shadow-lg inline-flex items-center gap-3"
                 >
                   <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 24 24">

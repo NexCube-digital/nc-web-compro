@@ -1,22 +1,56 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async';
 import { PricingCard } from '../ui/PricingCard'
+import apiClient from '../services/api'
 import { pricingData } from '../data/pricingData'
 import { Layout } from '../components/layout/Layout';
 
 export const Paket: React.FC = () => {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [packages, setPackages] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState<'all' | 'website' | 'undangan' | 'desain' | 'katalog'>('all');
+  const location = useLocation()
   const navigate = useNavigate();
   
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoaded(true);
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, []);
+    const timer = setTimeout(() => setIsLoaded(true), 100);
+
+    const determineAndFetch = async () => {
+      // determine active category from URL path
+      const pathAfter = location.pathname.split('/paket/')[1] || ''
+      if (!pathAfter || pathAfter === '') {
+        setActiveTab('all')
+        try {
+          const res = await apiClient.getPackages()
+          if (res && res.data) setPackages(res.data)
+        } catch (e) {
+          console.error('Failed to load packages', e)
+        }
+        return
+      }
+
+      // match to known category routePaths
+      const matched = paketCategories.find(cat => location.pathname.startsWith(cat.routePath))
+      const type = matched ? matched.id : pathAfter.split('/')[0]
+      setActiveTab((matched && matched.id) as any || 'all')
+      try {
+        const res = await apiClient.getPackages(type)
+        if (res && res.data) setPackages(res.data)
+      } catch (e) {
+        console.error('Failed to load packages', e)
+        // fallback to loading all
+        try {
+          const resAll = await apiClient.getPackages()
+          if (resAll && resAll.data) setPackages(resAll.data)
+        } catch (_err) {}
+      }
+    }
+
+    determineAndFetch()
+
+    return () => clearTimeout(timer)
+  }, [location.pathname])
 
   const paketCategories = [
     {
@@ -75,7 +109,10 @@ export const Paket: React.FC = () => {
 
   // Render pricing cards per category
   const renderPricingSection = (category: typeof paketCategories[0]) => {
-    const categoryPricing = pricingData.filter(item => category.tierIds.includes(item.id));
+    // use backend packages when available; otherwise fallback to pricingData
+    const categoryPricing = packages.length > 0
+      ? packages.filter(p => p.type === category.id)
+      : pricingData.filter(item => category.tierIds.includes(item.id));
     
     return (
       <div key={category.id} className={`mb-20 scroll-mt-32 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}>
@@ -90,24 +127,33 @@ export const Paket: React.FC = () => {
 
         {/* Pricing Cards Grid - Per Category */}
         <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {categoryPricing.map((tier, index) => (
-            <div 
-              key={tier.id} 
-              style={{ animationDelay: `${400 + (index * 100)}ms` }} 
-              className={!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}
-            >
-              <Link to={`/paket/${tier.id}`} className="block h-full">
-                <PricingCard 
-                  tier={tier.title}
-                  price={tier.price}
-                  features={tier.features}
-                  accent={tier.accent}
-                  badge={tier.badge}
-                  popular={tier.popular}
-                />
-              </Link>
-            </div>
-          ))}
+          {categoryPricing.map((tier, index) => {
+            const isBackendPkg = !!tier.id && !!tier.title
+            const title = tier.title || tier.id || `Package ${index + 1}`
+            const price = tier.price || ''
+            const features = tier.features || []
+            const detailUrl = isBackendPkg ? `/paket/${category.id}/${tier.id}` : undefined
+
+            return (
+              <div 
+                key={isBackendPkg ? `pkg-${tier.id}` : `tier-${index}`} 
+                style={{ animationDelay: `${400 + (index * 100)}ms` }} 
+                className={!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}
+              >
+                <div className="block h-full">
+                  <PricingCard 
+                    tier={title}
+                    price={price}
+                    features={features}
+                    accent={tier.accent}
+                    badge={tier.badge}
+                    popular={tier.popular}
+                    detailUrl={detailUrl}
+                  />
+                </div>
+              </div>
+            )
+          })}
         </div>
 
         {/* View More Button */}
