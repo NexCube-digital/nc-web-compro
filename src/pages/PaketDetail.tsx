@@ -254,6 +254,19 @@ const processIncludeItem = (item: RawInclude) => {
   return { included: Boolean(item.included ?? true), text: item.text || '' };
 };
 
+// Helper function to determine card color based on tier title
+const getTierColor = (title: string): string => {
+  const lowerTitle = title.toLowerCase();
+  if (lowerTitle.includes('student')) return 'bg-gradient-to-br from-blue-50 to-white';
+  if (lowerTitle.includes('bronze')) return 'bg-slate-50';
+  if (lowerTitle.includes('silver')) return 'bg-white';
+  if (lowerTitle.includes('gold')) return 'bg-gradient-to-br from-gold-light to-white';
+  if (lowerTitle.includes('platinum') || lowerTitle.includes('diamond') || lowerTitle.includes('enterprise')) {
+    return 'bg-gradient-to-br from-slate-800 to-slate-850 text-white';
+  }
+  return 'bg-white';
+};
+
 export const PaketDetail: React.FC = () => {
   // Support routes: /paket/:tier  OR /paket/:category/:id
   const params = useParams<{ tier?: string; id?: string }>();
@@ -296,7 +309,26 @@ export const PaketDetail: React.FC = () => {
   // Determine paket to render: prefer remotePackage, then local detailed mapping by tier, then basic info
   const detailedPaketInfo = !idParam ? paketDetailData[tierParam as keyof typeof paketDetailData] : null
 
-  const paket = remotePackage || detailedPaketInfo || {
+  const paket = remotePackage ? {
+    title: remotePackage.title || remotePackage.name || 'Paket',
+    price: remotePackage.price || '',
+    description: remotePackage.description || 'Detail paket tidak tersedia',
+    includes: remotePackage.includes || [],
+    benefits: remotePackage.benefits || remotePackage.features || [],
+    idealFor: remotePackage.idealFor || 'Berbagai kebutuhan digital',
+    timeline: remotePackage.timeline || '1-2 minggu pengerjaan',
+    process: remotePackage.process || [
+      'Konsultasi kebutuhan',
+      'Desain dan pengembangan',
+      'Review dan revisi',
+      'Deployment'
+    ],
+    color: remotePackage.color || getTierColor(remotePackage.title || remotePackage.name || ''),
+    hot: remotePackage.hot
+  } : detailedPaketInfo ? {
+    ...detailedPaketInfo,
+    hot: undefined
+  } : {
     title: basicPaketInfo?.title || 'Paket Tidak Ditemukan',
     price: basicPaketInfo?.price || '',
     description: basicPaketInfo?.description || 'Detail paket tidak tersedia',
@@ -305,7 +337,8 @@ export const PaketDetail: React.FC = () => {
     idealFor: '',
     timeline: '',
     process: [],
-    color: basicPaketInfo?.accent || 'bg-white'
+    color: basicPaketInfo?.accent || 'bg-white',
+    hot: undefined
   };
   
   const isSpecialTier = Boolean(paket.color && String(paket.color).includes('from-slate-800'));
@@ -336,7 +369,14 @@ export const PaketDetail: React.FC = () => {
           <div className={`rounded-xl shadow-premium p-6 sm:p-8 md:p-12 ${paket.color} ${!isLoaded ? 'opacity-0' : 'animate-scaleIn delay-200'}`}>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 mb-8 sm:mb-12 pb-6 sm:pb-8 border-b border-slate-200/30">
               <div>
-                <h1 className={`text-2xl sm:text-3xl font-heading font-semibold mb-2 sm:mb-4 ${isSpecialTier ? 'text-white' : ''}`}>Paket {paket.title}</h1>
+                <div className="flex items-center gap-3">
+                  <h1 className={`text-2xl sm:text-3xl font-heading font-semibold mb-2 sm:mb-4 ${isSpecialTier ? 'text-white' : ''}`}>Paket {paket.title}</h1>
+                  {paket.hot && (
+                    <span className={`inline-block text-xs font-semibold px-2 py-1 rounded ${isSpecialTier ? 'bg-white/20 text-white' : 'bg-red-100 text-red-700'}`}>
+                      HOT
+                    </span>
+                  )}
+                </div>
                 <p className={`${isSpecialTier ? 'text-slate-300' : 'text-slate-500'} text-base sm:text-lg`}>{paket.description}</p>
               </div>
               <div className={`text-2xl sm:text-3xl md:text-4xl font-bold ${isSpecialTier ? 'text-white' : isGoldTier ? 'text-gold' : 'text-accent'}`}>
