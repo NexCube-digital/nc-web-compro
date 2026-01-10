@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import apiClient, { Invoice, Contact } from '../../services/api'
+import useBackgroundRefresh from '../../hooks/useBackgroundRefresh'
+import useSSE from '../../hooks/useSSE'
 import { InvoiceTable } from './invoice/InvoiceTable'
 import { FormInvoice } from './invoice/FormInvoice'
 import { Toast } from '../../components/Toast'
+import NewDataBanner from '../../components/NewDataBanner'
 
 export const InvoiceManagement: React.FC = () => {
   const navigate = useNavigate()
@@ -66,6 +69,35 @@ export const InvoiceManagement: React.FC = () => {
     loadInvoices()
     loadClients()
   }, [])
+
+  // Background refresh: poll for new invoices silently and notify user
+  const { hasNew: hasNewInvoices, newData: newInvoices, clearNew: clearNewInvoices } = useBackgroundRefresh<Invoice[]>(
+    'invoices',
+    async () => {
+      try {
+        const r = await apiClient.getInvoices()
+        return r.success && Array.isArray(r.data) ? r.data : null
+      } catch { return null }
+    },
+    { interval: 10000 }
+  )
+  const [sseUpdating, setSseUpdating] = useState(false)
+
+  // SSE: auto-fetch when invoice events arrive and show a small micro-animation
+  useSSE('/api/stream', {
+    'invoice:created': async (d: any) => {
+      setSseUpdating(true)
+      try { await loadInvoices() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) }
+    },
+    'invoice:updated': async (d: any) => {
+      setSseUpdating(true)
+      try { await loadInvoices() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) }
+    },
+    'invoice:deleted': async (d: any) => {
+      setSseUpdating(true)
+      try { await loadInvoices() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) }
+    },
+  })
 
   const filteredInvoices = Array.isArray(invoices) ? invoices.filter(invoice =>
     invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -236,7 +268,33 @@ export const InvoiceManagement: React.FC = () => {
       )}
 
       {/* Page Container with Fade-In Animation */}
-      <div className="animate-in fade-in duration-500">
+      <div className={`relative animate-in fade-in duration-500 ${sseUpdating ? 'ring-2 ring-blue-300/30' : ''}`}>
+        {loading && <div className="absolute inset-0 z-40"><div className="absolute inset-0 bg-white/60 backdrop-blur-sm" /><div className="relative z-50 flex items-center justify-center h-full"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600" /></div></div>}
+        {sseUpdating && (
+          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-white/90 px-3 py-1 rounded shadow">
+            <svg className="animate-spin h-4 w-4 text-blue-600" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+            <span className="text-sm text-slate-700">Updating...</span>
+          </div>
+        )}
+        {(hasNewInvoices && newInvoices) || (typeof (window as any)._invoiceSSE !== 'undefined' && (window as any)._invoiceSSE) ? (
+          <NewDataBanner
+            message="Invoice terbaru tersedia"
+            onRefresh={async () => {
+              // apply new data and clear flag with a smooth update
+              setLoading(true)
+              try {
+                if (hasNewInvoices && newInvoices) {
+                  setInvoices(newInvoices)
+                  clearNewInvoices()
+                } else if ((window as any)._invoiceSSE) {
+                  await loadInvoices()
+                  ;(window as any)._invoiceSSE = false
+                }
+              } finally { setLoading(false) }
+            }}
+            onDismiss={() => clearNewInvoices()}
+          />
+        ) : null}
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>

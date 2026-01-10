@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import apiClient, { Invoice, Finance } from '../../services/api'
+import { useTheme } from '../ThemeContext'
 
 interface InvoiceData {
   id: number
@@ -15,6 +16,7 @@ interface InvoiceData {
 
 export const DashboardStats: React.FC = () => {
   const navigate = useNavigate()
+  const { theme } = useTheme()
   const [stats, setStats] = useState({
     totalClients: 0,
     totalInvoices: 0,
@@ -27,6 +29,9 @@ export const DashboardStats: React.FC = () => {
     recentInvoices: [] as InvoiceData[]
   })
   const [loading, setLoading] = useState(true)
+  const [monthlyData, setMonthlyData] = useState<{ label: string; value: number }[]>([])
+
+  const formatRupiah = (v: number) => `Rp ${v.toLocaleString('id-ID')}`
 
   useEffect(() => {
     let mounted = true
@@ -34,6 +39,8 @@ export const DashboardStats: React.FC = () => {
 
     const fetchAll = async () => {
       if (!mounted) return
+      // avoid polling when tab is hidden
+      if (typeof document !== 'undefined' && document.hidden) return
       try {
         setLoading(true)
 
@@ -123,7 +130,6 @@ export const DashboardStats: React.FC = () => {
   }, [])
 
   // Prepare monthly data for bar chart (last 6 months)
-  const [monthlyData, setMonthlyData] = useState<{ label: string; value: number }[]>([])
 
   useEffect(() => {
     const now = new Date()
@@ -159,6 +165,11 @@ export const DashboardStats: React.FC = () => {
     loadMonthly()
   }, [stats.recentInvoices])
 
+  // Compute simple month-over-month change for top card metrics
+  const latest = monthlyData[monthlyData.length - 1]?.value || 0
+  const prev = monthlyData[monthlyData.length - 2]?.value || 0
+  const monthChangePercent = prev === 0 ? (latest === 0 ? 0 : 100) : Math.round(((latest - prev) / prev) * 100)
+
   // Enhanced BarChart component with responsive layout, y-axis ticks and tooltip
   const BarChart: React.FC<{ data: { label: string; value: number }[] }> = ({ data }) => {
     const containerRef = useRef<HTMLDivElement | null>(null)
@@ -186,8 +197,11 @@ export const DashboardStats: React.FC = () => {
 
     const formatRupiah = (v: number) => `Rp ${v.toLocaleString('id-ID')}`
 
+    const cardPadding = theme === 'compact' ? 'p-4' : 'p-6'
+    const cardBg = theme === 'minimal' ? 'bg-white' : 'bg-white'
+
     return (
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 h-full">
+      <div className={`${cardBg} rounded-2xl ${cardPadding} shadow-sm border border-slate-100 h-full`}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
             <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -230,7 +244,7 @@ export const DashboardStats: React.FC = () => {
                       }}
                       onMouseLeave={() => setHover(null)}
                       onFocus={() => setHover({ idx, x: 0, y: 0, value: d.value })}
-                      className="w-full rounded-t-md bg-gradient-to-br from-blue-500 to-blue-600 transform origin-bottom hover:from-blue-600 hover:to-blue-700 hover:scale-105 cursor-pointer"
+                      className={`w-full rounded-t-md ${theme === 'minimal' ? 'bg-blue-500' : 'bg-gradient-to-br from-blue-500 to-blue-600'} transform origin-bottom hover:from-blue-600 hover:to-blue-700 hover:scale-105 cursor-pointer`}
                       style={{ height: `${heightPercent}%`, transition: 'height 700ms cubic-bezier(0.2,0.8,0.2,1)', willChange: 'height' }}
                       title={`${formatRupiah(d.value)} — ${d.label}`}
                     />
@@ -258,13 +272,32 @@ export const DashboardStats: React.FC = () => {
     )
   }
 
+  const cardPaddingOuter = theme === 'compact' ? 'p-4' : 'p-6'
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-24 rounded-xl bg-slate-100 animate-pulse" />
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 h-64 rounded-2xl bg-slate-100 animate-pulse" />
+          <div className="h-64 rounded-2xl bg-slate-100 animate-pulse" />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-8">
       {/* Ringkasan (replaces top stat cards) */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+      <div className={`bg-white rounded-2xl ${cardPaddingOuter} shadow-sm border border-slate-100`}>
         <h2 className="text-lg font-bold text-slate-900 mb-4">Ringkasan</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+          <div className={`p-4 ${theme === 'minimal' ? 'bg-blue-50' : 'bg-gradient-to-br from-blue-50 to-blue-100'} rounded-xl border border-blue-200`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-blue-700 font-semibold">Total Invoices</p>
@@ -277,7 +310,7 @@ export const DashboardStats: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+          <div className={`p-4 ${theme === 'minimal' ? 'bg-green-50' : 'bg-gradient-to-br from-green-50 to-green-100'} rounded-xl border border-green-200`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-green-700 font-semibold">Total Pemasukan</p>
@@ -291,7 +324,7 @@ export const DashboardStats: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl border border-yellow-200">
+          <div className={`p-4 ${theme === 'minimal' ? 'bg-yellow-50' : 'bg-gradient-to-br from-yellow-50 to-yellow-100'} rounded-xl border border-yellow-200`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-yellow-700 font-semibold">Pemasukan Lainnya</p>
@@ -305,7 +338,7 @@ export const DashboardStats: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="p-4 bg-gradient-to-br from-red-50 to-red-100 rounded-xl border border-red-200">
+          <div className={`p-4 ${theme === 'minimal' ? 'bg-red-50' : 'bg-gradient-to-br from-red-50 to-red-100'} rounded-xl border border-red-200`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-red-700 font-semibold">Total Pengeluaran</p>
@@ -319,7 +352,7 @@ export const DashboardStats: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 lg:col-span-4">
+          <div className={`p-4 ${theme === 'minimal' ? 'bg-purple-50' : 'bg-gradient-to-br from-purple-50 to-purple-100'} rounded-xl border border-purple-200 lg:col-span-4`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-purple-700 font-semibold">Saldo</p>

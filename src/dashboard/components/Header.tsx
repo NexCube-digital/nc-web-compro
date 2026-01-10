@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import apiClient, { User } from '../../services/api'
+import { useTheme } from '../ThemeContext'
 
 interface HeaderProps {
   sidebarOpen: boolean
@@ -13,6 +14,7 @@ export const DashboardHeader: React.FC<HeaderProps> = ({
   setSidebarOpen,
   user
 }) => {
+  const { theme, setTheme } = useTheme()
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const navigate = useNavigate()
 
@@ -62,8 +64,10 @@ export const DashboardHeader: React.FC<HeaderProps> = ({
     return role.charAt(0).toUpperCase() + role.slice(1)
   }
 
+  const headerClass = `px-6 ${theme === 'compact' ? 'py-2' : 'py-4'} flex items-center justify-between sticky top-0 z-20 bg-white border-b border-slate-200`
+
   return (
-    <header className="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between sticky top-0 z-20">
+    <header className={headerClass}>
       <div className="flex items-center gap-4">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -94,6 +98,25 @@ export const DashboardHeader: React.FC<HeaderProps> = ({
           />
         </div>
 
+        {/* Theme Selector */}
+        <div className="hidden sm:flex items-center gap-2">
+          <button
+            title="Modern"
+            onClick={() => setTheme('modern')}
+            className={`px-2 py-1 rounded-md ${theme === 'modern' ? 'bg-blue-100 text-blue-700' : 'text-slate-600 hover:bg-slate-100'}`}
+          >M</button>
+          <button
+            title="Minimal"
+            onClick={() => setTheme('minimal')}
+            className={`px-2 py-1 rounded-md ${theme === 'minimal' ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-100'}`}
+          >Min</button>
+          <button
+            title="Compact"
+            onClick={() => setTheme('compact')}
+            className={`px-2 py-1 rounded-md ${theme === 'compact' ? 'bg-slate-700 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
+          >C</button>
+        </div>
+
         {/* Notifications */}
         <button className="relative p-2 hover:bg-slate-100 rounded-xl transition-colors">
           <svg className="w-6 h-6 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -108,7 +131,7 @@ export const DashboardHeader: React.FC<HeaderProps> = ({
             onClick={() => setShowProfileMenu(!showProfileMenu)}
             className="flex items-center gap-3 px-3 py-2 hover:bg-slate-100 rounded-xl transition-all duration-200 group"
           >
-            <div className="text-right hidden sm:block">
+            <div className={`text-right hidden sm:block ${theme === 'compact' ? 'text-sm' : ''}`}>
               <p className="font-semibold text-sm text-slate-900 group-hover:text-slate-700 truncate max-w-[120px]">
                 {user?.name || 'User'}
               </p>

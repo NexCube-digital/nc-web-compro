@@ -15,15 +15,43 @@ export const Login: React.FC = () => {
   // Load saved email on component mount
   React.useEffect(() => {
     const savedEmail = localStorage.getItem('savedEmail')
-    const savedPassword = localStorage.getItem('savedPassword')
     if (savedEmail) {
       setEmail(savedEmail)
       setRememberMe(true)
     }
-    if (savedPassword) {
-      setPassword(savedPassword)
-    }
   }, [])
+
+  // Store credentials to browser password manager (Credential Management API)
+  async function storeToBrowser(email: string, password: string) {
+    if (!('credentials' in navigator)) return
+    try {
+      // Use the modern create/store pattern if available
+      const nav: any = navigator
+      if (nav.credentials && typeof nav.credentials.create === 'function') {
+        const cred = await nav.credentials.create({ password: { id: email, password } })
+        if (cred && typeof nav.credentials.store === 'function') {
+          await nav.credentials.store(cred)
+        }
+        return
+      }
+
+      // Fallback for older implementations
+      const PasswordCredential: any = (window as any).PasswordCredential
+      if (PasswordCredential) {
+        try {
+          const pc = new PasswordCredential({ id: email, password })
+          const navAny: any = navigator
+          if (navAny.credentials && typeof navAny.credentials.store === 'function') {
+            await navAny.credentials.store(pc)
+          }
+        } catch (err) {
+          console.warn('PasswordCredential store failed', err)
+        }
+      }
+    } catch (err) {
+      console.warn('Credential store failed', err)
+    }
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,14 +83,17 @@ export const Login: React.FC = () => {
         // Also set token in apiClient
         apiClient.setToken(response.data.token)
         
-        // Save email and password if "Remember Me" is checked
+        // Save email and (optionally) store password to browser password manager
         if (rememberMe) {
           localStorage.setItem('savedEmail', email)
-          localStorage.setItem('savedPassword', password)
+          try {
+            await storeToBrowser(email, password)
+          } catch (err) {
+            console.warn('Storing credential failed', err)
+          }
         } else {
-          // Clear saved credentials if "Remember Me" is unchecked
+          // Clear saved email if "Remember Me" is unchecked
           localStorage.removeItem('savedEmail')
-          localStorage.removeItem('savedPassword')
         }
         
         navigate('/dashboard')

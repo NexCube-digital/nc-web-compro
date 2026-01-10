@@ -4,6 +4,8 @@ import { Helmet } from 'react-helmet-async'
 import DashboardSidebar from './components/Sidebar'
 import DashboardHeader from './components/Header'
 import DashboardStats from './components/Stats'
+import { ThemeProvider } from './ThemeContext'
+import TopProgress from './components/TopProgress'
 import ClientManagement from './pages/ClientManagement'
 import InvoiceManagement from './pages/InvoiceManagement'
 import FinanceManagement from './pages/FinanceManagement'
@@ -128,7 +130,8 @@ export const Dashboard: React.FC = () => {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <ThemeProvider>
+      <TopProgress />
       <Helmet>
         <title>Dashboard - NexCube Digital Admin</title>
         <meta name="description" content="Dashboard admin NexCube Digital untuk mengelola klien, invoice, keuangan, dan laporan" />
@@ -155,7 +158,7 @@ export const Dashboard: React.FC = () => {
           </main>
         </div>
       </div>
-    </div>
+    </ThemeProvider>
   )
 }
 

@@ -2,8 +2,12 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import apiClient, { Finance, Invoice } from '../../services/api'
+import useBackgroundRefresh from '../../hooks/useBackgroundRefresh'
+import useSSE from '../../hooks/useSSE'
+import Toast from '../../components/Toast'
 import { FinanceTable } from './finance/FinanceTable'
 import { FormFinance } from './finance/FormFinance'
+import NewDataBanner from '../../components/NewDataBanner'
 
 export const FinanceManagement: React.FC = () => {
   const navigate = useNavigate()
@@ -12,6 +16,7 @@ export const FinanceManagement: React.FC = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' | 'info' | 'warning' } | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
 
@@ -40,6 +45,7 @@ export const FinanceManagement: React.FC = () => {
       }
     } catch (err: any) {
       setError(err.message || 'Failed to load finances')
+        setToast({ msg: err.message || 'Failed to load finances', type: 'error' })
     } finally {
       setLoading(false)
     }
@@ -61,6 +67,26 @@ export const FinanceManagement: React.FC = () => {
     loadFinances()
     loadInvoices()
   }, [])
+
+  // Background refresh for finances
+  const { hasNew: hasNewFinances, newData: newFinances, clearNew: clearNewFinances } = useBackgroundRefresh<Finance[]>(
+    'finances',
+    async () => {
+      try {
+        const r = await apiClient.getFinances()
+        return r.success && Array.isArray(r.data) ? r.data : null
+      } catch { return null }
+    },
+    { interval: 12000 }
+  )
+
+  const [sseUpdating, setSseUpdating] = useState(false)
+
+  useSSE('/api/stream', {
+    'finance:created': async (d: any) => { setSseUpdating(true); try { await loadFinances() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) } },
+    'finance:updated': async (d: any) => { setSseUpdating(true); try { await loadFinances() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) } },
+    'finance:deleted': async (d: any) => { setSseUpdating(true); try { await loadFinances() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) } },
+  })
 
   const filteredFinances = Array.isArray(finances) ? finances.filter(finance =>
     finance.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -88,12 +114,14 @@ export const FinanceManagement: React.FC = () => {
         const response = await apiClient.updateFinance(editingId, formData)
         if (response.success) {
           await loadFinances()
+            setToast({ msg: 'Transaksi berhasil diperbarui', type: 'success' })
         }
       } else {
         // Create new finance
         const response = await apiClient.createFinance(formData)
         if (response.success) {
           await loadFinances()
+            setToast({ msg: 'Transaksi berhasil dibuat', type: 'success' })
         }
       }
 
@@ -111,6 +139,7 @@ export const FinanceManagement: React.FC = () => {
       navigate('/dashboard/finances')
     } catch (err: any) {
       setError(err.message || 'Failed to save finance')
+      setToast({ msg: err.message || 'Gagal menyimpan transaksi', type: 'error' })
     } finally {
       setLoading(false)
     }
@@ -138,8 +167,10 @@ export const FinanceManagement: React.FC = () => {
       await apiClient.deleteFinance(financeId.toString())
       await loadFinances()
       setLoading(false)
+      setToast({ msg: 'Transaksi berhasil dihapus', type: 'success' })
     } catch (err: any) {
       setError(err.message || 'Failed to delete finance')
+      setToast({ msg: err.message || 'Gagal menghapus transaksi', type: 'error' })
       setLoading(false)
       throw err
     }
@@ -174,7 +205,21 @@ export const FinanceManagement: React.FC = () => {
       </Helmet>
 
       {/* Page Container with Fade-In Animation */}
-      <div className="animate-in fade-in duration-500">
+      <div className={`relative animate-in fade-in duration-500 ${sseUpdating ? 'ring-2 ring-blue-300/30' : ''}`}>
+        {loading && (
+          <div className="absolute inset-0 z-40">
+            <div className="absolute inset-0 bg-white/60 backdrop-blur-sm" />
+            <div className="relative z-50 flex items-center justify-center h-full">
+              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600" />
+            </div>
+          </div>
+        )}
+        {sseUpdating && (
+          <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-white/90 px-3 py-1 rounded shadow">
+            <svg className="animate-spin h-4 w-4 text-blue-600" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+            <span className="text-sm text-slate-700">Updating...</span>
+          </div>
+        )}
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -210,6 +255,19 @@ export const FinanceManagement: React.FC = () => {
         {/* Table & Stats - Only show when not in form view */}
         {!showForm && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {(hasNewFinances && newFinances) || (typeof (window as any)._financesSSE !== 'undefined' && (window as any)._financesSSE) ? (
+              <NewDataBanner
+                message="Data keuangan terbaru tersedia"
+                onRefresh={async () => {
+                  setLoading(true)
+                  try {
+                    if (hasNewFinances && newFinances) { setFinances(newFinances); clearNewFinances() }
+                    else if ((window as any)._financesSSE) { await loadFinances(); (window as any)._financesSSE = false }
+                  } finally { setLoading(false) }
+                }}
+                onDismiss={() => clearNewFinances()}
+              />
+            ) : null}
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
@@ -259,6 +317,7 @@ export const FinanceManagement: React.FC = () => {
           </div>
         )}
       </div>
+      {toast && <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   )
 }

@@ -126,6 +126,8 @@ export interface Report {
 class ApiClient {
   private axiosInstance: AxiosInstance;
   private token: string | null = null;
+  private activeRequests: number = 0;
+  private loadingListeners: Array<(loading: boolean) => void> = [];
 
   constructor(baseUrl: string = API_BASE_URL) {
     this.axiosInstance = axios.create({
@@ -155,15 +157,32 @@ class ApiClient {
         if (this.token) {
           config.headers.Authorization = `Bearer ${this.token}`;
         }
+        // increment active requests and notify
+        this.activeRequests = this.activeRequests + 1
+        this.emitLoading(true)
         return config;
       },
-      (error) => Promise.reject(error)
+      (error) => {
+        // decrement on request error
+        this.activeRequests = Math.max(0, this.activeRequests - 1)
+        if (this.activeRequests === 0) this.emitLoading(false)
+        return Promise.reject(error)
+      }
     );
 
     // Response interceptor
     this.axiosInstance.interceptors.response.use(
-      (response: AxiosResponse) => response,
+      (response: AxiosResponse) => {
+        // decrement active requests and notify
+        this.activeRequests = Math.max(0, this.activeRequests - 1)
+        if (this.activeRequests === 0) this.emitLoading(false)
+        return response
+      },
       (error) => {
+        // decrement on response error
+        this.activeRequests = Math.max(0, this.activeRequests - 1)
+        if (this.activeRequests === 0) this.emitLoading(false)
+
         if (error.response?.status === 401) {
           this.setToken(null);
           if (typeof window !== 'undefined') {
@@ -173,6 +192,23 @@ class ApiClient {
         return Promise.reject(error);
       }
     );
+  }
+
+  // Loading listeners
+  onLoadingChange(cb: (loading: boolean) => void) {
+    this.loadingListeners.push(cb)
+  }
+
+  offLoadingChange(cb: (loading: boolean) => void) {
+    this.loadingListeners = this.loadingListeners.filter((f) => f !== cb)
+  }
+
+  private emitLoading(loading: boolean) {
+    try {
+      this.loadingListeners.forEach((cb) => {
+        try { cb(loading) } catch (e) { /* ignore listener errors */ }
+      })
+    } catch {}
   }
 
   setToken(token: string | null): void {

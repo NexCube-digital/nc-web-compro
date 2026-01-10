@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import apiClient from '../../services/api'
+import { useTheme } from '../ThemeContext'
 
 interface SidebarProps {
   open: boolean
@@ -14,6 +15,7 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
   activeTab
 }) => {
   const navigate = useNavigate()
+  const { theme } = useTheme()
 
   const menuItems = [
     {
@@ -150,7 +152,7 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
       )}
 
       {/* Sidebar */}
-      <div className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-gradient-to-b from-slate-900 to-slate-800 text-white transform transition-transform duration-300 ${
+      <div className={`fixed lg:static inset-y-0 left-0 z-40 ${theme === 'compact' ? 'w-56' : 'w-64'} ${theme === 'minimal' ? 'bg-slate-900' : 'bg-gradient-to-b from-slate-900 to-slate-800'} text-white transform transition-transform duration-300 ${
         open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
         <div className="h-full flex flex-col">
@@ -198,9 +200,9 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
                       navigate(path)
                       setOpen(false)
                     }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                    className={`w-full flex items-center gap-3 px-4 ${theme === 'compact' ? 'py-2 text-sm' : 'py-3'} rounded-xl transition-all duration-200 ${
                       activeTab === item.id
-                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                        ? (theme === 'minimal' ? 'bg-slate-700 text-white shadow' : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg')
                         : 'text-slate-400 hover:text-white hover:bg-white/5'
                     }`}
                   >
