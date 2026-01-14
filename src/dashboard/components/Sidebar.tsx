@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import apiClient from '../../services/api'
 import { useTheme } from '../ThemeContext'
@@ -126,6 +126,8 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
     }
   ]
 
+  const [pkgOpen, setPkgOpen] = useState(true)
+
   const handleLogout = () => {
     // Clear all authentication data
     localStorage.removeItem('authToken')
@@ -242,24 +244,47 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
             <div>
               <div className="text-xs text-slate-300 uppercase font-semibold px-2 mb-2">Manajemen Paket</div>
               <div className="space-y-2">
-                {packageItems.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      const path = item.id === 'overview' ? '/dashboard' : `/dashboard/${item.id}`
-                      navigate(path)
-                      setOpen(false)
-                    }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                      activeTab === item.id
-                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                        : 'text-slate-400 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    {item.icon}
-                    <span className="font-semibold">{item.label}</span>
-                  </button>
-                ))}
+                <button
+                  onClick={() => setPkgOpen(!pkgOpen)}
+                  className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                    activeTab === 'paket' || activeTab?.startsWith('paket/')
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                      : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7h18M3 12h18M3 17h18" />
+                    </svg>
+                    <span className="font-semibold">Paket</span>
+                  </div>
+                  <svg className={`w-4 h-4 transition-transform ${pkgOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+
+                {pkgOpen && (
+                  <div className="pl-6 space-y-2">
+                    {packageItems.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          const path = item.id === 'overview' ? '/dashboard' : `/dashboard/${item.id}`
+                          navigate(path)
+                          setOpen(false)
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition-all duration-200 ${
+                          activeTab === item.id
+                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
+                            : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        {item.icon}
+                        <span className="font-semibold">{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           </nav>

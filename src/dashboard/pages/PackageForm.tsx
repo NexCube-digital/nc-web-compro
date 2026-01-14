@@ -29,6 +29,7 @@ const PackageForm: React.FC = () => {
   const [form, setForm] = useState({
     title: '',
     description: '',
+    link: '',
     type: 'website',
     price: '',
     features: '',
@@ -83,6 +84,7 @@ const PackageForm: React.FC = () => {
           setForm({
             title: p.title || '',
             description: p.description || '',
+            link: p.link || '',
             type: p.type || 'website',
             price: p.price || '',
             features: (p.features || []).join(', '),
@@ -131,6 +133,7 @@ const PackageForm: React.FC = () => {
     try {
       const payload = {
         ...form,
+        link: form.link,
         features: form.features.split(',').map((s: string) => s.trim()).filter((s: string) => s),
         includes: form.type === 'website'
           ? selectedIncludes
@@ -246,6 +249,28 @@ const PackageForm: React.FC = () => {
                   )}
                 </div>
               </div>
+
+                {/* Event specific: Link input for Undangan Digital */}
+                {form.type === 'event' && (
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div className="bg-gradient-to-r from-cyan-50 to-blue-50 px-6 py-4 border-b border-gray-200">
+                      <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <MdEvent className="w-5 h-5 text-cyan-600" />
+                        Detail Undangan Digital
+                      </h3>
+                    </div>
+                    <div className="p-6">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Link Undangan <span className="text-gray-500 text-xs ml-2">(URL tujuan ketika foto diklik)</span></label>
+                      <input
+                        value={form.link}
+                        onChange={e => setForm({ ...form, link: e.target.value })}
+                        className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                        placeholder="https://contoh.com/undangan"
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -260,31 +285,35 @@ const PackageForm: React.FC = () => {
                   placeholder="e.g., Rp 2.500.000"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Timeline
-                </label>
-                <input 
-                  value={form.timeline} 
-                  onChange={e => setForm({ ...form, timeline: e.target.value })} 
-                  className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="e.g., 7-14 hari kerja"
-                />
-              </div>
+              {form.type !== 'event' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Timeline
+                  </label>
+                  <input 
+                    value={form.timeline} 
+                    onChange={e => setForm({ ...form, timeline: e.target.value })} 
+                    className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    placeholder="e.g., 7-14 hari kerja"
+                  />
+                </div>
+              )}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Deskripsi Singkat
-              </label>
-              <textarea 
-                value={form.description} 
-                onChange={e => setForm({ ...form, description: e.target.value })} 
-                className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                rows={3}
-                placeholder="Deskripsi singkat tentang paket ini..."
-              />
-            </div>
+            {form.type !== 'event' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Deskripsi Singkat
+                </label>
+                <textarea 
+                  value={form.description} 
+                  onChange={e => setForm({ ...form, description: e.target.value })} 
+                  className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  rows={3}
+                  placeholder="Deskripsi singkat tentang paket ini..."
+                />
+              </div>
+            )}
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -316,7 +345,8 @@ const PackageForm: React.FC = () => {
         </div>
 
         {/* Includes Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        {form.type !== 'event' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="bg-gradient-to-r from-green-50 to-emerald-50 px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
               <HiCheckCircle className="w-5 h-5 text-green-600" />
@@ -367,10 +397,12 @@ const PackageForm: React.FC = () => {
               </div>
             )}
           </div>
-        </div>
+          </div>
+        )}
 
         {/* Benefits & Process Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        {form.type !== 'event' && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="bg-gradient-to-r from-purple-50 to-pink-50 px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
               <HiLightningBolt className="w-5 h-5 text-purple-600" />
@@ -406,7 +438,8 @@ const PackageForm: React.FC = () => {
               />
             </div>
           </div>
-        </div>
+          </div>
+        )}
 
         {/* Images Upload Card */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">

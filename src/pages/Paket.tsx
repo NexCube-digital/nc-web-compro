@@ -77,15 +77,21 @@ export const Paket: React.FC = () => {
       try {
         const res = await apiClient.getPackages()
         if (res && res.data) {
-          setPackages(res.data)
+          // Normalize backend package types to public category ids
+          const normalized = res.data.map((pkg: any) => ({
+            ...pkg,
+            _normalizedType: normalizeTypeForCategory(pkg.type)
+          }))
+          setPackages(normalized)
           
           // Group packages by type to get actual package counts
           const packagesByType: Record<string, any[]> = {}
-          res.data.forEach((pkg: any) => {
-            if (!packagesByType[pkg.type]) {
-              packagesByType[pkg.type] = []
+          normalized.forEach((pkg: any) => {
+            const t = pkg._normalizedType || pkg.type
+            if (!packagesByType[t]) {
+              packagesByType[t] = []
             }
-            packagesByType[pkg.type].push(pkg)
+            packagesByType[t].push(pkg)
           })
           
           // Build categories with actual data from backend
@@ -110,6 +116,28 @@ export const Paket: React.FC = () => {
 
     fetchPackagesAndCategories()
   }, [])
+
+  // Map backend package type values to public category ids
+  const normalizeTypeForCategory = (backendType: string) => {
+    if (!backendType) return backendType
+    const t = String(backendType).toLowerCase()
+    if (t === 'event' || t === 'undangan' || t === 'undangan-digital') return 'undangan'
+    if (t === 'website' || t === 'web') return 'website'
+    if (t === 'desain' || t === 'desain-grafis') return 'desain'
+    if (t === 'katalog' || t === 'menu-katalog') return 'katalog'
+    return t
+  }
+
+  // Map public category id to API type param when requesting backend
+  const categoryIdToApiType = (categoryId: string) => {
+    switch (categoryId) {
+      case 'undangan': return 'event'
+      case 'website': return 'website'
+      case 'desain': return 'desain'
+      case 'katalog': return 'katalog'
+      default: return categoryId
+    }
+  }
   
   useEffect(() => {
     const timer = setTimeout(() => setIsLoaded(true), 100);
@@ -185,8 +213,15 @@ export const Paket: React.FC = () => {
       const type = matched ? matched.id : pathAfter.split('/')[0]
       setActiveTab((matched && matched.id) as any || 'all')
       try {
-        const res = await apiClient.getPackages(type)
-        if (res && res.data) setPackages(res.data)
+        const apiType = categoryIdToApiType(type)
+        const res = await apiClient.getPackages(apiType)
+        if (res && res.data) {
+          const normalized = res.data.map((pkg: any) => ({
+            ...pkg,
+            _normalizedType: normalizeTypeForCategory(pkg.type)
+          }))
+          setPackages(normalized)
+        }
       } catch (e) {
         console.error('Failed to load packages', e)
       }
@@ -205,7 +240,7 @@ export const Paket: React.FC = () => {
   const renderPricingSection = (category: typeof paketCategories[0]) => {
     // use backend packages when available; otherwise fallback to pricingData
     const categoryPricing = packages.length > 0
-      ? packages.filter(p => p.type === category.id)
+      ? packages.filter(p => (p._normalizedType || normalizeTypeForCategory(p.type)) === category.id)
       : pricingData.filter(item => category.tierIds.includes(item.id));
     
     return (
@@ -243,16 +278,29 @@ export const Paket: React.FC = () => {
                   className={!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}
                 >
                   <div className="block h-full">
-                    <PricingCard 
-                      tier={title}
-                      price={price}
-                      features={features}
-                      includes={includes}
-                      accent={tier.accent}
-                      badge={tier.badge}
-                      popular={hot || tier.popular}
-                      detailUrl={detailUrl}
-                    />
+                    {isBackendPkg && category.id === 'undangan' ? (
+                      // Render event package as clickable cover image
+                      <a href={tier.link || tier.url || '#'} target="_blank" rel="noopener noreferrer" className="block rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition">
+                        <div className="h-56 w-full bg-gray-100 overflow-hidden">
+                          <img src={(tier.images && tier.images[0]) || tier.image || '/images/placeholder.png'} alt={title} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="p-4 bg-white">
+                          <div className="font-bold text-lg">{title}</div>
+                          <div className="text-sm text-slate-600">{price}</div>
+                        </div>
+                      </a>
+                    ) : (
+                      <PricingCard 
+                        tier={title}
+                        price={price}
+                        features={features}
+                        includes={includes}
+                        accent={tier.accent}
+                        badge={tier.badge}
+                        popular={hot || tier.popular}
+                        detailUrl={detailUrl}
+                      />
+                    )}
                   </div>
                 </div>
               )
@@ -278,16 +326,28 @@ export const Paket: React.FC = () => {
                     className={!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}
                   >
                     <div className="block h-full">
-                      <PricingCard 
-                        tier={title}
-                        price={price}
-                        features={features}
-                        includes={includes}
-                        accent={tier.accent}
-                        badge={tier.badge}
-                        popular={hot || tier.popular}
-                        detailUrl={detailUrl}
-                      />
+                      {isBackendPkg && category.id === 'undangan' ? (
+                        <a href={tier.link || tier.url || '#'} target="_blank" rel="noopener noreferrer" className="block rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition">
+                          <div className="h-56 w-full bg-gray-100 overflow-hidden">
+                            <img src={(tier.images && tier.images[0]) || tier.image || '/images/placeholder.png'} alt={title} className="w-full h-full object-cover" />
+                          </div>
+                          <div className="p-4 bg-white">
+                            <div className="font-bold text-lg">{title}</div>
+                            <div className="text-sm text-slate-600">{price}</div>
+                          </div>
+                        </a>
+                      ) : (
+                        <PricingCard 
+                          tier={title}
+                          price={price}
+                          features={features}
+                          includes={includes}
+                          accent={tier.accent}
+                          badge={tier.badge}
+                          popular={hot || tier.popular}
+                          detailUrl={detailUrl}
+                        />
+                      )}
                     </div>
                   </div>
                 )

@@ -81,32 +81,7 @@ export const Website: React.FC = () => {
         </Helmet>
 
         <div className="container">
-          {/* Category Filter - STICKY AT TOP */}
-          <div className={`sticky top-20 z-40 mb-12 bg-gradient-to-b from-white via-white to-white/95 backdrop-blur-sm py-4 px-4 rounded-2xl shadow-lg border border-white/50 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-100'}`}>
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
-              <Link
-                to="/paket"
-                className="px-4 sm:px-6 py-2 rounded-full font-bold text-sm transition-all duration-300 bg-white text-slate-700 border-2 border-slate-200 hover:border-blue-300"
-              >
-                Semua Kategori
-              </Link>
-              
-              {paketCategories.map((paket) => (
-                <button
-                  key={paket.id}
-                  onClick={() => handleCategoryClick(paket.routePath)}
-                  className={`px-4 sm:px-6 py-2 rounded-full font-bold text-sm transition-all duration-300 flex items-center gap-2 ${
-                    paket.id === 'website'
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                      : 'bg-white text-slate-700 border-2 border-slate-200 hover:border-blue-300'
-                  }`}
-                >
-                  {paket.icon}
-                  <span className="hidden sm:inline">{paket.title}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Category filter removed — sidebar provides navigation */}
 
           <div className={`text-center max-w-3xl mx-auto mb-8 sm:mb-10 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}>
             <h1 className="text-2xl sm:text-3xl font-heading font-semibold">Paket Website</h1>
