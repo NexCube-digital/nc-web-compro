@@ -154,24 +154,24 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
       )}
 
       {/* Sidebar */}
-      <div className={`fixed lg:static inset-y-0 left-0 z-40 ${theme === 'compact' ? 'w-56' : 'w-64'} ${theme === 'minimal' ? 'bg-slate-900' : 'bg-gradient-to-b from-slate-900 to-slate-800'} text-white transform transition-transform duration-300 ${
+      <div className={`fixed lg:static inset-y-0 left-0 z-40 ${theme === 'compact' ? 'w-52' : 'w-60'} ${theme === 'minimal' ? 'bg-slate-950' : 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950'} text-white transform transition-all duration-300 ease-out shadow-2xl ${
         open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
-        <div className="h-full flex flex-col">
+        <div className="h-full flex flex-col bg-gradient-to-br from-slate-950/50 to-transparent backdrop-blur-xl">
           {/* Logo */}
-          <div className="p-6 border-b border-white/10">
-            <Link to="/" className="flex items-center gap-3">
+          <div className="px-4 py-5 border-b border-white/5 flex-shrink-0 backdrop-blur-sm">
+            <Link to="/" className="flex items-center gap-2.5 group">
               <img 
                 src="/images/NexCube-full.png" 
                 alt="NexCube" 
-                className="h-10 w-auto"
+                className="h-8 w-auto transition-transform duration-300 group-hover:scale-105"
               />
-              <span className="font-bold text-lg hidden sm:inline">NexCube</span>
+              <span className="font-bold text-base tracking-tight bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">NexCube</span>
             </Link>
           </div>
 
-          {/* Menu Items */}
-          <nav className="flex-1 px-4 py-6 space-y-4">
+          {/* Menu Items with Custom Scrollbar */}
+          <nav className="flex-1 px-3 py-4 space-y-3 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-700/50 scrollbar-track-transparent hover:scrollbar-thumb-slate-600 scroll-smooth">
             {/* Overview */}
             <div>
               <button
@@ -179,21 +179,26 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
                   navigate('/dashboard')
                   setOpen(false)
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
                   (activeTab === '' || activeTab === 'overview')
-                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                    ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
+                    : 'text-slate-400 hover:text-white hover:bg-white/5 hover:scale-[1.01]'
                 }`}
               >
-                {menuItems[0].icon}
-                <span className="font-semibold">{menuItems[0].label}</span>
+                <div className="transition-transform duration-300 group-hover:scale-110">
+                  {menuItems[0].icon}
+                </div>
+                <span className="font-medium text-sm">{menuItems[0].label}</span>
               </button>
             </div>
 
             {/* Admin Management */}
             <div>
-              <div className="text-xs text-slate-300 uppercase font-semibold px-2 mb-2">Manajemen Admin</div>
-              <div className="space-y-2">
+              <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider px-3 mb-2 mt-1 flex items-center gap-2">
+                <div className="h-px flex-1 bg-gradient-to-r from-slate-700 to-transparent"></div>
+                <span>Admin</span>
+              </div>
+              <div className="space-y-1">
                 {adminItems.map((item) => (
                   <button
                     key={item.id}
@@ -202,14 +207,16 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
                       navigate(path)
                       setOpen(false)
                     }}
-                    className={`w-full flex items-center gap-3 px-4 ${theme === 'compact' ? 'py-2 text-sm' : 'py-3'} rounded-xl transition-all duration-200 ${
+                    className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
                       activeTab === item.id
-                        ? (theme === 'minimal' ? 'bg-slate-700 text-white shadow' : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg')
-                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5 hover:scale-[1.01] hover:translate-x-0.5'
                     }`}
                   >
-                    {item.icon}
-                    <span className="font-semibold">{item.label}</span>
+                    <div className="transition-transform duration-300 group-hover:scale-110">
+                      {item.icon}
+                    </div>
+                    <span className="font-medium text-sm">{item.label}</span>
                   </button>
                 ))}
               </div>
@@ -217,8 +224,11 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
 
             {/* Content Management */}
             <div>
-              <div className="text-xs text-slate-300 uppercase font-semibold px-2 mb-2">Manajemen Konten</div>
-              <div className="space-y-2">
+              <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider px-3 mb-2 mt-1 flex items-center gap-2">
+                <div className="h-px flex-1 bg-gradient-to-r from-slate-700 to-transparent"></div>
+                <span>Konten</span>
+              </div>
+              <div className="space-y-1">
                 {contentItems.map((item) => (
                   <button
                     key={item.id}
@@ -227,14 +237,16 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
                       navigate(path)
                       setOpen(false)
                     }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                    className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
                       activeTab === item.id
-                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                        ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
+                        : 'text-slate-400 hover:text-white hover:bg-white/5 hover:scale-[1.01] hover:translate-x-0.5'
                     }`}
                   >
-                    {item.icon}
-                    <span className="font-semibold">{item.label}</span>
+                    <div className="transition-transform duration-300 group-hover:scale-110">
+                      {item.icon}
+                    </div>
+                    <span className="font-medium text-sm">{item.label}</span>
                   </button>
                 ))}
               </div>
@@ -242,29 +254,34 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
 
             {/* Package Management */}
             <div>
-              <div className="text-xs text-slate-300 uppercase font-semibold px-2 mb-2">Manajemen Paket</div>
-              <div className="space-y-2">
+              <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider px-3 mb-2 mt-1 flex items-center gap-2">
+                <div className="h-px flex-1 bg-gradient-to-r from-slate-700 to-transparent"></div>
+                <span>Paket</span>
+              </div>
+              <div className="space-y-1">
                 <button
                   onClick={() => setPkgOpen(!pkgOpen)}
-                  className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                  className={`group w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
                     activeTab === 'paket' || activeTab?.startsWith('paket/')
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                      : 'text-slate-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
+                      : 'text-slate-400 hover:text-white hover:bg-white/5 hover:scale-[1.01]'
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7h18M3 12h18M3 17h18" />
-                    </svg>
-                    <span className="font-semibold">Paket</span>
+                    <div className="transition-transform duration-300 group-hover:scale-110">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                    </div>
+                    <span className="font-medium text-sm">Paket</span>
                   </div>
-                  <svg className={`w-4 h-4 transition-transform ${pkgOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-4 h-4 transition-transform duration-300 ${pkgOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
 
                 {pkgOpen && (
-                  <div className="pl-6 space-y-2">
+                  <div className="pl-4 space-y-1 mt-1 border-l-2 border-slate-800/50 ml-3">
                     {packageItems.map((item) => (
                       <button
                         key={item.id}
@@ -273,14 +290,16 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
                           navigate(path)
                           setOpen(false)
                         }}
-                        className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition-all duration-200 ${
+                        className={`group w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-300 ${
                           activeTab === item.id
-                            ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg'
-                            : 'text-slate-400 hover:text-white hover:bg-white/5'
+                            ? 'bg-gradient-to-r from-blue-600/90 via-blue-500/90 to-indigo-600/90 text-white shadow-md shadow-blue-500/20 scale-[1.01]'
+                            : 'text-slate-500 hover:text-white hover:bg-white/5 hover:scale-[1.01] hover:translate-x-1'
                         }`}
                       >
-                        {item.icon}
-                        <span className="font-semibold">{item.label}</span>
+                        <div className="transition-transform duration-300 group-hover:scale-110 w-4 h-4 flex items-center justify-center">
+                          {item.icon}
+                        </div>
+                        <span className="font-medium text-xs">{item.label}</span>
                       </button>
                     ))}
                   </div>
@@ -288,11 +307,13 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
               </div>
             </div>
           </nav>
-          <div className="mt-8 text-center">
-          <p className="text-white/60 text-sm">
-            © 2025 NexCube Digital.
-          </p>
-        </div>
+          
+          {/* Footer - Fixed at bottom */}
+          <div className="px-4 py-3 border-t border-white/5 text-center flex-shrink-0 backdrop-blur-sm">
+            <p className="text-slate-500 text-[10px] font-medium tracking-wide">
+              © 2025 NexCube
+            </p>
+          </div>
         </div>
       </div>
     </>

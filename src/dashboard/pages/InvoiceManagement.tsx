@@ -44,10 +44,15 @@ export const InvoiceManagement: React.FC = () => {
       setError('')
       const response = await apiClient.getInvoices()
       if (response.success && response.data) {
-        setInvoices(response.data)
+        // Ensure data is an array
+        const invoiceData = Array.isArray(response.data) ? response.data : []
+        setInvoices(invoiceData)
+      } else {
+        setInvoices([])
       }
     } catch (err: any) {
       setError(err.message || 'Failed to load invoices')
+      setInvoices([])
     } finally {
       setLoading(false)
     }
@@ -58,10 +63,15 @@ export const InvoiceManagement: React.FC = () => {
     try {
       const response = await apiClient.getContacts()
       if (response.success && response.data) {
-        setClients(response.data)
+        // Ensure data is an array
+        const clientData = Array.isArray(response.data) ? response.data : []
+        setClients(clientData)
+      } else {
+        setClients([])
       }
     } catch (err: any) {
       console.error('Failed to load clients:', err.message)
+      setClients([])
     }
   }
 
@@ -79,7 +89,7 @@ export const InvoiceManagement: React.FC = () => {
         return r.success && Array.isArray(r.data) ? r.data : null
       } catch { return null }
     },
-    { interval: 10000 }
+    { interval: 60000 } // 60s polling interval (reduced from 10s)
   )
   const [sseUpdating, setSseUpdating] = useState(false)
 
@@ -247,10 +257,11 @@ export const InvoiceManagement: React.FC = () => {
   }
 
   // Calculate stats
-  const totalInvoices = invoices.length
-  const paidInvoices = invoices.filter(inv => inv.status === 'paid').length
-  const totalAmount = invoices.reduce((sum, inv) => sum + inv.amount, 0)
-  const paidAmount = invoices.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + inv.amount, 0)
+  const invoiceArray = Array.isArray(invoices) ? invoices : []
+  const totalInvoices = invoiceArray.length
+  const paidInvoices = invoiceArray.filter(inv => inv.status === 'paid').length
+  const totalAmount = invoiceArray.reduce((sum, inv) => sum + inv.amount, 0)
+  const paidAmount = invoiceArray.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + inv.amount, 0)
 
   return (
     <div>

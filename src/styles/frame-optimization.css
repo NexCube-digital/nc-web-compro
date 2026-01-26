@@ -1,0 +1,402 @@
+/* Frame-by-Frame Optimization Styles */
+/* Ensures smooth 60fps animations across all devices */
+
+/* ===================================
+   GPU Acceleration & Performance
+   =================================== */
+
+/* Force GPU acceleration untuk animated elements */
+.scroll-fade-in,
+.scale-on-scroll,
+.parallax-element,
+.rotate-on-scroll,
+.floating-element,
+.animate-bounce,
+.animate-pulse,
+.animate-spin {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+/* Optimize untuk smooth transitions */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* ===================================
+   Smooth Scroll Behavior
+   =================================== */
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Production-ready smooth scrolling */
+body {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Smooth momentum scrolling for iOS */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ===================================
+   Performance Optimized Animations
+   =================================== */
+
+/* Fade In Animation - 60fps optimized */
+@keyframes fadeInOptimized {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.fade-in-optimized {
+  animation: fadeInOptimized 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* Scale In Animation - 60fps optimized */
+@keyframes scaleInOptimized {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale3d(0.9, 0.9, 1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+}
+
+.scale-in-optimized {
+  animation: scaleInOptimized 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* Slide Up Animation - 60fps optimized */
+@keyframes slideUpOptimized {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 30px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.slide-up-optimized {
+  animation: slideUpOptimized 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* Float Animation - Continuous 60fps */
+@keyframes floatOptimized {
+  0%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -20px, 0);
+  }
+}
+
+.float-optimized {
+  animation: floatOptimized 3s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  will-change: transform;
+}
+
+/* Pulse Animation - Optimized */
+@keyframes pulseOptimized {
+  0%, 100% {
+    opacity: 1;
+    transform: scale3d(1, 1, 1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale3d(1.05, 1.05, 1);
+  }
+}
+
+.pulse-optimized {
+  animation: pulseOptimized 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  will-change: transform, opacity;
+}
+
+/* ===================================
+   Hover Effects - Frame Optimized
+   =================================== */
+
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.hover-lift:hover {
+  transform: translate3d(0, -8px, 0);
+}
+
+.hover-scale {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.hover-scale:hover {
+  transform: scale3d(1.05, 1.05, 1);
+}
+
+.hover-glow {
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-glow::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #0066FF, #FF9900);
+  opacity: 0;
+  filter: blur(20px);
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: -1;
+  will-change: opacity;
+}
+
+.hover-glow:hover::before {
+  opacity: 0.6;
+}
+
+/* ===================================
+   Loading States
+   =================================== */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 102, 255, 0.05) 0%,
+    rgba(0, 102, 255, 0.1) 50%,
+    rgba(0, 102, 255, 0.05) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonLoading 1.5s ease-in-out infinite;
+  will-change: background-position;
+}
+
+@keyframes skeletonLoading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ===================================
+   Scroll Indicators
+   =================================== */
+
+.scroll-indicator {
+  animation: scrollBounce 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform;
+}
+
+@keyframes scrollBounce {
+  0%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, 10px, 0);
+  }
+}
+
+/* ===================================
+   Progress Bars - Smooth Fill
+   =================================== */
+
+.progress-fill {
+  transform-origin: left;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+/* ===================================
+   Glassmorphism Effects
+   =================================== */
+
+.glass {
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  background-color: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.125);
+}
+
+.glass-dark {
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  background-color: rgba(15, 23, 42, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.125);
+}
+
+/* ===================================
+   Stagger Animations
+   =================================== */
+
+.stagger-1 { animation-delay: 0.1s; }
+.stagger-2 { animation-delay: 0.2s; }
+.stagger-3 { animation-delay: 0.3s; }
+.stagger-4 { animation-delay: 0.4s; }
+.stagger-5 { animation-delay: 0.5s; }
+.stagger-6 { animation-delay: 0.6s; }
+
+/* ===================================
+   Reduced Motion Support
+   =================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .scroll-fade-in,
+  .scale-on-scroll,
+  .parallax-element,
+  .rotate-on-scroll,
+  .floating-element {
+    animation: none !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+}
+
+/* ===================================
+   Mobile Optimizations
+   =================================== */
+
+@media (max-width: 768px) {
+  /* Reduce blur untuk mobile performance */
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  
+  /* Simplify shadows untuk mobile */
+  .shadow-2xl {
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Disable parallax on mobile untuk performa */
+  .parallax-element {
+    transform: none !important;
+  }
+}
+
+/* ===================================
+   High Refresh Rate Optimization
+   =================================== */
+
+@media (min-resolution: 120dpi) {
+  .smooth-animation {
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* ===================================
+   Dark Mode Support
+   =================================== */
+
+@media (prefers-color-scheme: dark) {
+  .auto-dark {
+    color-scheme: dark;
+  }
+  
+  .glass {
+    background-color: rgba(15, 23, 42, 0.75);
+  }
+}
+
+/* ===================================
+   Print Optimization
+   =================================== */
+
+@media print {
+  .scroll-fade-in,
+  .scale-on-scroll,
+  .parallax-element,
+  .rotate-on-scroll,
+  .floating-element {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl {
+    backdrop-filter: none;
+  }
+}
+
+/* ===================================
+   Container Query Support (Future)
+   =================================== */
+
+@supports (container-type: inline-size) {
+  .adaptive-container {
+    container-type: inline-size;
+    container-name: section;
+  }
+  
+  @container section (min-width: 768px) {
+    .adaptive-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+  }
+}
+
+/* ===================================
+   Custom Scrollbar Styling
+   =================================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #0066FF, #FF9900);
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #0052CC, #FF7700);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #0066FF rgba(241, 245, 249, 0.5);
+}

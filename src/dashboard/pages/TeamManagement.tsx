@@ -162,25 +162,25 @@ const TeamManagement: React.FC = () => {
     <div>
       <Helmet><title>Manajemen Tim - NexCube Dashboard</title></Helmet>
 
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-3">
         <div className="flex-1">
-          <h1 className="text-3xl font-bold">Manajemen Tim</h1>
-          <p className="text-slate-600 mt-1">Kelola konten 'Tim Ahli Kami' yang tampil di halaman About</p>
+          <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">Manajemen Tim</h1>
+          <p className="text-slate-500 mt-0.5 text-xs sm:text-sm">Kelola konten 'Tim Ahli Kami' yang tampil di halaman About</p>
         </div>
-        <div className="flex-1 flex items-center gap-3 justify-end">
-          <div className="flex items-center gap-2 bg-slate-50 border rounded px-3 py-2">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg px-3 py-2 shadow-sm hover:shadow-md transition-shadow">
             <svg className="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            <input placeholder="Cari anggota..." value={query} onChange={(e) => setQuery(e.target.value)} className="bg-transparent outline-none text-sm" />
+            <input placeholder="Cari..." value={query} onChange={(e) => setQuery(e.target.value)} className="bg-transparent outline-none text-sm w-28 placeholder:text-slate-400" />
           </div>
-          <select value={sort} onChange={(e) => setSort(e.target.value as any)} className="border rounded px-3 py-2 text-sm">
+          <select value={sort} onChange={(e) => setSort(e.target.value as any)} className="border border-slate-200 rounded-lg px-3 py-2 text-xs sm:text-sm bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow outline-none focus:ring-2 focus:ring-blue-500/20">
             <option value="newest">Terbaru</option>
             <option value="name">Nama (A-Z)</option>
           </select>
-          <button onClick={openCreate} className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg shadow hover:scale-105 transition-transform">+ Tambah Anggota</button>
+          <button onClick={openCreate} className="bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white px-3 py-2 rounded-lg shadow-lg shadow-blue-500/30 hover:scale-105 transition-transform text-xs sm:text-sm font-medium whitespace-nowrap">+ Tambah</button>
         </div>
       </div>
 
-      <div className="relative bg-white rounded-xl p-4 border">
+      <div className="relative bg-white/50 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-slate-200/50 shadow-sm">
         {loading && (
           <div className="absolute inset-0 z-40">
             <div className="absolute inset-0 bg-white/60 backdrop-blur-sm" />
@@ -192,57 +192,64 @@ const TeamManagement: React.FC = () => {
         {error && <p className="text-red-500">{error}</p>}
 
         {filteredTeams.length === 0 ? (
-          <div className="py-24 text-center">
-            <p className="text-slate-500">Belum ada anggota tim.</p>
-            <button onClick={openCreate} className="mt-4 bg-blue-600 text-white px-4 py-2 rounded">+ Tambah Anggota</button>
+          <div className="py-16 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-4">
+              <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+            <p className="text-slate-500 text-sm mb-3">Belum ada anggota tim</p>
+            <button onClick={openCreate} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg text-sm shadow-lg shadow-blue-500/30 hover:scale-105 transition-transform">+ Tambah Anggota</button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             {filteredTeams.map(t => {
             const imageUrl = t.image
               ? (typeof t.image === 'string' && t.image.startsWith('/uploads') ? `${API_MEDIA_BASE}${t.image}` : t.image)
               : '/images/team/team-1.jpg'
 
             return (
-              <div key={t.id} className="group p-4 rounded-xl bg-white border shadow-md hover:shadow-xl transform hover:-translate-y-1 transition">
-                <div className="flex gap-4 items-center">
-                  <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0">
-                    <img src={imageUrl} alt={t.name} className="w-full h-full object-cover" />
+              <div key={t.id} className="group relative p-3 sm:p-4 rounded-xl bg-gradient-to-br from-white to-slate-50/50 border border-slate-200/50 shadow-sm hover:shadow-xl hover:border-blue-200/50 transform hover:-translate-y-1 transition-all duration-300 backdrop-blur-sm">
+                <div className="flex gap-3 items-start">
+                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 ring-2 ring-slate-200/50 group-hover:ring-blue-500/50 transition-all">
+                    <img src={imageUrl} alt={t.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                   </div>
-                  <div className="flex-1 relative">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold text-lg">{t.name}</h3>
-                        <p className="text-sm text-slate-600">{t.position}</p>
-                        {t.email && <p className="text-sm text-slate-500">{t.email}</p>}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-sm sm:text-base text-slate-900 truncate">{t.name}</h3>
+                        <p className="text-xs text-slate-600 truncate">{t.position}</p>
+                        {t.email && <p className="text-xs text-slate-500 truncate mt-0.5">{t.email}</p>}
                       </div>
-                      <div className="text-right opacity-0 group-hover:opacity-100 transition">
-                        {t.portfolioUrl && <a href={t.portfolioUrl} target="_blank" rel="noreferrer" className="text-sm text-blue-600">Portfolio</a>}
-                      </div>
+                      {t.portfolioUrl && (
+                        <a href={t.portfolioUrl} target="_blank" rel="noreferrer" className="flex-shrink-0 px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md text-[10px] font-medium transition-colors">
+                          Portfolio
+                        </a>
+                      )}
                     </div>
-                    <p className="mt-2 text-sm text-slate-700 line-clamp-3">{t.bio}</p>
+                    <p className="mt-2 text-xs text-slate-600 line-clamp-2">{t.bio}</p>
                     {(t.bank || t.accountNumber) && (
-                      <div className="mt-2 text-sm text-slate-600">
-                        <strong>Rekening:</strong> {t.bank || '-'} {t.accountNumber ? `• ${t.accountNumber}` : ''}
+                      <div className="mt-2 text-[10px] text-slate-500 bg-slate-50 rounded px-2 py-1">
+                        <strong className="text-slate-700">Rekening:</strong> {t.bank || '-'} {t.accountNumber ? `• ${t.accountNumber}` : ''}
                       </div>
                     )}
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="mt-2 flex flex-wrap gap-1.5">
                       {Array.isArray(t.expertise)
                         ? t.expertise.map((e: string, i: number) => (
-                            e.trim() ? <span key={i} className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded transition-transform hover:scale-105">{e.trim()}</span> : null
+                            e.trim() ? <span key={i} className="text-[10px] bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200/50 font-medium transition-transform hover:scale-105">{e.trim()}</span> : null
                           ))
                         : (t.expertise || '').toString().split(',').map((e: string, i: number) => (
-                            e.trim() ? <span key={i} className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded transition-transform hover:scale-105">{e.trim()}</span> : null
+                            e.trim() ? <span key={i} className="text-[10px] bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200/50 font-medium transition-transform hover:scale-105">{e.trim()}</span> : null
                           ))
                       }
                     </div>
 
-                    <div className="mt-4 flex items-center justify-between">
-                      <div className="flex gap-2">
-                        <button onClick={() => openEdit(t)} className="px-3 py-1 bg-blue-600 text-white rounded hover:shadow">Edit</button>
-                        <button onClick={() => handleDeleteWithConfirm(t.id)} className="px-3 py-1 bg-red-600 text-white rounded hover:shadow">Hapus</button>
+                    <div className="mt-3 pt-3 border-t border-slate-200/50 flex items-center justify-between">
+                      <div className="flex gap-1.5">
+                        <button onClick={() => openEdit(t)} className="px-2.5 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg hover:shadow-blue-500/30 transition-all text-xs font-medium">Edit</button>
+                        <button onClick={() => handleDeleteWithConfirm(t.id)} className="px-2.5 py-1.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:shadow-lg hover:shadow-red-500/30 transition-all text-xs font-medium">Hapus</button>
                       </div>
-                      <div className="text-xs text-slate-400">ID #{t.id}</div>
+                      <div className="text-[10px] text-slate-400 font-medium">ID #{t.id}</div>
                     </div>
                   </div>
                 </div>
@@ -255,8 +262,8 @@ const TeamManagement: React.FC = () => {
 
       {/* Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setShowForm(false)} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowForm(false)} />
           {/** compute avatar URL to support uploads, full URLs, and data URIs */}
           {(() => {
             let avatarUrl = '/images/team/team-1.jpg'
@@ -266,48 +273,52 @@ const TeamManagement: React.FC = () => {
               else avatarUrl = form.image
             }
             return (
-              <form onSubmit={handleSubmit} className="relative z-10 bg-white p-6 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-auto transform transition-transform">
-            <div className="flex gap-4">
-              <div className="w-28 flex-shrink-0">
-                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden mx-auto border shadow-sm">
+              <form onSubmit={handleSubmit} className="relative z-10 bg-white/95 backdrop-blur-xl p-4 sm:p-6 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-auto transform transition-transform shadow-2xl border border-slate-200">
+            <div className="flex gap-3 sm:gap-4">
+              <div className="flex-shrink-0">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden mx-auto border-2 border-slate-200 shadow-md">
                   <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
                 </div>
                 <div className="mt-2 text-center">
-                  <button type="button" onClick={() => fileInputRef.current?.click()} className="text-sm text-blue-600">Ubah Foto</button>
+                  <button type="button" onClick={() => fileInputRef.current?.click()} className="text-xs text-blue-600 hover:text-blue-700 font-medium">Ubah Foto</button>
                 </div>
               </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-lg font-bold">{editing ? 'Edit Anggota' : 'Tambah Anggota'}</h3>
-                  <button type="button" onClick={() => setShowForm(false)} className="text-slate-500">Tutup</button>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-base sm:text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">{editing ? 'Edit Anggota' : 'Tambah Anggota'}</h3>
+                  <button type="button" onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
-                <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-1 gap-2.5">
                   <div>
-                    <label className="text-xs text-slate-500">Nama</label>
-                    <input autoFocus className="w-full border px-3 py-2 rounded-lg" value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} />
+                    <label className="block text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Nama</label>
+                    <input autoFocus className="w-full border border-slate-300 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} />
                   </div>
                   <div>
-                    <label className="text-xs text-slate-500">Posisi</label>
-                    <input className="w-full border px-3 py-2 rounded-lg" value={form.position} onChange={(e) => setForm({...form, position: e.target.value})} />
+                    <label className="block text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Posisi</label>
+                    <input className="w-full border border-slate-300 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" value={form.position} onChange={(e) => setForm({...form, position: e.target.value})} />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2.5">
                     <div>
-                      <label className="text-xs text-slate-500">Email</label>
-                      <input className="w-full border px-3 py-2 rounded-lg" value={(form as any).email || ''} onChange={(e) => setForm({...form, email: e.target.value})} />
+                      <label className="block text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Email</label>
+                      <input className="w-full border border-slate-300 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" value={(form as any).email || ''} onChange={(e) => setForm({...form, email: e.target.value})} />
                     </div>
                     <div>
-                      <label className="text-xs text-slate-500">Pengalaman</label>
-                      <input className="w-full border px-3 py-2 rounded-lg" value={form.experience} onChange={(e) => setForm({...form, experience: e.target.value})} />
+                      <label className="block text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Pengalaman</label>
+                      <input className="w-full border border-slate-300 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" value={form.experience} onChange={(e) => setForm({...form, experience: e.target.value})} />
                     </div>
                   </div>
                   <div>
-                    <label className="text-xs text-slate-500">Portfolio URL</label>
-                    <input className="w-full border px-3 py-2 rounded-lg" value={form.portfolioUrl} onChange={(e) => setForm({...form, portfolioUrl: e.target.value})} />
+                    <label className="block text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Portfolio URL</label>
+                    <input className="w-full border border-slate-300 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" value={form.portfolioUrl} onChange={(e) => setForm({...form, portfolioUrl: e.target.value})} />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-2.5">
                     <div>
-                      <label className="text-xs text-slate-500">Bank</label>
-                      <select className="w-full border px-3 py-2 rounded-lg" value={(form as any).bank || ''} onChange={(e) => setForm({...form, bank: e.target.value})}>
+                      <label className="block text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Bank</label>
+                      <select className="w-full border border-slate-300 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm bg-white" value={(form as any).bank || ''} onChange={(e) => setForm({...form, bank: e.target.value})}>
                         <option value="">Pilih Bank</option>
                         <option value="BCA">BCA</option>
                         <option value="Mandiri">Mandiri</option>
@@ -317,29 +328,29 @@ const TeamManagement: React.FC = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs text-slate-500">No. Rekening</label>
-                      <input className="w-full border px-3 py-2 rounded-lg" value={(form as any).accountNumber || ''} onChange={(e) => setForm({...form, accountNumber: e.target.value})} />
+                      <label className="block text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-1">No. Rekening</label>
+                      <input className="w-full border border-slate-300 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" value={(form as any).accountNumber || ''} onChange={(e) => setForm({...form, accountNumber: e.target.value})} />
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="mt-4">
-              <label className="text-xs text-slate-500">Keahlian (pisahkan koma)</label>
-              <input className="w-full border px-3 py-2 rounded-lg" value={Array.isArray(form.expertise) ? form.expertise.join(', ') : (form.expertise as any) || ''} onChange={(e) => setForm({...form, expertise: e.target.value.split(',').map(s => s.trim())})} />
+            <div className="mt-3">
+              <label className="block text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Keahlian (pisahkan koma)</label>
+              <input className="w-full border border-slate-300 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" value={Array.isArray(form.expertise) ? form.expertise.join(', ') : (form.expertise as any) || ''} onChange={(e) => setForm({...form, expertise: e.target.value.split(',').map(s => s.trim())})} />
             </div>
 
-            <div className="mt-4">
-              <label className="text-xs text-slate-500">Bio</label>
-              <textarea className="w-full border px-3 py-2 rounded-lg" value={form.bio} onChange={(e) => setForm({...form, bio: e.target.value})} />
+            <div className="mt-3">
+              <label className="block text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Bio</label>
+              <textarea rows={3} className="w-full border border-slate-300 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm resize-none" value={form.bio} onChange={(e) => setForm({...form, bio: e.target.value})} />
             </div>
 
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileChange(e.target.files && e.target.files[0])} />
 
                 <div className="mt-6" />
                 <div className="mt-4 flex items-center justify-end gap-2">
-              <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 border rounded bg-white">Batal</button>
-              <button type="submit" disabled={loading} className="px-4 py-2 bg-blue-600 text-white rounded flex items-center gap-2">
+              <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 border border-slate-300 rounded-lg bg-white hover:bg-slate-50 transition-colors text-sm font-medium">Batal</button>
+              <button type="submit" disabled={loading} className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg flex items-center gap-2 shadow-lg shadow-blue-500/30 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium">
                 {loading && <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>}
                 <span>{editing ? 'Update' : 'Buat'}</span>
               </button>

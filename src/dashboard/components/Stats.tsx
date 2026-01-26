@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import gsap from 'gsap'
 import apiClient, { Invoice, Finance } from '../../services/api'
 import { useTheme } from '../ThemeContext'
+import { StaggerContainer, CountUp } from '../../components/PageTransition'
 
 interface InvoiceData {
   id: number
@@ -35,12 +37,9 @@ export const DashboardStats: React.FC = () => {
 
   useEffect(() => {
     let mounted = true
-    const POLL_MS = 10000 // 10s polling interval
 
     const fetchAll = async () => {
       if (!mounted) return
-      // avoid polling when tab is hidden
-      if (typeof document !== 'undefined' && document.hidden) return
       try {
         setLoading(true)
 
@@ -117,66 +116,26 @@ export const DashboardStats: React.FC = () => {
       }
     }
 
-    // initial fetch
+    // fetch only on mount (no auto-refresh)
     fetchAll()
-
-    // polling
-    const id = setInterval(fetchAll, POLL_MS)
 
     return () => {
       mounted = false
-      clearInterval(id)
     }
   }, [])
-
-  // Prepare monthly data for bar chart (last 6 months)
-
-  useEffect(() => {
-    const now = new Date()
-    const months: { label: string; value: number }[] = []
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      const label = d.toLocaleString('id-ID', { month: 'short' })
-      months.push({ label, value: 0 })
-    }
-
-    // Aggregate invoice amounts by month
-    const loadMonthly = async () => {
-      try {
-        const invRes = await apiClient.getInvoices()
-        const invs = Array.isArray(invRes.data) ? invRes.data : []
-        const totals = months.map((m, idx) => {
-          const target = new Date(now.getFullYear(), now.getMonth() - (5 - idx), 1)
-          const total = invs.reduce((sum: number, inv: any) => {
-            const issue = new Date(inv.issueDate)
-            if (issue.getFullYear() === target.getFullYear() && issue.getMonth() === target.getMonth()) {
-              return sum + Number(inv.amount || 0)
-            }
-            return sum
-          }, 0)
-          return { label: m.label, value: total }
-        })
-        setMonthlyData(totals)
-      } catch (e) {
-        setMonthlyData(months)
-      }
-    }
-
-    loadMonthly()
-  }, [stats.recentInvoices])
 
   // Compute simple month-over-month change for top card metrics
   const latest = monthlyData[monthlyData.length - 1]?.value || 0
   const prev = monthlyData[monthlyData.length - 2]?.value || 0
   const monthChangePercent = prev === 0 ? (latest === 0 ? 0 : 100) : Math.round(((latest - prev) / prev) * 100)
 
-  // Enhanced BarChart component with responsive layout, y-axis ticks and tooltip
-  const BarChart: React.FC<{ data: { label: string; value: number }[] }> = ({ data }) => {
-    const containerRef = useRef<HTMLDivElement | null>(null)
-    const [hover, setHover] = useState<{ idx: number; x: number; y: number; value: number } | null>(null)
+  // Enhanced LineChart component with growth animation
+  const LineChart: React.FC<{ data: { label: string; value: number }[] }> = ({ data }) => {
+    const svgRef = useRef<SVGSVGElement | null>(null)
+    const lineRef = useRef<SVGPathElement | null>(null)
+    const [hover, setHover] = useState<number | null>(null)
+    
     const rawMax = Math.max(...data.map(d => d.value), 1)
-
-    // Round max to a 'nice' number (1,2,5 * 10^exp) for better readable ticks
     const niceNumber = (n: number) => {
       if (n <= 0) return 1
       const exp = Math.floor(Math.log10(n))
@@ -188,84 +147,173 @@ export const DashboardStats: React.FC = () => {
       else nf = 10
       return nf * Math.pow(10, exp)
     }
-
     const max = niceNumber(rawMax)
-
-    // ticks for y-axis (4 ticks)
+    
     const ticks = 4
     const tickValues = Array.from({ length: ticks + 1 }, (_, i) => Math.round((max * (ticks - i)) / ticks))
-
     const formatRupiah = (v: number) => `Rp ${v.toLocaleString('id-ID')}`
-
+    
+    // Chart dimensions
+    const width = 600
+    const height = 180
+    const padding = { top: 15, right: 15, bottom: 30, left: 60 }
+    
+    // Calculate points for line
+    const points = data.map((d, i) => {
+      const x = padding.left + (i / (data.length - 1)) * (width - padding.left - padding.right)
+      const y = padding.top + (1 - d.value / max) * (height - padding.top - padding.bottom)
+      return { x, y, value: d.value, label: d.label }
+    })
+    
+    // Create SVG path
+    const createPath = () => {
+      if (points.length === 0) return ''
+      let path = `M ${points[0].x} ${points[0].y}`
+      for (let i = 1; i < points.length; i++) {
+        const xc = (points[i].x + points[i - 1].x) / 2
+        const yc = (points[i].y + points[i - 1].y) / 2
+        path += ` Q ${points[i - 1].x} ${points[i - 1].y} ${xc} ${yc}`
+      }
+      path += ` T ${points[points.length - 1].x} ${points[points.length - 1].y}`
+      return path
+    }
+    
+    // Animate line on mount
+    useEffect(() => {
+      if (lineRef.current) {
+        const pathLength = lineRef.current.getTotalLength()
+        gsap.fromTo(lineRef.current,
+          { strokeDasharray: pathLength, strokeDashoffset: pathLength },
+          { strokeDashoffset: 0, duration: 2, ease: 'power2.out' }
+        )
+      }
+    }, [data])
+    
     const cardPadding = theme === 'compact' ? 'p-4' : 'p-6'
-    const cardBg = theme === 'minimal' ? 'bg-white' : 'bg-white'
 
     return (
-      <div className={`${cardBg} rounded-2xl ${cardPadding} shadow-sm border border-slate-100 h-full`}>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3v18h18" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 14h3v-4h4v4h3" />
+      <div className={`bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm border border-slate-100 h-full max-h-[400px] flex flex-col`}>
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
+          <h2 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
             </svg>
-            Pemasukan Bulanan
+            Data Penjualan
           </h2>
-          <div className="text-sm text-slate-500">6 bulan terakhir — Total: {formatRupiah(data.reduce((s, d) => s + d.value, 0))}</div>
+          <div className="text-xs sm:text-sm text-slate-500">Total: {formatRupiah(data.reduce((s, d) => s + d.value, 0))}</div>
         </div>
 
-        <div className="flex gap-4 items-stretch">
-          {/* Y-axis labels */}
-          <div className="w-20 hidden sm:flex flex-col justify-between items-end text-xs text-slate-400 pr-3">
-            {tickValues.map((v, i) => (
-              <div key={i}>{formatRupiah(v)}</div>
-            ))}
-          </div>
-
-          {/* Chart area */}
-          <div ref={containerRef} className="flex-1 relative h-48 lg:h-64">
-            {/* horizontal grid lines */}
-            {tickValues.map((_, i) => (
-              <div key={i} className="absolute left-0 right-0 border-t border-slate-100" style={{ top: `${(i / ticks) * 100}%` }} />
-            ))}
-
-            <div className="absolute inset-0 flex items-end gap-3 px-1">
-              {data.map((d, idx) => {
-                const heightPercent = (d.value / max) * 100
-                return (
-                  <div key={idx} className="flex-1 flex flex-col items-center">
-                    <div className="text-xs text-slate-600 mb-2 sm:mb-3">{formatRupiah(d.value)}</div>
-                    <div
-                      role="button"
-                      tabIndex={0}
-                      onMouseMove={(e) => {
-                        const rect = containerRef.current?.getBoundingClientRect()
-                        if (!rect) return
-                        setHover({ idx, x: e.clientX - rect.left, y: e.clientY - rect.top - 48, value: d.value })
-                      }}
-                      onMouseLeave={() => setHover(null)}
-                      onFocus={() => setHover({ idx, x: 0, y: 0, value: d.value })}
-                      className={`w-full rounded-t-md ${theme === 'minimal' ? 'bg-blue-500' : 'bg-gradient-to-br from-blue-500 to-blue-600'} transform origin-bottom hover:from-blue-600 hover:to-blue-700 hover:scale-105 cursor-pointer`}
-                      style={{ height: `${heightPercent}%`, transition: 'height 700ms cubic-bezier(0.2,0.8,0.2,1)', willChange: 'height' }}
-                      title={`${formatRupiah(d.value)} — ${d.label}`}
-                    />
-                    <div className="text-xs text-slate-600 mt-3">{d.label}</div>
-                  </div>
-                )
-              })}
-            </div>
-
-            {/* Tooltip */}
-            {hover && (
-              <div
-                className="absolute z-50 pointer-events-none"
-                style={{ left: Math.min(hover.x, (containerRef.current?.clientWidth || 300) - 140), top: Math.max(hover.y, 8) }}
+        <div className="relative overflow-x-auto">
+          <div className="min-w-[320px]">
+            <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
+            {/* Grid lines */}
+            {tickValues.map((tick, i) => {
+              const y = padding.top + (i / ticks) * (height - padding.top - padding.bottom)
+              return (
+                <g key={i}>
+                  <line
+                    x1={padding.left}
+                    y1={y}
+                    x2={width - padding.right}
+                    y2={y}
+                    stroke="#e2e8f0"
+                    strokeWidth="1"
+                  />
+                  <text x={padding.left - 10} y={y + 5} textAnchor="end" fontSize="11" fill="#94a3b8">
+                    {(tick / 1000000).toFixed(1)}M
+                  </text>
+                </g>
+              )
+            })}
+            
+            {/* X-axis labels */}
+            {points.map((point, i) => (
+              <text
+                key={i}
+                x={point.x}
+                y={height - 10}
+                textAnchor="middle"
+                fontSize="11"
+                fill="#64748b"
               >
-                <div className="bg-slate-900 text-white text-xs px-3 py-2 rounded-md shadow-lg">
-                  <div className="font-semibold">{formatRupiah(hover.value)}</div>
-                  <div className="text-slate-200 text-xs">{data[hover.idx]?.label}</div>
-                </div>
-              </div>
-            )}
+                {data[i].label}
+              </text>
+            ))}
+            
+            {/* Area gradient */}
+            <defs>
+              <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.05" />
+              </linearGradient>
+            </defs>
+            
+            {/* Area fill */}
+            <path
+              d={`${createPath()} L ${points[points.length - 1].x} ${height - padding.bottom} L ${points[0].x} ${height - padding.bottom} Z`}
+              fill="url(#lineGradient)"
+            />
+            
+            {/* Main line */}
+            <path
+              ref={lineRef}
+              d={createPath()}
+              fill="none"
+              stroke="#3b82f6"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            
+            {/* Data points */}
+            {points.map((point, i) => (
+              <g key={i}>
+                <circle
+                  cx={point.x}
+                  cy={point.y}
+                  r={hover === i ? 6 : 4}
+                  fill="white"
+                  stroke="#3b82f6"
+                  strokeWidth="2"
+                  className="cursor-pointer transition-all"
+                  onMouseEnter={() => setHover(i)}
+                  onMouseLeave={() => setHover(null)}
+                />
+                {hover === i && (
+                  <g>
+                    <rect
+                      x={point.x - 60}
+                      y={point.y - 45}
+                      width="120"
+                      height="35"
+                      rx="6"
+                      fill="#1e293b"
+                      opacity="0.95"
+                    />
+                    <text
+                      x={point.x}
+                      y={point.y - 28}
+                      textAnchor="middle"
+                      fontSize="12"
+                      fill="white"
+                      fontWeight="600"
+                    >
+                      {formatRupiah(point.value)}
+                    </text>
+                    <text
+                      x={point.x}
+                      y={point.y - 15}
+                      textAnchor="middle"
+                      fontSize="10"
+                      fill="#cbd5e1"
+                    >
+                      {point.label}
+                    </text>
+                  </g>
+                )}
+              </g>
+            ))}
+          </svg>
           </div>
         </div>
       </div>
@@ -276,90 +324,100 @@ export const DashboardStats: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-24 rounded-xl bg-slate-100 animate-pulse" />
+      <div className="space-y-3 sm:space-y-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-16 sm:h-20 rounded-lg bg-slate-100 animate-pulse" />
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 h-64 rounded-2xl bg-slate-100 animate-pulse" />
-          <div className="h-64 rounded-2xl bg-slate-100 animate-pulse" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+          <div className="lg:col-span-2 h-64 sm:h-80 rounded-lg bg-slate-100 animate-pulse" />
+          <div className="h-64 sm:h-80 rounded-lg bg-slate-100 animate-pulse" />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-8">
+    <StaggerContainer className="space-y-3 sm:space-y-4" staggerDelay={0.15}>
       {/* Ringkasan (replaces top stat cards) */}
-      <div className={`bg-white rounded-2xl ${cardPaddingOuter} shadow-sm border border-slate-100`}>
-        <h2 className="text-lg font-bold text-slate-900 mb-4">Ringkasan</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className={`p-4 ${theme === 'minimal' ? 'bg-blue-50' : 'bg-gradient-to-br from-blue-50 to-blue-100'} rounded-xl border border-blue-200`}>
+      <div className={`bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm border border-slate-100 transition-smooth hover:shadow-lg`}>
+        <h2 className="text-sm sm:text-base font-bold text-slate-900 mb-2 sm:mb-3">Ringkasan</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3">
+          <div className={`p-2 sm:p-3 ${theme === 'minimal' ? 'bg-blue-50' : 'bg-gradient-to-br from-blue-50 to-blue-100'} rounded-lg border border-blue-200`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-blue-700 font-semibold">Total Invoices</p>
-                <p className="text-2xl font-bold text-blue-900 mt-2">{stats.totalInvoices}</p>
+                <p className="text-xs text-blue-700 font-semibold">Total Invoices</p>
+                <p className="text-lg sm:text-xl font-bold text-blue-900 mt-1">
+                  <CountUp end={stats.totalInvoices} duration={1.5} delay={0.2} />
+                </p>
               </div>
-              <div className="p-2 rounded-md bg-blue-100 text-blue-700">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-1 sm:p-1.5 rounded-md bg-blue-100 text-blue-700">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
             </div>
           </div>
-          <div className={`p-4 ${theme === 'minimal' ? 'bg-green-50' : 'bg-gradient-to-br from-green-50 to-green-100'} rounded-xl border border-green-200`}>
+          <div className={`p-2 sm:p-3 ${theme === 'minimal' ? 'bg-green-50' : 'bg-gradient-to-br from-green-50 to-green-100'} rounded-lg border border-green-200`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-green-700 font-semibold">Total Pemasukan</p>
-                <p className="text-2xl font-bold text-green-900 mt-2">Rp {((stats.totalPemasukan || 0)).toLocaleString('id-ID')}</p>
+                <p className="text-xs text-green-700 font-semibold">Total Pemasukan</p>
+                <p className="text-lg sm:text-xl font-bold text-green-900 mt-1">
+                  Rp <CountUp end={stats.totalPemasukan || 0} duration={1.5} delay={0.3} />
+                </p>
               </div>
-              <div className="p-2 rounded-md bg-green-100 text-green-700">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-1 sm:p-1.5 rounded-md bg-green-100 text-green-700">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
           </div>
-          <div className={`p-4 ${theme === 'minimal' ? 'bg-yellow-50' : 'bg-gradient-to-br from-yellow-50 to-yellow-100'} rounded-xl border border-yellow-200`}>
+          <div className={`p-2 sm:p-3 ${theme === 'minimal' ? 'bg-yellow-50' : 'bg-gradient-to-br from-yellow-50 to-yellow-100'} rounded-lg border border-yellow-200`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-yellow-700 font-semibold">Pemasukan Lainnya</p>
-                <p className="text-2xl font-bold text-yellow-900 mt-2">Rp {((stats.pemasukanLainnya || 0)).toLocaleString('id-ID')}</p>
+                <p className="text-xs text-yellow-700 font-semibold">Pemasukan Lainnya</p>
+                <p className="text-lg sm:text-xl font-bold text-yellow-900 mt-1">
+                  Rp <CountUp end={stats.pemasukanLainnya || 0} duration={1.5} delay={0.4} />
+                </p>
               </div>
-              <div className="p-2 rounded-md bg-yellow-100 text-yellow-700">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-1 sm:p-1.5 rounded-md bg-yellow-100 text-yellow-700">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
           </div>
-          <div className={`p-4 ${theme === 'minimal' ? 'bg-red-50' : 'bg-gradient-to-br from-red-50 to-red-100'} rounded-xl border border-red-200`}>
+          <div className={`p-2 sm:p-3 ${theme === 'minimal' ? 'bg-red-50' : 'bg-gradient-to-br from-red-50 to-red-100'} rounded-lg border border-red-200`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-red-700 font-semibold">Total Pengeluaran</p>
-                <p className="text-2xl font-bold text-red-900 mt-2">Rp {((stats.totalPengeluaran || 0)).toLocaleString('id-ID')}</p>
+                <p className="text-xs text-red-700 font-semibold">Total Pengeluaran</p>
+                <p className="text-lg sm:text-xl font-bold text-red-900 mt-1">
+                  Rp <CountUp end={stats.totalPengeluaran || 0} duration={1.5} delay={0.5} />
+                </p>
               </div>
-              <div className="p-2 rounded-md bg-red-100 text-red-700">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-1 sm:p-1.5 rounded-md bg-red-100 text-red-700">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7h18" />
                 </svg>
               </div>
             </div>
           </div>
-          <div className={`p-4 ${theme === 'minimal' ? 'bg-purple-50' : 'bg-gradient-to-br from-purple-50 to-purple-100'} rounded-xl border border-purple-200 lg:col-span-4`}>
+          <div className={`p-2 sm:p-3 ${theme === 'minimal' ? 'bg-purple-50' : 'bg-gradient-to-br from-purple-50 to-purple-100'} rounded-lg border border-purple-200 col-span-2 sm:col-span-2 lg:col-span-1`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-purple-700 font-semibold">Saldo</p>
-                <p className="text-2xl font-bold text-purple-900 mt-2">Rp {Math.abs(stats.saldo || 0).toLocaleString('id-ID')}</p>
+                <p className="text-xs text-purple-700 font-semibold">Saldo</p>
+                <p className="text-lg sm:text-xl font-bold text-purple-900 mt-1">
+                  Rp <CountUp end={Math.abs(stats.saldo || 0)} duration={1.5} delay={0.6} />
+                </p>
               </div>
-              <div className="p-2 rounded-md bg-purple-100 text-purple-700">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-1 sm:p-1.5 rounded-md bg-purple-100 text-purple-700">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m8.66-9H21" />
                 </svg>
@@ -370,45 +428,45 @@ export const DashboardStats: React.FC = () => {
       </div>
 
       {/* Charts and Recent Invoices (swapped) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Bar chart in the former invoice area (large) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
+        {/* Line chart in the former invoice area (large) */}
         <div className="lg:col-span-2">
-          <BarChart data={monthlyData} />
+          <LineChart data={monthlyData} />
         </div>
 
         {/* Recent Invoices (moved to right) */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-3">
-              <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm border border-slate-100 max-h-[400px] flex flex-col">
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <h2 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6M7 7h10M7 21h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               Invoice Terbaru
             </h2>
             <button
               onClick={() => navigate('/dashboard/invoices')}
-              className="text-blue-600 font-semibold text-sm hover:text-blue-700"
+              className="text-blue-600 font-semibold text-xs sm:text-sm hover:text-blue-700"
             >
               Lihat Semua
             </button>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-2 sm:space-y-3 overflow-y-auto flex-1">
             {Array.isArray(stats.recentInvoices) && stats.recentInvoices.length > 0 ? (
               stats.recentInvoices.map((invoice) => (
                 <div
                   key={invoice.id}
                   onClick={() => navigate(`/dashboard/invoices`)}
-                  className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer"
+                  className="flex items-center justify-between p-2 sm:p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
                 >
-                  <div>
-                    <p className="font-semibold text-slate-900">{invoice.invoiceNumber}</p>
-                    <p className="text-sm text-slate-600">{invoice.clientName || 'Unknown Client'}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm sm:text-base text-slate-900 truncate">{invoice.invoiceNumber}</p>
+                    <p className="text-xs sm:text-sm text-slate-600 truncate">{invoice.clientName || 'Unknown Client'}</p>
                     <p className="text-xs text-slate-400 mt-1">{new Date(invoice.issueDate).toLocaleDateString('id-ID')}</p>
                   </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-slate-900">Rp {Math.round(invoice.amount || 0).toLocaleString('id-ID')}</p>
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                  <div className="text-right ml-2 flex-shrink-0">
+                    <p className="font-semibold text-sm sm:text-base text-slate-900">Rp {Math.round(invoice.amount || 0).toLocaleString('id-ID')}</p>
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap ${
                       invoice.status === 'paid' ? 'bg-green-100 text-green-700' :
                       invoice.status === 'sent' ? 'bg-yellow-100 text-yellow-700' :
                       invoice.status === 'overdue' ? 'bg-red-100 text-red-700' :
@@ -428,7 +486,7 @@ export const DashboardStats: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </StaggerContainer>
   )
 }
 

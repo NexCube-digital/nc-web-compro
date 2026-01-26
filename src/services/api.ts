@@ -287,7 +287,12 @@ class ApiClient {
   }
 
   async getContacts(): Promise<ApiResponse<Contact[]>> {
-    return this.request<Contact[]>('/contacts', 'GET');
+    const response = await this.request<any>('/contacts', 'GET');
+    // Backend returns { items: [], meta: {} }, extract items
+    if (response.data && response.data.items) {
+      response.data = response.data.items;
+    }
+    return response as ApiResponse<Contact[]>;
   }
 
   async getContact(id: string): Promise<ApiResponse<Contact>> {
@@ -313,12 +318,22 @@ class ApiClient {
     if (category) params.append('category', category);
     if (featured) params.append('featured', 'true');
     if (params.toString()) url += `?${params.toString()}`;
-    return this.request<Portfolio[]>(url, 'GET');
+    const response = await this.request<any>(url, 'GET');
+    // Backend returns { items: [], meta: {} }, extract items
+    if (response.data && response.data.items) {
+      response.data = response.data.items;
+    }
+    return response as ApiResponse<Portfolio[]>;
   }
 
   // Team endpoints
   async getTeams(): Promise<ApiResponse<any[]>> {
-    return this.request<any[]>('/teams', 'GET');
+    const response = await this.request<any>('/teams', 'GET');
+    // Backend returns { items: [], meta: {} }, extract items
+    if (response.data && response.data.items) {
+      response.data = response.data.items;
+    }
+    return response as ApiResponse<any[]>;
   }
 
   async getTeam(id: string): Promise<ApiResponse<any>> {
@@ -351,9 +366,14 @@ class ApiClient {
 
   // Invoice endpoints
   async getInvoices(): Promise<ApiResponse<Invoice[]>> {
-    const response = await this.request<any[]>('/invoices', 'GET');
-    if (response.data && Array.isArray(response.data)) {
-      response.data = response.data.map((invoice: any) => ({
+    const response = await this.request<any>('/invoices', 'GET');
+    // Backend returns { items: [], meta: {} }, extract items
+    let invoices = response.data;
+    if (response.data && response.data.items) {
+      invoices = response.data.items;
+    }
+    if (invoices && Array.isArray(invoices)) {
+      response.data = invoices.map((invoice: any) => ({
         ...invoice,
         clientName: invoice.client?.name || invoice.clientName || 'Unknown Client',
       }));
@@ -387,7 +407,12 @@ class ApiClient {
 
   // Finance endpoints
   async getFinances(): Promise<ApiResponse<Finance[]>> {
-    return this.request<Finance[]>('/finances', 'GET');
+    const response = await this.request<any>('/finances', 'GET');
+    // Backend returns { items: [], meta: {} }, extract items
+    if (response.data && response.data.items) {
+      response.data = response.data.items;
+    }
+    return response as ApiResponse<Finance[]>;
   }
 
   async getFinance(id: string): Promise<ApiResponse<Finance>> {
@@ -412,7 +437,12 @@ class ApiClient {
 
   // Report endpoints
   async getReports(): Promise<ApiResponse<Report[]>> {
-    return this.request<Report[]>('/reports', 'GET');
+    const response = await this.request<any>('/reports', 'GET');
+    // Backend returns { items: [], meta: {} }, extract items
+    if (response.data && response.data.items) {
+      response.data = response.data.items;
+    }
+    return response as ApiResponse<Report[]>;
   }
 
   async getReport(id: string): Promise<ApiResponse<Report>> {

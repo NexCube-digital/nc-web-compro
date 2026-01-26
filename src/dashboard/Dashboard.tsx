@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
+import gsap from 'gsap'
 import DashboardSidebar from './components/Sidebar'
 import DashboardHeader from './components/Header'
 import DashboardStats from './components/Stats'
@@ -22,6 +23,8 @@ export const Dashboard: React.FC = () => {
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
   const location = useLocation()
+  const contentRef = useRef<HTMLDivElement>(null)
+  const mainRef = useRef<HTMLElement>(null)
 
   // Get active tab from URL path
   const getActiveTab = () => {
@@ -86,6 +89,28 @@ export const Dashboard: React.FC = () => {
     checkAuth()
   }, [navigate])
 
+  // Animate content when activeTab changes
+  useEffect(() => {
+    if (mainRef.current && !loading) {
+      // Fade out existing content
+      gsap.to(mainRef.current, {
+        opacity: 0,
+        y: 10,
+        duration: 0.2,
+        ease: 'power2.inOut',
+        onComplete: () => {
+          // Fade in new content
+          gsap.to(mainRef.current, {
+            opacity: 1,
+            y: 0,
+            duration: 0.4,
+            ease: 'power2.out'
+          })
+        }
+      })
+    }
+  }, [activeTab, loading])
+
   const renderContent = () => {
     switch(activeTab) {
       case 'overview':
@@ -146,14 +171,14 @@ export const Dashboard: React.FC = () => {
         />
 
         {/* Main Content */}
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto" ref={contentRef}>
           <DashboardHeader 
             sidebarOpen={sidebarOpen}
             setSidebarOpen={setSidebarOpen}
             user={user}
           />
           
-          <main className="p-6 lg:p-8">
+          <main className="p-3 sm:p-4 lg:p-6 min-h-screen" ref={mainRef}>
             {renderContent()}
           </main>
         </div>

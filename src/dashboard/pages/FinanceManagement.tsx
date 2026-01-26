@@ -77,7 +77,7 @@ export const FinanceManagement: React.FC = () => {
         return r.success && Array.isArray(r.data) ? r.data : null
       } catch { return null }
     },
-    { interval: 12000 }
+    { interval: 60000 } // 60s polling interval (reduced from 10s)
   )
 
   const [sseUpdating, setSseUpdating] = useState(false)

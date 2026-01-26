@@ -1,35 +1,140 @@
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState, Suspense } from 'react'
 import { Link } from 'react-router-dom'
 import { Layout } from '../components/layout/Layout'
 import { Portfolio } from '../components/Portfolio'
+import { 
+  useScrollFadeIn, 
+  useParallax, 
+  useScrollRotate, 
+  useScrollScale,
+  useFloatingAnimation 
+} from '../hooks/useGsapAnimation'
+import { useCountUp } from '../hooks/useCountUp'
+import { useSmoothScroll, useThreePerformance } from '../hooks/useSmoothAnimation'
+import { useSmoothScrollRAF } from '../hooks/useFrameOptimization'
+import { 
+  FaRocket, 
+  FaGem, 
+  FaBolt, 
+  FaCode, 
+  FaEnvelope, 
+  FaPalette, 
+  FaBook,
+  FaCheckCircle,
+  FaStar,
+  FaWhatsapp,
+  FaArrowRight,
+  FaArrowUp,
+  FaShieldAlt,
+  FaClock,
+  FaUsers,
+  FaChartLine,
+  FaHeadset
+} from 'react-icons/fa'
+import { HiSparkles, HiLightningBolt } from 'react-icons/hi'
+import { IoMdCube } from 'react-icons/io'
+
+// Lazy load Three.js components for better performance
+const ThreeBackground = React.lazy(() => import('../components/ThreeBackground'))
+const HeroThree = React.lazy(() => import('../components/HeroThree'))
 
 export const Home: React.FC = () => {
   const heroSectionRef = useRef<HTMLElement>(null);
   const portfolioSectionRef = useRef<HTMLElement>(null);
   const testimonialSectionRef = useRef<HTMLElement>(null);
   
+  // GSAP ScrollTrigger refs dengan proper dependencies
+  const fadeInRef = useRef<HTMLDivElement>(null);
+  const parallaxRef = useRef<HTMLDivElement>(null);
+  const rotateRef = useRef<HTMLDivElement>(null);
+  const scaleRef = useRef<HTMLDivElement>(null);
+  const floatingRef = useRef<HTMLDivElement>(null);
+  
+  // Apply GSAP animations
+  useScrollFadeIn('.scroll-fade-in');
+  useParallax('.parallax-element', 0.3);
+  useScrollRotate('.rotate-on-scroll', 360);
+  useScrollScale('.scale-on-scroll');
+  useFloatingAnimation('.floating-element');
+  
+  // Apply smooth scroll and Three.js performance optimization
+  useSmoothScroll();
+  useThreePerformance();
+  
+  // Smooth scroll dengan RAF
+  const { scrollTo } = useSmoothScrollRAF();
+  
   // State untuk mengontrol animasi
   const [isLoaded, setIsLoaded] = useState(false);
+  const [showHero, setShowHero] = useState(false);
+  const [scrollProgress, setScrollProgress] = useState(0);
   
   // Set animasi entrance pada page load yang lebih tegas
   useEffect(() => {
-    // Sedikit delay untuk memastikan DOM telah selesai dirender
-    const timer = setTimeout(() => {
-      setIsLoaded(true);
-    }, 100);
+    // Check if this is first visit in this session
+    const isFirstVisit = !sessionStorage.getItem('hasVisitedHome');
     
-    return () => clearTimeout(timer);
+    if (isFirstVisit) {
+      // Loading animation only on first visit
+      const loadTimer = setTimeout(() => {
+        setIsLoaded(true);
+      }, 800);
+      
+      // Hero content reveal
+      const heroTimer = setTimeout(() => {
+        setShowHero(true);
+      }, 1000);
+      
+      // Mark as visited
+      sessionStorage.setItem('hasVisitedHome', 'true');
+      
+      return () => {
+        clearTimeout(loadTimer);
+        clearTimeout(heroTimer);
+      };
+    } else {
+      // Skip loading animation for subsequent visits
+      setIsLoaded(true);
+      setShowHero(true);
+    }
   }, []);
   
-  // Fungsi scrolling yang lebih presisi
+  // Track scroll progress untuk visual feedback
+  useEffect(() => {
+    let rafId: number;
+    let ticking = false;
+    
+    const handleScroll = () => {
+      if (!ticking) {
+        rafId = requestAnimationFrame(() => {
+          const windowHeight = window.innerHeight;
+          const documentHeight = document.documentElement.scrollHeight;
+          const scrollTop = window.scrollY;
+          const scrollPercentage = (scrollTop / (documentHeight - windowHeight)) * 100;
+          setScrollProgress(scrollPercentage);
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, []);
+  
+  // Fungsi scrolling yang lebih presisi dengan RAF
   const handleScrollToSection = (ref: React.RefObject<HTMLElement>, e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     
     if (ref.current) {
-      const headerOffset = 80; // Perkiraan tinggi header
+      const headerOffset = 80;
       const elementPosition = ref.current.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
       
+      // Smooth scroll dengan easing
       window.scrollTo({
         top: offsetPosition,
         behavior: 'smooth'
@@ -58,51 +163,63 @@ export const Home: React.FC = () => {
   const services = [
     {
       title: 'Website Premium',
-      description: 'Landing page profesional dengan desain modern dan performa optimal',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-      ),
-      gradient: 'from-blue-500 to-purple-600'
+      description: 'Full-stack web solutions dengan teknologi terkini, SEO-optimized, dan performa blazing fast',
+      icon: <FaCode className="w-7 h-7" />,
+      gradient: 'from-blue-500 via-blue-600 to-cyan-500',
+      features: ['Responsive Design', 'SEO Ready', 'Fast Loading']
     },
     {
       title: 'Undangan Digital',
-      description: 'Template interaktif dengan RSVP dan integrasi maps untuk acara spesial',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-        </svg>
-      ),
-      gradient: 'from-emerald-500 to-teal-600'
+      description: 'Interactive wedding & event invitations dengan RSVP tracking dan live streaming integration',
+      icon: <FaEnvelope className="w-7 h-7" />,
+      gradient: 'from-emerald-500 via-green-600 to-teal-500',
+      features: ['RSVP System', 'Maps Integration', 'Gallery']
     },
     {
       title: 'Desain Grafis',
-      description: 'Poster, feed sosial media, dan materi branding yang eye-catching',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      ),
-      gradient: 'from-rose-500 to-pink-600'
+      description: 'Creative design solutions dari branding hingga social media content yang engaging',
+      icon: <FaPalette className="w-7 h-7" />,
+      gradient: 'from-pink-500 via-rose-600 to-orange-500',
+      features: ['Brand Identity', 'Social Media', 'Print Design']
     },
     {
       title: 'Katalog Digital',
-      description: 'QR menu untuk restoran dan katalog produk yang interaktif',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-        </svg>
-      ),
-      gradient: 'from-orange-500 to-amber-600'
+      description: 'Smart digital catalogs dengan QR technology dan real-time inventory management',
+      icon: <FaBook className="w-7 h-7" />,
+      gradient: 'from-amber-500 via-orange-600 to-yellow-500',
+      features: ['QR Menu', 'Real-time Update', 'Analytics']
     }
   ];
 
   const stats = [
-    { number: '50+', label: 'Proyek Selesai', icon: '🚀' },
-    { number: '30+', label: 'Klien Puas', icon: '😊' },
-    { number: '99%', label: 'Success Rate', icon: '⭐' },
-    { number: '24/7', label: 'Support Premium', icon: '🔧' }
+    { 
+      number: 50, 
+      suffix: '+',
+      label: 'Proyek Selesai', 
+      icon: <FaRocket className="w-6 h-6" />,
+      color: 'from-blue-500 to-cyan-500'
+    },
+    { 
+      number: 30, 
+      suffix: '+',
+      label: 'Klien Puas', 
+      icon: <FaUsers className="w-6 h-6" />,
+      color: 'from-emerald-500 to-green-500'
+    },
+    { 
+      number: 99, 
+      suffix: '%',
+      label: 'Success Rate', 
+      icon: <FaChartLine className="w-6 h-6" />,
+      color: 'from-orange-500 to-amber-500'
+    },
+    { 
+      number: 24, 
+      suffix: '/7',
+      label: 'Support Premium', 
+      icon: <FaHeadset className="w-6 h-6" />,
+      color: 'from-pink-500 to-rose-500'
+    }
   ];
 
   const testimonials = [
@@ -131,140 +248,570 @@ export const Home: React.FC = () => {
   
   return (
     <Layout>
-      <div className="overflow-hidden">
-        {/* Background Elements */}
-        <div className="fixed top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-100/30 to-purple-100/30 rounded-full blur-3xl -translate-x-48 -translate-y-48 animate-pulse"></div>
-        <div className="fixed bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-pink-100/30 to-orange-100/30 rounded-full blur-3xl translate-x-48 translate-y-48 animate-pulse" style={{ animationDelay: '2s' }}></div>
+      {/* Scroll Progress Bar - Fixed at Top */}
+      <div className="fixed top-0 left-0 w-full h-1 bg-slate-200/30 z-50 backdrop-blur-sm">
+        <div 
+          className="h-full bg-gradient-to-r from-blue-600 via-purple-500 to-orange-500 transition-all duration-300 shadow-lg shadow-blue-500/50"
+          style={{ width: `${scrollProgress}%`, willChange: 'width' }}
+        ></div>
+      </div>
+      
+      {/* Scroll to Top Button */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className={`fixed bottom-8 right-8 z-40 backdrop-blur-xl bg-gradient-to-r from-blue-600 to-orange-500 text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 ${
+          scrollProgress > 10 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'
+        }`}
+        aria-label="Scroll to top"
+      >
+        <FaArrowUp className="w-5 h-5" />
+        <span className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-orange-500 rounded-full blur opacity-50 animate-pulse"></span>
+      </button>
+      
+      {/* Initial Page Load Animation Overlay */}
+      <div 
+        className={`fixed inset-0 bg-gradient-to-br from-blue-600 via-blue-500 to-orange-500 z-50 transition-all duration-1000 flex items-center justify-center ${
+          isLoaded ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}
+      >
+        <div className="text-center">
+          <div className="inline-block animate-bounce">
+            <IoMdCube className="w-20 h-20 text-white animate-spin" style={{ animationDuration: '2s' }} />
+          </div>
+          <h2 className="text-3xl font-bold text-white mt-6 tracking-wider">NEXCUBE</h2>
+          <div className="mt-4 flex gap-2 justify-center">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="overflow-hidden" ref={parallaxRef}>
+        {/* Three.js 3D Background - Smooth particles and shapes */}
+        <Suspense fallback={null}>
+          <ThreeBackground className="opacity-30" />
+        </Suspense>
+        
+        {/* Background Elements with NEXCUBE Branding */}
+        <div className="fixed top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-500/20 to-orange-400/20 rounded-full blur-3xl -translate-x-48 -translate-y-48 animate-pulse parallax-element"></div>
+        <div className="fixed bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-orange-400/20 to-blue-500/20 rounded-full blur-3xl translate-x-48 translate-y-48 animate-pulse parallax-element" style={{ animationDelay: '2s' }}></div>
+        
+        {/* Floating NEXCUBE 3D Cubes */}
+        <div className="fixed top-20 right-10 opacity-20 pointer-events-none z-0">
+          <div className="floating-element">
+            <svg viewBox="0 0 100 100" className="w-32 h-32">
+              <defs>
+                <linearGradient id="cubeGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style={{ stopColor: '#0066FF', stopOpacity: 1 }} />
+                  <stop offset="100%" style={{ stopColor: '#0052CC', stopOpacity: 1 }} />
+                </linearGradient>
+              </defs>
+              <path d="M50 10 L90 30 L90 70 L50 90 L10 70 L10 30 Z" fill="url(#cubeGradient1)" />
+              <path d="M50 10 L90 30 L50 50 L10 30 Z" fill="#0080FF" opacity="0.8" />
+              <path d="M50 50 L50 90 L10 70 L10 30 Z" fill="#0052CC" opacity="0.9" />
+            </svg>
+          </div>
+        </div>
+        <div className="fixed bottom-20 left-10 opacity-20 pointer-events-none z-0" style={{ animationDelay: '1s' }}>
+          <div className="floating-element">
+            <svg viewBox="0 0 100 100" className="w-40 h-40">
+              <rect x="10" y="10" width="80" height="80" rx="5" fill="none" stroke="#FF9900" strokeWidth="3" />
+              <path d="M50 20 L85 40 L85 75 L50 85 L15 75 L15 40 Z" fill="url(#cubeGradient1)" />
+            </svg>
+          </div>
+        </div>
+        
+        {/* Parallax NEXCUBE watermark */}
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.08] pointer-events-none z-0">
+          <div className="parallax-element text-[15rem] md:text-[20rem] font-black bg-gradient-to-r from-blue-600/30 to-orange-500/30 bg-clip-text text-transparent">
+            NEXCUBE
+          </div>
+        </div>
 
-        {/* Hero Section - Enhanced with Premium Design */}
+        {/* Hero Section - Full Viewport (1 Frame) */}
         <section 
           ref={heroSectionRef} 
-          className="relative flex items-center pt-4 pb-16 bg-gradient-to-b from-slate-50 via-white to-slate-50/50"
+          className="relative h-screen flex items-start justify-center overflow-hidden pt-20"
         >
-          <div className="container grid md:grid-cols-2 gap-12 md:gap-20 items-center relative">
-            <div className="space-y-8">
-              {/* Trust Badge */}
-              <div className={`inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-purple-50 text-blue-700 px-4 py-2 rounded-full text-sm font-medium border border-blue-200 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}>
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                Premium Digital Solutions
+          {/* Three.js 3D NEXCUBE Logo in background */}
+          <Suspense fallback={null}>
+            <HeroThree />
+          </Suspense>
+          
+          {/* Modern Gradient Mesh Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-orange-50/30"></div>
+          
+          {/* Animated Grid Pattern */}
+          <div className="absolute inset-0 opacity-[0.03]">
+            <div className="absolute inset-0" style={{
+              backgroundImage: `linear-gradient(#0066FF 1px, transparent 1px), linear-gradient(90deg, #0066FF 1px, transparent 1px)`,
+              backgroundSize: '50px 50px'
+            }}></div>
+          </div>
+          
+          {/* Animated 3D NEXCUBE Logo Background */}
+          <div className="absolute top-20 right-10 opacity-10">
+            <div className="rotate-on-scroll w-64 h-64 md:w-96 md:h-96">
+              <svg viewBox="0 0 200 200" className="w-full h-full">
+                <defs>
+                  <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style={{ stopColor: '#0066FF', stopOpacity: 1 }} />
+                    <stop offset="100%" style={{ stopColor: '#0052CC', stopOpacity: 1 }} />
+                  </linearGradient>
+                  <linearGradient id="orangeFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style={{ stopColor: '#FF9900', stopOpacity: 1 }} />
+                    <stop offset="100%" style={{ stopColor: '#FF7700', stopOpacity: 1 }} />
+                  </linearGradient>
+                </defs>
+                {/* Orange Frame */}
+                <rect x="30" y="30" width="140" height="140" rx="10" fill="url(#orangeFrame)" opacity="0.6" />
+                {/* 3D Cube */}
+                <g transform="translate(100, 100)">
+                  {/* Back face */}
+                  <path d="M-30,-15 L30,-15 L30,45 L-30,45 Z" fill="#0052CC" opacity="0.7" />
+                  {/* Top face */}
+                  <path d="M-30,-45 L0,-60 L60,-30 L30,-15 Z" fill="#0080FF" opacity="0.9" />
+                  {/* Right face */}
+                  <path d="M30,-15 L60,-30 L60,30 L30,45 Z" fill="url(#logoGradient)" />
+                  {/* Left face */}
+                  <path d="M-30,-15 L0,-30 L0,30 L-30,45 Z" fill="#0052CC" opacity="0.8" />
+                  {/* Front face */}
+                  <path d="M0,-30 L60,-30 L60,30 L0,30 Z" fill="url(#logoGradient)" />
+                </g>
+              </svg>
+            </div>
+          </div>
+          
+          <div className="container relative">
+            <div className="max-w-6xl mx-auto text-center space-y-4">
+
+              
+              {/* Modern Trust Badge */}
+              <div className={`inline-flex items-center justify-center gap-3 backdrop-blur-xl bg-white/70 border border-white/30 shadow-lg px-5 py-2 rounded-2xl transition-all duration-700 delay-100 ${!showHero ? 'opacity-0 -translate-y-10' : 'opacity-100 translate-y-0'}`}>
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-orange-500 rounded-full blur-md opacity-75 animate-pulse"></div>
+                  <HiSparkles className="w-5 h-5 text-orange-500 relative" />
+                </div>
+                <span className="text-sm font-bold bg-gradient-to-r from-blue-600 to-orange-600 bg-clip-text text-transparent">Premium Digital Solutions 2025</span>
               </div>
 
-              <div>
-                <h1 className={`text-4xl sm:text-5xl md:text-6xl font-bold leading-tight ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-100'}`}>
-                  <span className="bg-gradient-to-r from-slate-800 via-blue-700 to-purple-700 bg-clip-text text-transparent">
-                    Transformasi Digital
+              <div className="space-y-2">
+                <h1 className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-[1.05] tracking-tight transition-all duration-700 delay-200 ${!showHero ? 'opacity-0 scale-95 -translate-y-10' : 'opacity-100 scale-100 translate-y-0'}`}>
+                  <span className="inline-block">
+                    <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 bg-clip-text text-transparent drop-shadow-lg">Digital</span>
                   </span>
                   <br />
-                  <span className="text-slate-800">untuk Bisnis Modern</span>
+                  <span className="inline-block">
+                    <span className="bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 bg-clip-text text-transparent drop-shadow-lg">Excellence</span>
+                  </span>
+                  <br />
+                  <span className="text-slate-800 text-2xl md:text-3xl lg:text-4xl font-bold mt-2 inline-block drop-shadow">For Modern Business</span>
                 </h1>
-                <p className={`mt-6 text-xl text-slate-600 leading-relaxed max-w-xl ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-200'}`}>
-                  Solusi teknologi <span className="font-semibold text-slate-800">berkualitas internasional</span> dengan 
-                  pendekatan personal. Dari website premium hingga strategi digital yang 
-                  <span className="font-semibold text-blue-700"> mengakselerasi pertumbuhan bisnis Anda</span>.
+                
+                <p className={`text-sm md:text-base lg:text-lg text-slate-600 leading-relaxed max-w-3xl mx-auto transition-all duration-700 delay-300 ${!showHero ? 'opacity-0 translate-y-10' : 'opacity-100 translate-y-0'}`}>
+                  Transformasi bisnis Anda dengan <span className="font-bold text-blue-600">teknologi terdepan</span> dan <span className="font-bold text-orange-600">kreativitas tanpa batas</span>. Dari konsep hingga eksekusi, kami hadirkan solusi digital yang <span className="font-bold text-slate-800">menghasilkan impact nyata</span>.
                 </p>
               </div>
 
-              {/* Enhanced CTAs */}
-              <div className={`flex flex-wrap gap-4 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-300'}`}>
+              {/* Modern Stats Cards with Counter Animation */}
+              <div className="scroll-fade-in" ref={fadeInRef}>
+                <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-5xl mx-auto transition-all duration-700 delay-500 ${!showHero ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`}>
+                {stats.map((stat, index) => {
+                  // Counter hook untuk setiap stat
+                  const StatCounter = () => {
+                    const { formattedValue, elementRef } = useCountUp({
+                      end: stat.number,
+                      duration: 2,
+                      suffix: stat.suffix,
+                      enableScrollTrigger: false
+                    });
+
+                    return (
+                      <div 
+                        ref={elementRef as React.RefObject<HTMLDivElement>}
+                        className={`text-2xl md:text-3xl font-black bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}
+                      >
+                        {formattedValue()}
+                      </div>
+                    );
+                  };
+
+                  return (
+                    <div key={index} className="scale-on-scroll group relative">
+                      {/* Glassmorphism Card */}
+                      <div className="relative backdrop-blur-xl bg-white/70 border border-white/30 rounded-2xl p-4 md:p-5 hover:bg-white/90 transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer overflow-hidden">
+                        {/* Gradient Overlay on Hover */}
+                        <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
+                        
+                        {/* Glow Effect */}
+                        <div className={`absolute -inset-1 bg-gradient-to-r ${stat.color} rounded-2xl blur opacity-0 group-hover:opacity-30 transition-opacity duration-500`}></div>
+                        
+                        <div className="relative text-center space-y-1 md:space-y-2">
+                          {/* Icon with gradient & pulse animation */}
+                          <div className={`inline-flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br ${stat.color} text-white shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 animate-pulse`}>
+                            {stat.icon}
+                          </div>
+                          
+                          {/* Animated Number Counter */}
+                          <StatCounter />
+                          
+                          {/* Label */}
+                          <div className="text-xs md:text-sm font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">
+                            {stat.label}
+                          </div>
+
+                          {/* Progress Bar */}
+                          <div className="w-full h-1 bg-slate-200/50 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full bg-gradient-to-r ${stat.color} transform origin-left transition-transform duration-1000 group-hover:scale-x-100 scale-x-0`}
+                              style={{ transitionDelay: `${index * 100}ms` }}
+                            ></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {/* Modern CTAs with Enhanced Animations - Moved Below Stats */}
+              <div className={`flex flex-wrap gap-4 justify-center items-center mt-6 transition-all duration-700 delay-600 ${!showHero ? 'opacity-0 translate-y-10' : 'opacity-100 translate-y-0'}`}>
                 <button 
                   onClick={(e) => handleScrollToSection(portfolioSectionRef, e)} 
-                  className="group bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 hover:scale-105 hover:shadow-xl inline-flex items-center gap-3"
+                  className="group relative backdrop-blur-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-110 hover:shadow-2xl inline-flex items-center gap-3 overflow-hidden hover:-translate-y-1"
                 >
-                  <span>Lihat Portfolio</span>
-                  <svg className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
+                  {/* Animated Background Shine */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                  
+                  {/* Glow Effect */}
+                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-blue-500 rounded-2xl blur opacity-0 group-hover:opacity-75 transition-opacity duration-300"></div>
+                  
+                  <FaRocket className="w-5 h-5 relative transform group-hover:rotate-12 group-hover:scale-125 transition-all duration-300" />
+                  <span className="relative">Lihat Portfolio</span>
+                  <FaArrowRight className="w-5 h-5 relative transform group-hover:translate-x-2 transition-transform duration-300" />
+                  
+                  {/* Ripple Effect */}
+                  <span className="absolute inset-0 rounded-2xl">
+                    <span className="animate-ping absolute inset-0 rounded-2xl bg-blue-400 opacity-0 group-hover:opacity-20"></span>
+                  </span>
                 </button>
                 
                 <Link 
                   to="https://wa.me/6285950313360?text=Halo%20NexCube%20Digital%2C%20saya%20ingin%20berkonsultasi%20tentang%20kebutuhan%20digital%20saya" 
-                  className="group bg-white text-slate-700 px-8 py-4 rounded-xl font-semibold border-2 border-slate-200 hover:border-blue-300 hover:text-blue-700 transition-all duration-300 hover:scale-105 hover:shadow-lg inline-flex items-center gap-3"
+                  className="group relative backdrop-blur-xl bg-white/80 hover:bg-white border-2 border-slate-200 hover:border-orange-400 text-slate-700 hover:text-orange-600 px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-110 hover:shadow-2xl inline-flex items-center gap-3 overflow-hidden hover:-translate-y-1"
                 >
-                  <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
-                  </svg>
-                  <span>Konsultasi Gratis</span>
+                  {/* Glow Effect */}
+                  <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-orange-500 rounded-2xl blur opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
+                  
+                  <FaWhatsapp className="w-6 h-6 text-green-500 relative group-hover:scale-125 group-hover:rotate-12 transition-all duration-300 animate-pulse" />
+                  <span className="relative">Konsultasi Gratis</span>
+                  <HiSparkles className="w-5 h-5 relative opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:rotate-180" />
+                  
+                  {/* Shine Effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                 </Link>
               </div>
-
-              {/* Enhanced Stats */}
-              <div className={`grid grid-cols-2 md:grid-cols-4 gap-6 pt-6 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-400'}`}>
-                {stats.map((stat, index) => (
-                  <div key={index} className="text-center">
-                    <div className="text-lg mb-1">{stat.icon}</div>
-                    <div className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                      {stat.number}
-                    </div>
-                    <div className="text-sm text-slate-600">{stat.label}</div>
-                  </div>
-                ))}
+            </div>
+            
+            {/* Scroll Indicator - Animated */}
+            <div className="scroll-fade-in absolute left-1/2 -translate-x-1/2 animate-bounce">
+              <div className="flex flex-col items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors cursor-pointer">
+                <span className="text-xs font-semibold">Scroll Down</span>
+                <svg className="w-5 h-5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
               </div>
             </div>
-
-            {/* Enhanced Service Cards */}
-            <div className={`relative ${!isLoaded ? 'opacity-0' : 'animate-scaleIn delay-200'}`}>
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-100/50 to-purple-100/50 rounded-3xl blur-xl"></div>
-              <div className="relative bg-white/80 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-white/50">
-                <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold text-slate-800 mb-2">Layanan Premium Kami</h3>
-                  <p className="text-slate-600">Solusi digital berkualitas internasional</p>
-                </div>
-                
-                <div className="grid grid-cols-1 gap-6">
-                  {services.map((service, index) => (
-                    <div 
-                      key={index}
-                      style={{ animationDelay: `${500 + (index * 150)}ms` }}
-                      className={`group p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-white/50 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-2 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className={`p-3 rounded-xl bg-gradient-to-r ${service.gradient} text-white group-hover:scale-110 transition-transform duration-300`}>
-                          {service.icon}
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-bold text-slate-800 mb-2 group-hover:text-blue-700 transition-colors">
-                            {service.title}
-                          </h4>
-                          <p className="text-sm text-slate-600 leading-relaxed">
-                            {service.description}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           </div>
         </section>
 
-        {/* Enhanced Trusted By Section */}
-        <section className="py-16 bg-gradient-to-r from-slate-50 to-white">
-          <div className="container">
-            <div className="text-center mb-12">
-              <div className={`inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium text-slate-600 border border-slate-200 mb-4 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-600'}`}>
-                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                </svg>
-                Dipercaya oleh 30+ Bisnis
+        {/* Premium Services Section - Full Viewport (1 Frame) */}
+        <section className="relative h-screen flex items-center justify-center overflow-y-auto" ref={fadeInRef}>
+          {/* Modern Gradient Background */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white via-slate-50/30 to-white"></div>
+          
+          {/* Animated Dots Pattern */}
+          <div className="absolute inset-0 opacity-[0.03]">
+            <div className="absolute inset-0" style={{ 
+              backgroundImage: `linear-gradient(#0066FF 1px, transparent 1px), linear-gradient(90deg, #0066FF 1px, transparent 1px)`,
+              backgroundSize: '50px 50px'
+            }}></div>
+          </div>
+
+          <div className="container relative z-10 py-10">
+            {/* Section Header */}
+            <div className="text-center mb-6">
+              <div className="scroll-fade-in inline-block relative mb-6 scale-on-scroll">
+                {/* Premium NEXCUBE Badge */}
+                <div className="relative group cursor-pointer">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-orange-500 rounded-full blur-2xl opacity-75 group-hover:opacity-100 animate-pulse"></div>
+                  <div className="relative backdrop-blur-xl bg-gradient-to-r from-blue-600 to-orange-500 text-white px-8 py-4 rounded-full font-black text-sm md:text-base shadow-2xl border-4 border-white/50 flex items-center gap-2 group-hover:scale-110 transition-transform">
+                    <IoMdCube className="w-5 h-5" />
+                    <span>NEXCUBE</span>
+                    <HiSparkles className="w-4 h-4" />
+                  </div>
+                </div>
               </div>
-              <h2 className={`text-2xl font-bold text-slate-800 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-700'}`}>
-                Partner Terpercaya untuk Transformasi Digital
+
+              <h2 className="scroll-fade-in text-3xl md:text-4xl font-black text-slate-800 mb-2 flex items-center justify-center gap-3">
+                <HiSparkles className="w-8 h-8 text-orange-500" />
+                <span>Premium Services</span>
+                <HiSparkles className="w-8 h-8 text-blue-500" />
+              </h2>
+              <p className="scroll-fade-in text-base md:text-lg text-slate-600 font-medium max-w-2xl mx-auto">
+                Solusi digital terlengkap untuk bisnis modern
+              </p>
+            </div>
+
+            {/* Services Grid */}
+            <div className="grid md:grid-cols-2 gap-4 max-w-6xl mx-auto">
+              {services.map((service, index) => (
+                <div 
+                  key={index}
+                  className="scroll-fade-in scale-on-scroll group relative"
+                  style={{ animationDelay: `${index * 150}ms` }}
+                >
+                  <div className="relative h-full backdrop-blur-xl bg-white/80 hover:bg-white/95 rounded-3xl p-4 md:p-6 border border-white/50 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden cursor-pointer">
+                    {/* Animated Shine Effect */}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                    </div>
+                    
+                    {/* Gradient Border Effect on Hover */}
+                    <div className={`absolute -inset-[2px] bg-gradient-to-r ${service.gradient} rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm`}></div>
+                    
+                    <div className="relative space-y-3">
+                      {/* Gradient Icon with Multiple Animations */}
+                      <div className="flex items-center gap-3">
+                        <div className={`flex-shrink-0 p-4 rounded-2xl bg-gradient-to-br ${service.gradient} text-white shadow-xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 animate-pulse`}>
+                          <div className="group-hover:animate-spin-slow">
+                            {service.icon}
+                          </div>
+                        </div>
+                        
+                        <h3 className="text-xl md:text-2xl font-black text-slate-800 group-hover:text-blue-600 transition-colors flex items-center gap-2">
+                          {service.title}
+                          <FaBolt className="w-5 h-5 text-orange-500 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:animate-bounce" />
+                        </h3>
+                      </div>
+                      
+                      <p className="text-sm md:text-base text-slate-600 leading-relaxed group-hover:text-slate-700 transition-colors">
+                        {service.description}
+                      </p>
+                      
+                      {/* Feature Tags with Stagger Animation */}
+                      <div className="flex flex-wrap gap-2">
+                        {service.features.map((feature, idx) => (
+                          <span 
+                            key={idx} 
+                            className="inline-flex items-center gap-1 text-sm font-bold text-blue-600 bg-blue-50 px-4 py-2 rounded-full border border-blue-200 hover:bg-blue-100 hover:scale-110 transition-all duration-300"
+                            style={{ transitionDelay: `${idx * 50}ms` }}
+                          >
+                            <FaCheckCircle className="w-3 h-3 group-hover:animate-spin" />
+                            {feature}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Progress indicator on hover */}
+                      <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div 
+                          className={`h-full bg-gradient-to-r ${service.gradient} transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-1000`}
+                          style={{ transitionDelay: '200ms' }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    {/* Corner Badge */}
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:scale-100 scale-0">
+                      <div className={`bg-gradient-to-r ${service.gradient} text-white text-xs font-bold px-3 py-1 rounded-full shadow-xl animate-bounce`}>
+                        HOT
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* NEXCUBE Brand Showcase - Full Viewport (1 Frame) */}
+        <section className="relative h-screen flex items-center justify-center overflow-hidden" ref={fadeInRef}>
+          {/* Modern Gradient Background */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white via-blue-50/30 to-white"></div>
+          
+          {/* Animated Dots Pattern */}
+          <div className="absolute inset-0 opacity-[0.03]">
+            <div className="absolute inset-0" style={{ 
+              backgroundImage: `radial-gradient(circle, #0066FF 2px, transparent 2px)`,
+              backgroundSize: '40px 40px'
+            }}></div>
+          </div>
+
+          <div className="container relative z-10">
+            {/* Main NEXCUBE 3D Logo */}
+            <div className="text-center mb-6">
+              <div className="scroll-fade-in scale-on-scroll inline-block relative">
+                {/* Animated Glow Rings */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                  <div className="w-[400px] h-[400px] rounded-full border-4 border-blue-200 animate-ping opacity-20"></div>
+                </div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style={{ animationDelay: '0.5s' }}>
+                  <div className="w-[350px] h-[350px] rounded-full border-4 border-orange-200 animate-ping opacity-20"></div>
+                </div>
+                
+                {/* Main Logo Card - Glassmorphism */}
+                <div className="scale-on-scroll relative backdrop-blur-2xl bg-gradient-to-br from-blue-600 via-blue-500 to-orange-500 rounded-[30px] p-6 md:p-8 shadow-[0_30px_60px_-20px_rgba(0,102,255,0.5)] border-2 border-white/30">
+                  {/* NEXCUBE Real Logo - Enhanced */}
+                  <div className="mb-4 flex justify-center relative">
+                    <div className="relative group cursor-pointer">
+                      <div className="absolute inset-0 bg-white/30 rounded-2xl blur-2xl group-hover:blur-3xl transition-all animate-pulse"></div>
+                      <div className="relative backdrop-blur-xl bg-white/10 rounded-2xl p-4 border-2 border-white/30 shadow-2xl group-hover:scale-110 transition-transform duration-500">
+                        <img 
+                          src="/images/NexCube-full.png" 
+                          alt="NEXCUBE Digital Logo" 
+                          className="h-16 md:h-20 w-auto drop-shadow-2xl relative group-hover:rotate-3 transition-all duration-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Typography - Modern 2025 */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-center gap-2">
+                      <h2 className="text-4xl md:text-5xl font-black text-white drop-shadow-2xl">
+                        <span className="inline-block hover:scale-110 transition-transform">NEX</span>
+                        <span className="inline-block text-orange-200 hover:scale-110 transition-transform">CUBE</span>
+                      </h2>
+                      <HiSparkles className="w-8 h-8 text-orange-300 animate-pulse" />
+                    </div>
+                    <div className="text-xl font-black text-orange-200 tracking-wider">
+                      Digital.
+                    </div>
+                    <div className="text-sm font-bold text-white/90 max-w-2xl mx-auto">
+                      Your Trusted Digital Transformation Partner
+                    </div>
+                    
+                    {/* Feature Pills - Modern */}
+                    <div className="flex flex-wrap gap-2 justify-center mt-2">
+                      {[
+                        { text: 'Premium Quality', icon: <FaGem className="w-3 h-3" /> },
+                        { text: 'Lightning Fast', icon: <HiLightningBolt className="w-3 h-3" /> },
+                        { text: '24/7 Support', icon: <FaClock className="w-3 h-3" /> },
+                        { text: 'Best Value', icon: <FaStar className="w-3 h-3" /> }
+                      ].map((badge, i) => (
+                        <div key={i} className="scroll-fade-in group cursor-pointer backdrop-blur-xl bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full text-white text-sm font-bold border border-white/30 hover:border-white/50 transition-all duration-300 hover:scale-110 inline-flex items-center gap-2" style={{ animationDelay: `${i * 0.1}s` }}>
+                          {badge.icon}
+                          <span>{badge.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Why Choose NEXCUBE - Modern Cards */}
+            <div className="grid md:grid-cols-3 gap-4 md:gap-5">
+              {[
+                {
+                  icon: <FaRocket className="w-12 h-12" />,
+                  title: 'Innovation First',
+                  desc: 'Teknologi cutting-edge dan solusi inovatif untuk akselerasi bisnis digital Anda',
+                  gradient: 'from-blue-500 to-cyan-500'
+                },
+                {
+                  icon: <FaGem className="w-12 h-12" />,
+                  title: 'Premium Quality',
+                  desc: 'Standar kualitas internasional dengan harga yang kompetitif dan value terbaik',
+                  gradient: 'from-purple-500 to-pink-500'
+                },
+                {
+                  icon: <FaBolt className="w-12 h-12" />,
+                  title: 'Fast & Reliable',
+                  desc: 'Pengerjaan cepat dengan hasil maksimal, tanpa mengorbankan kualitas premium',
+                  gradient: 'from-orange-500 to-amber-500'
+                }
+              ].map((item, index) => (
+                <div key={index} className="scroll-fade-in scale-on-scroll group" style={{ animationDelay: `${index * 0.2}s` }}>
+                  <div className="relative backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 rounded-3xl p-5 shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden">
+                    {/* Gradient Overlay */}
+                    <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}></div>
+                    
+                    <div className="relative text-center space-y-3">
+                      {/* Icon */}
+                      <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${item.gradient} text-white shadow-2xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                        <div className="w-8 h-8">{item.icon}</div>
+                      </div>
+                      
+                      {/* Title */}
+                      <h3 className="text-lg font-black text-slate-800 bg-gradient-to-r ${item.gradient} bg-clip-text group-hover:text-transparent transition-all duration-300">
+                        {item.title}
+                      </h3>
+                      
+                      {/* Description */}
+                      <p className="text-sm text-slate-600 leading-relaxed">
+                        {item.desc}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Trusted By Section - Full Viewport (1 Frame) */}
+        <section className="relative h-screen flex items-center justify-center overflow-hidden" ref={fadeInRef}>
+          {/* Modern Background */}
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-white to-orange-50/50"></div>
+          
+          {/* 3D NEXCUBE Pattern Background */}
+          <div className="absolute inset-0 opacity-5 overflow-hidden">
+            <div className="grid grid-cols-8 gap-6 p-8 rotate-12 scale-150">
+              {[...Array(32)].map((_, i) => (
+                <div key={i} className="scroll-fade-in animate-float" style={{ animationDelay: `${i * 0.1}s` }}>
+                  <svg viewBox="0 0 40 40" className="w-10 h-10">
+                    <rect x="2" y="2" width="36" height="36" rx="4" fill="none" stroke="#FF9900" strokeWidth="2" opacity="0.4" />
+                    <g transform="translate(20, 20)">
+                      <path d="M-8,-4 L8,-4 L8,10 L-8,10 Z" fill="#0066FF" opacity="0.6" />
+                      <path d="M-8,-10 L0,-13 L16,-6 L8,-4 Z" fill="#0080FF" opacity="0.8" />
+                      <path d="M8,-4 L16,-6 L16,6 L8,10 Z" fill="#0052CC" opacity="0.7" />
+                    </g>
+                  </svg>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="container relative z-10">
+            <div className="text-center mb-12">
+              <div className="scroll-fade-in inline-flex items-center gap-3 backdrop-blur-xl bg-white/80 border border-white/40 px-6 py-3 rounded-2xl text-sm font-bold text-slate-700 shadow-xl mb-6">
+                <FaCheckCircle className="w-5 h-5 text-green-500" />
+                <span>Dipercaya oleh <span className="text-blue-600">30+</span> Bisnis di Indonesia</span>
+              </div>
+              
+              <h2 className="scroll-fade-in text-4xl font-black text-slate-800">
+                Partner Terpercaya untuk <span className="bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent">Transformasi Digital</span>
               </h2>
             </div>
             
-            <div className="flex flex-wrap justify-center items-center gap-8 opacity-60 hover:opacity-80 transition-opacity">
+            <div className="flex flex-wrap justify-center items-center gap-8">
               {[1, 2, 3, 4, 5].map((item, index) => (
                 <div 
                   key={index}
-                  style={{ animationDelay: `${800 + (index * 100)}ms` }}
-                  className={`bg-white/50 backdrop-blur-sm p-4 rounded-xl border border-white/50 hover:shadow-lg transition-all duration-300 hover:scale-105 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                  className="scroll-fade-in group"
                 >
-                  <img 
-                    src={`/images/clients/client-${item}.png`} 
-                    alt={`Client Logo ${item}`}
-                    className="h-8 w-auto object-contain" 
-                  />
+                  <div className="backdrop-blur-xl bg-white/70 hover:bg-white/90 p-6 rounded-2xl border border-white/50 hover:shadow-2xl transition-all duration-300 hover:scale-110">
+                    <img 
+                      src={`/images/clients/client-${item}.png`} 
+                      alt={`Client Logo ${item}`}
+                      className="h-12 w-auto object-contain opacity-60 group-hover:opacity-100 transition-opacity" 
+                    />
+                  </div>
                 </div>
               ))}
             </div>
@@ -276,72 +823,94 @@ export const Home: React.FC = () => {
           <Portfolio />
         </section>
 
-        {/* Enhanced Testimonials */}
+        {/* Testimonials - Full Viewport (1 Frame) */}
         <section 
           ref={testimonialSectionRef}
-          className="py-24 bg-gradient-to-b from-slate-50 to-white"
+          className="relative h-screen flex items-center justify-center overflow-hidden"
         >
-          <div className="container">
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <div className={`inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full text-sm font-medium text-slate-600 border border-slate-200 mb-6 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-300'}`}>
-                ⭐ 4.9/5 Rating dari 30+ Klien
+          {/* Modern Gradient Background */}
+          <div className="absolute inset-0 bg-gradient-to-b from-white via-slate-50/50 to-white"></div>
+          
+          {/* Animated NEXCUBE Orbs */}
+          <div className="absolute top-20 left-10 opacity-10" ref={scaleRef}>
+            <div className="scale-on-scroll w-80 h-80 bg-gradient-to-br from-blue-600 to-blue-400 rounded-full blur-[100px] animate-pulse"></div>
+          </div>
+          <div className="absolute bottom-20 right-10 opacity-10" ref={scaleRef}>
+            <div className="scale-on-scroll w-80 h-80 bg-gradient-to-br from-orange-500 to-orange-300 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }}></div>
+          </div>
+          
+          <div className="container relative z-10">
+            <div className="text-center max-w-3xl mx-auto mb-12">
+              <div className="scroll-fade-in inline-flex items-center gap-2 backdrop-blur-xl bg-white/80 border border-white/40 px-6 py-3 rounded-2xl text-sm font-bold text-orange-600 shadow-xl mb-6">
+                <FaStar className="w-5 h-5" />
+                <span>4.9/5 Rating dari 30+ Klien Puas</span>
               </div>
-              <h2 className={`text-3xl md:text-4xl font-bold text-slate-800 mb-6 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-400'}`}>
-                Cerita Sukses <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Klien Kami</span>
+              
+              <h2 className="scroll-fade-in text-5xl font-black text-slate-800 mb-6">
+                Cerita Sukses <span className="bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent">Klien Kami</span>
               </h2>
-              <p className={`text-lg text-slate-600 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-500'}`}>
-                Kepuasan dan kesuksesan klien adalah prioritas utama kami dalam setiap proyek digital
+              
+              <p className="scroll-fade-in text-lg text-slate-600">
+                Kepuasan dan kesuksesan klien adalah prioritas utama dalam setiap proyek digital kami
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-3 gap-6 md:gap-6">
               {testimonials.map((testimonial, index) => (
                 <div 
                   key={index}
-                  style={{ animationDelay: `${600 + (index * 150)}ms` }}
-                  className={`group bg-white/80 backdrop-blur-sm p-8 rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 border border-white/50 hover:-translate-y-2 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}
+                  className="scroll-fade-in scale-on-scroll group"
+                  style={{ animationDelay: `${index * 0.2}s` }}
                 >
-                  {/* Rating Stars */}
-                  <div className="flex mb-6">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <svg key={i} className="w-5 h-5 text-amber-400 fill-current" viewBox="0 0 24 24">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                      </svg>
-                    ))}
-                  </div>
-                  
-                  <blockquote className="text-slate-600 italic leading-relaxed mb-6 group-hover:text-slate-700 transition-colors">
-                    "{testimonial.text}"
-                  </blockquote>
-                  
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
-                      <span className="text-blue-700 font-semibold text-lg">
-                        {testimonial.name.charAt(0)}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="font-semibold text-slate-800 group-hover:text-blue-700 transition-colors">
-                        {testimonial.name}
+                  <div className="relative h-full backdrop-blur-2xl bg-white/80 hover:bg-white/95 border border-white/60 rounded-3xl p-6 md:p-8 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden">
+                    {/* Gradient Overlay on Hover */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    
+                    <div className="relative space-y-6">
+                      {/* Rating Stars */}
+                      <div className="flex gap-1">
+                        {[...Array(testimonial.rating)].map((_, i) => (
+                          <FaStar key={i} className="w-5 h-5 text-amber-400 fill-current drop-shadow-sm" />
+                        ))}
                       </div>
-                      <div className="text-sm text-slate-500">{testimonial.company}</div>
+                      
+                      {/* Testimonial Text */}
+                      <blockquote className="text-slate-700 leading-relaxed italic text-lg group-hover:text-slate-800 transition-colors">
+                        "{testimonial.text}"
+                      </blockquote>
+                      
+                      {/* Client Info */}
+                      <div className="flex items-center gap-4 pt-4 border-t border-slate-200">
+                        <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-blue-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                          <span className="text-white font-black text-xl drop-shadow">
+                            {testimonial.name.charAt(0)}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="font-black text-slate-800 group-hover:text-blue-600 transition-colors text-lg">
+                            {testimonial.name}
+                          </div>
+                          <div className="text-sm font-semibold text-slate-500 flex items-center gap-2">
+                            <FaCheckCircle className="w-3 h-3 text-green-500" />
+                            {testimonial.company}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
             
-            {/* Enhanced Back to Top */}
-            <div className="text-center mt-16">
-              <button 
-                onClick={(e) => handleScrollToSection(heroSectionRef, e)}
-                className="group inline-flex items-center gap-2 bg-white/80 backdrop-blur-sm text-slate-600 hover:text-blue-700 px-6 py-3 rounded-xl border border-slate-200 hover:border-blue-300 transition-all duration-300 hover:scale-105 hover:shadow-lg"
-              >
-                <svg className="w-5 h-5 transform group-hover:-translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                </svg>
-                Kembali ke Atas
-              </button>
+            {/* Modern Footer NEXCUBE Branding */}
+            <div className="text-center mt-16" ref={fadeInRef}>
+              {/* Main NEXCUBE Card - Ultra Modern */}
+              <div className="scroll-fade-in mb-12">
+                <div className="inline-block relative group cursor-pointer">
+                  {/* Glow Effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-orange-500 rounded-[40px] blur-3xl opacity-40 group-hover:opacity-60 transition-opacity animate-pulse"></div>                  
+                </div>
+              </div>
             </div>
           </div>
         </section>

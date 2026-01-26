@@ -1,7 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import LoginButton from './LoginButton';
 import apiClient from '../../services/api'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+
+gsap.registerPlugin(ScrollTrigger)
 
 export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -10,6 +14,30 @@ export const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userName, setUserName] = useState<string | null>(null);
+  const logoRef = useRef<HTMLDivElement>(null);
+
+  // GSAP animation for logo on scroll
+  useEffect(() => {
+    if (!logoRef.current) return;
+
+    gsap.to(logoRef.current, {
+      scale: isScrolled ? 0.9 : 1,
+      duration: 0.3,
+      ease: 'power2.out'
+    });
+
+    // Pulsing glow effect on scroll
+    if (isScrolled) {
+      gsap.to(logoRef.current.querySelector('.logo-glow'), {
+        opacity: 0.6,
+        scale: 1.2,
+        duration: 1.5,
+        repeat: -1,
+        yoyo: true,
+        ease: 'sine.inOut'
+      });
+    }
+  }, [isScrolled]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -103,26 +131,30 @@ export const Navbar: React.FC = () => {
         : 'bg-gradient-to-b from-white/90 to-white/50 backdrop-blur-xl border-b border-white/30'
     }`}>
       {/* Animated gradient background */}
-      <div className="absolute inset-0 opacity-0 hover:opacity-5 transition-opacity duration-300 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600"></div>
+      <div className="absolute inset-0 opacity-0 hover:opacity-5 transition-opacity duration-300 bg-gradient-to-r from-blue-600 via-orange-500 to-blue-600"></div>
 
       <div className="container mx-auto px-4 relative">
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo with Enhanced Animation */}
           <Link to="/" className="flex items-center space-x-3 group relative z-10">
-            <div className="relative">
-              {/* Animated glow effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full blur-xl opacity-0 group-hover:opacity-40 transition-all duration-500 scale-0 group-hover:scale-100"></div>
+            <div className="relative" ref={logoRef}>
+              {/* Animated glow effect - NEXCUBE blue */}
+              <div className="logo-glow absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-400 rounded-full blur-xl opacity-0 transition-all duration-500"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-blue-400 to-orange-400 rounded-full blur-2xl opacity-0 group-hover:opacity-40 transition-all duration-500 scale-0 group-hover:scale-150 animate-pulse"></div>
               <img 
                 src="/images/NexCube-full.png" 
                 alt="NexCube Digital" 
-                className="h-12 lg:h-14 w-auto transition-all duration-300 group-hover:scale-110 filter drop-shadow-sm group-hover:drop-shadow-lg relative"
+                className="h-12 lg:h-14 w-auto transition-all duration-300 group-hover:scale-110 filter drop-shadow-sm group-hover:drop-shadow-2xl relative group-hover:brightness-110"
               />
+              {/* Sparkle effect on hover - orange accent */}
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-400 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:animate-ping"></div>
+              <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-blue-400 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:animate-ping" style={{ animationDelay: '0.2s' }}></div>
             </div>
             <div className="hidden xs:block">
-              <div className="text-base lg:text-lg font-black bg-gradient-to-r from-slate-900 via-blue-700 to-purple-700 bg-clip-text text-transparent tracking-tight">
+              <div className="text-base lg:text-lg font-black bg-gradient-to-r from-slate-900 via-blue-600 to-orange-500 bg-clip-text text-transparent tracking-tight group-hover:from-blue-600 group-hover:via-blue-500 group-hover:to-orange-500 transition-all duration-300">
                 NexCube
               </div>
-              <div className="text-xs lg:text-sm font-bold text-transparent bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 bg-clip-text">
+              <div className="text-xs lg:text-sm font-bold text-transparent bg-gradient-to-r from-blue-600 via-blue-500 to-orange-500 bg-clip-text animate-gradient-x">
                 Digital Studio
               </div>
             </div>
@@ -136,18 +168,18 @@ export const Navbar: React.FC = () => {
                 to={link.href}
                 className={`relative group px-4 py-2 text-sm font-bold transition-all duration-300 rounded-xl flex items-center gap-2 ${
                   isActive(link.href)
-                    ? 'text-blue-600 bg-gradient-to-r from-blue-50 via-purple-50 to-blue-50'
+                    ? 'text-blue-600 bg-gradient-to-r from-blue-50 via-orange-50 to-blue-50'
                     : 'text-slate-700 hover:text-blue-700'
                 }`}
               >
                 {/* Animated background on hover */}
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-100/0 via-purple-100/0 to-blue-100/0 group-hover:from-blue-100 group-hover:via-purple-100 group-hover:to-blue-100 rounded-xl transition-all duration-300 -z-10"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-100/0 via-orange-100/0 to-blue-100/0 group-hover:from-blue-100 group-hover:via-orange-100 group-hover:to-blue-100 rounded-xl transition-all duration-300 -z-10"></div>
                 
                 <span className="transition-all duration-300 group-hover:scale-110 group-hover:rotate-12">{link.icon}</span>
                 <span className="hidden sm:inline">{link.name}</span>
 
                 {/* Animated underline */}
-                <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 rounded-full transition-all duration-300 ${
+                <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-orange-500 to-blue-600 rounded-full transition-all duration-300 ${
                   isActive(link.href) 
                     ? 'w-full opacity-100' 
                     : 'w-0 opacity-0 group-hover:w-full group-hover:opacity-100'
@@ -160,7 +192,7 @@ export const Navbar: React.FC = () => {
           <div className="hidden lg:flex items-center space-x-3 relative z-10">
             {isAuthenticated ? (
               <div className="flex items-center gap-3">
-                <Link to="/dashboard" className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold">
+                <Link to="/dashboard" className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-orange-500 text-white font-semibold hover:shadow-lg transition-all">
                   {userName ? `Halo, ${userName}` : 'Dashboard'}
                 </Link>
                 <button onClick={handleLogout} className="text-sm px-3 py-2 rounded-xl border border-white/20 hover:bg-white/5">Logout</button>
@@ -173,7 +205,7 @@ export const Navbar: React.FC = () => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="lg:hidden p-3 rounded-xl hover:bg-gradient-to-r hover:from-blue-100 hover:to-purple-100 transition-all duration-300 relative z-10 group"
+            className="lg:hidden p-3 rounded-xl hover:bg-gradient-to-r hover:from-blue-100 hover:to-orange-100 transition-all duration-300 relative z-10 group"
             aria-label="Toggle menu"
           >
             <svg className="w-6 h-6 text-slate-700 transition-all duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
@@ -204,8 +236,8 @@ export const Navbar: React.FC = () => {
                 onClick={() => setIsMenuOpen(false)}
                 className={`flex px-5 py-4 text-base font-bold transition-all duration-300 rounded-xl group relative overflow-hidden items-center gap-3 ${
                   isActive(link.href)
-                    ? 'text-blue-600 bg-gradient-to-r from-blue-100 via-purple-100 to-blue-100'
-                    : 'text-slate-700 hover:text-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50'
+                    ? 'text-blue-600 bg-gradient-to-r from-blue-100 via-orange-100 to-blue-100'
+                    : 'text-slate-700 hover:text-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-orange-50'
                 }`}
                 style={{ 
                   animation: isMenuOpen ? `slideIn 0.3s ease-out ${index * 0.05}s forwards` : 'none',
@@ -225,7 +257,7 @@ export const Navbar: React.FC = () => {
                     <Link
                       to="/dashboard"
                       onClick={() => setIsMenuOpen(false)}
-                      className="block w-full text-center px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                      className="block w-full text-center px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-blue-600 to-orange-500 text-white hover:shadow-lg transition-all"
                     >
                       Dashboard
                     </Link>

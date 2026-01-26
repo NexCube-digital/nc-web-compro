@@ -15,7 +15,7 @@ interface PortfolioItem {
 }
 
 export const Portfolio: React.FC = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('Semua');
   const [isLoaded, setIsLoaded] = React.useState(false);
 
   React.useEffect(() => {
@@ -125,9 +125,9 @@ export const Portfolio: React.FC = () => {
 
   const categories = ['Semua', 'Website', 'Undangan Digital', 'Desain Grafis', 'Katalog Digital', 'Fotografi'];
 
-  const filteredItems = selectedCategory && selectedCategory !== 'Semua'
-    ? portfolioItems.filter(item => item.category === selectedCategory)
-    : portfolioItems;
+  const filteredItems = selectedCategory === 'Semua'
+    ? portfolioItems
+    : portfolioItems.filter(item => item.category === selectedCategory);
 
   return (
     <section className="py-24 bg-gradient-to-b from-white to-slate-50">
@@ -152,10 +152,10 @@ export const Portfolio: React.FC = () => {
             <button
               key={index}
               onClick={() => setSelectedCategory(category)}
-              className={`px-6 py-2.5 rounded-full font-bold text-sm transition-all duration-300 ${
-                selectedCategory === category || (selectedCategory === null && category === 'Semua')
-                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg hover:shadow-xl'
-                  : 'bg-white text-slate-700 border-2 border-slate-200 hover:border-blue-300 hover:text-blue-700'
+              className={`px-6 py-2.5 rounded-full font-bold text-sm transition-all duration-300 hover:scale-105 hover:shadow-lg ${
+                selectedCategory === category
+                  ? 'bg-gradient-to-r from-blue-600 to-orange-500 text-white shadow-lg'
+                  : 'bg-white/80 backdrop-blur-xl text-slate-700 border-2 border-white/50 hover:border-blue-400 hover:text-blue-700'
               }`}
             >
               {category}

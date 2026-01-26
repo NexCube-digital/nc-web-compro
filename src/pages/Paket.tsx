@@ -1,10 +1,16 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async';
 import { PricingCard } from '../ui/PricingCard'
 import apiClient from '../services/api'
 import { pricingData } from '../data/pricingData'
 import { Navbar } from '../components/layout/Navbar';
+import { useScrollFadeIn, useScrollScale, useParallax } from '../hooks/useGsapAnimation';
+import { useSmoothScroll } from '../hooks/useSmoothAnimation';
+import { useCountUp } from '../hooks/useCountUp';
+import { HiSparkles, HiCheckCircle } from 'react-icons/hi';
+import { FaRocket, FaArrowRight, FaWhatsapp } from 'react-icons/fa';
+import gsap from 'gsap';
 
 export const Paket: React.FC = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -12,8 +18,22 @@ export const Paket: React.FC = () => {
   const [paketCategories, setPaketCategories] = useState<any[]>([])
   const [activeTab, setActiveTab] = useState<'all' | 'website' | 'undangan' | 'desain' | 'katalog'>('website');
   const [showSidebar, setShowSidebar] = useState(false);
+  const [showHero, setShowHero] = useState(false);
   const location = useLocation()
   const navigate = useNavigate();
+  const fadeInRef = useRef<HTMLDivElement>(null);
+  const heroTitleRef = useRef<HTMLHeadingElement>(null);
+  const heroBadgeRef = useRef<HTMLDivElement>(null);
+  const heroDescRef = useRef<HTMLParagraphElement>(null);
+  const heroStatsRef = useRef<HTMLDivElement>(null);
+  const heroCTARef = useRef<HTMLDivElement>(null);
+  const heroLogoRef = useRef<HTMLDivElement>(null);
+
+  // Apply GSAP animations
+  useScrollFadeIn('.scroll-fade-in');
+  useScrollScale('.scale-on-scroll');
+  useParallax('.parallax-element', 0.3);
+  useSmoothScroll();
 
   // Base category definitions with UI elements
   const basePaketCategories = [
@@ -141,6 +161,63 @@ export const Paket: React.FC = () => {
   
   useEffect(() => {
     const timer = setTimeout(() => setIsLoaded(true), 100);
+    const heroTimer = setTimeout(() => {
+      setShowHero(true);
+      
+      // GSAP animations for hero elements
+      // Animate badge
+      if (heroBadgeRef.current) {
+        gsap.fromTo(heroBadgeRef.current,
+          { scale: 0, opacity: 0 },
+          { scale: 1, opacity: 1, duration: 0.8, ease: 'elastic.out(1, 0.8)', delay: 0.1 }
+        );
+      }
+      
+      // Animate title words
+      if (heroTitleRef.current) {
+        const titleSpans = heroTitleRef.current.querySelectorAll('.hero-title-word');
+        gsap.fromTo(titleSpans,
+          { y: 50, opacity: 0 },
+          { y: 0, opacity: 1, duration: 1, ease: 'expo.out', stagger: 0.15, delay: 0.3 }
+        );
+      }
+      
+      // Animate description
+      if (heroDescRef.current) {
+        gsap.fromTo(heroDescRef.current,
+          { y: 30, opacity: 0 },
+          { y: 0, opacity: 1, duration: 1, ease: 'power2.out', delay: 0.6 }
+        );
+      }
+      
+      // Animate stats cards
+      if (heroStatsRef.current) {
+        const statsCards = heroStatsRef.current.querySelectorAll('.stat-card');
+        gsap.fromTo(statsCards,
+          { scale: 0.8, opacity: 0, y: 40 },
+          { scale: 1, opacity: 1, y: 0, duration: 0.8, ease: 'back.out(1.4)', stagger: 0.1, delay: 0.8 }
+        );
+      }
+      
+      // Animate CTA buttons
+      if (heroCTARef.current) {
+        const ctaButtons = heroCTARef.current.querySelectorAll('.cta-button');
+        gsap.fromTo(ctaButtons,
+          { y: 30, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.8, ease: 'expo.out', stagger: 0.15, delay: 1.2 }
+        );
+      }
+      
+      // Animate 3D logo rotation
+      if (heroLogoRef.current) {
+        gsap.to(heroLogoRef.current, {
+          rotation: 360,
+          duration: 20,
+          ease: 'none',
+          repeat: -1
+        });
+      }
+    }, 300);
 
     // Scroll listener for sidebar visibility
     const handleScroll = () => {
@@ -231,6 +308,7 @@ export const Paket: React.FC = () => {
 
     return () => {
       clearTimeout(timer);
+      clearTimeout(heroTimer);
       window.removeEventListener('scroll', handleScroll);
       observer.disconnect();
     }
@@ -244,11 +322,11 @@ export const Paket: React.FC = () => {
       : pricingData.filter(item => category.tierIds.includes(item.id));
     
     return (
-      <div key={category.id} data-category={category.id} className={`mb-24 scroll-mt-32 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}>
+      <div key={category.id} data-category={category.id} className="mb-24 scroll-mt-32 scroll-fade-in relative z-20">
         {/* Category Header */}
         <div className="mb-12 text-center">
           <div className="inline-flex flex-col items-center">
-            <div className={`inline-flex items-center gap-3 bg-gradient-to-r ${category.gradient} text-white px-8 py-4 rounded-3xl mb-5 shadow-2xl hover:scale-105 transition-transform duration-300`}>
+            <div className={`inline-flex items-center gap-3 bg-gradient-to-r ${category.gradient} text-white px-8 py-4 rounded-3xl mb-5 shadow-2xl scale-on-scroll transition-transform duration-300 relative z-20`}>
               <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
                 {category.icon}
               </div>
@@ -274,8 +352,7 @@ export const Paket: React.FC = () => {
               return (
                 <div 
                   key={isBackendPkg ? `pkg-${tier.id}` : `tier-${index}`} 
-                  style={{ animationDelay: `${400 + (index * 100)}ms` }} 
-                  className={!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}
+                  className="scroll-fade-in scale-on-scroll"
                 >
                   <div className="block h-full">
                     {isBackendPkg && category.id === 'undangan' ? (
@@ -322,8 +399,7 @@ export const Paket: React.FC = () => {
                 return (
                   <div 
                     key={isBackendPkg ? `pkg-${tier.id}` : `tier-${index + 3}`} 
-                    style={{ animationDelay: `${400 + ((index + 3) * 100)}ms` }} 
-                    className={!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}
+                    className="scroll-fade-in scale-on-scroll"
                   >
                     <div className="block h-full">
                       {isBackendPkg && category.id === 'undangan' ? (
@@ -385,85 +461,234 @@ export const Paket: React.FC = () => {
   return (
     <>
       <Navbar />
+      
+      {/* Background Elements with NEXCUBE Branding - Same as Home */}
+      <div className="fixed top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-500/20 to-orange-400/20 rounded-full blur-3xl -translate-x-48 -translate-y-48 animate-pulse parallax-element pointer-events-none z-0"></div>
+      <div className="fixed bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-orange-400/20 to-blue-500/20 rounded-full blur-3xl translate-x-48 translate-y-48 animate-pulse parallax-element pointer-events-none z-0" style={{ animationDelay: '2s' }}></div>
+      
+      {/* Floating NEXCUBE 3D Cubes */}
+      <div className="fixed top-20 right-10 opacity-20 pointer-events-none z-0">
+        <div className="floating-element">
+          <svg viewBox="0 0 100 100" className="w-32 h-32">
+            <defs>
+              <linearGradient id="cubeGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style={{ stopColor: '#0066FF', stopOpacity: 1 }} />
+                <stop offset="100%" style={{ stopColor: '#0052CC', stopOpacity: 1 }} />
+              </linearGradient>
+            </defs>
+            <path d="M50 10 L90 30 L90 70 L50 90 L10 70 L10 30 Z" fill="url(#cubeGradient1)" />
+            <path d="M50 10 L90 30 L50 50 L10 30 Z" fill="#0080FF" opacity="0.8" />
+            <path d="M50 50 L50 90 L10 70 L10 30 Z" fill="#0052CC" opacity="0.9" />
+          </svg>
+        </div>
+      </div>
+      <div className="fixed bottom-20 left-10 opacity-20 pointer-events-none z-0" style={{ animationDelay: '1s' }}>
+        <div className="floating-element">
+          <svg viewBox="0 0 100 100" className="w-40 h-40">
+            <rect x="10" y="10" width="80" height="80" rx="5" fill="none" stroke="#FF9900" strokeWidth="3" />
+            <path d="M50 20 L85 40 L85 75 L50 85 L15 75 L15 40 Z" fill="url(#cubeGradient1)" />
+          </svg>
+        </div>
+      </div>
+      
+      {/* Parallax NEXCUBE watermark */}
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.08] pointer-events-none z-0">
+        <div className="parallax-element text-[10rem] md:text-[15rem] font-black bg-gradient-to-r from-blue-600/30 to-orange-500/30 bg-clip-text text-transparent">
+          NEXCUBE
+        </div>
+      </div>
+      
       <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
         <Helmet>
           <title>Paket Layanan - NexCube Digital</title>
           <meta name="description" content="Pilihan paket layanan NexCube Digital mulai dari website, undangan digital, desain grafis, hingga katalog digital" />
         </Helmet>
 
-        {/* Hero Section */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-blue-700 min-h-screen flex items-center">
-          {/* Animated Background */}
-          <div className="absolute inset-0 opacity-30">
-            <div className="absolute top-0 left-0 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob"></div>
-            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-2000"></div>
-            <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
+        {/* Hero Section - Full Viewport Template from Home */}
+        <section className="relative h-screen flex items-start justify-center overflow-hidden pt-20">
+          {/* Modern Gradient Mesh Background */}
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-orange-50/30"></div>
+          
+          {/* Animated Grid Pattern */}
+          <div className="absolute inset-0 opacity-[0.03]">
+            <div className="absolute inset-0" style={{
+              backgroundImage: `linear-gradient(#0066FF 1px, transparent 1px), linear-gradient(90deg, #0066FF 1px, transparent 1px)`,
+              backgroundSize: '50px 50px'
+            }}></div>
           </div>
+          
+          {/* Animated 3D NEXCUBE Logo Background */}
+          <div className="absolute top-20 right-10 opacity-10" ref={heroLogoRef}>
+            <div className="w-64 h-64 md:w-96 md:h-96">
+              <svg viewBox="0 0 200 200" className="w-full h-full">
+                <defs>
+                  <linearGradient id="logoGradientPaket" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style={{ stopColor: '#0066FF', stopOpacity: 1 }} />
+                    <stop offset="100%" style={{ stopColor: '#0052CC', stopOpacity: 1 }} />
+                  </linearGradient>
+                  <linearGradient id="orangeFramePaket" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style={{ stopColor: '#FF9900', stopOpacity: 1 }} />
+                    <stop offset="100%" style={{ stopColor: '#FF7700', stopOpacity: 1 }} />
+                  </linearGradient>
+                </defs>
+                {/* Orange Frame */}
+                <rect x="30" y="30" width="140" height="140" rx="10" fill="url(#orangeFramePaket)" opacity="0.6" />
+                {/* 3D Cube */}
+                <g transform="translate(100, 100)">
+                  {/* Back face */}
+                  <path d="M-30,-15 L30,-15 L30,45 L-30,45 Z" fill="#0052CC" opacity="0.7" />
+                  {/* Top face */}
+                  <path d="M-30,-45 L0,-60 L60,-30 L30,-15 Z" fill="#0080FF" opacity="0.9" />
+                  {/* Right face */}
+                  <path d="M30,-15 L60,-30 L60,30 L30,45 Z" fill="url(#logoGradientPaket)" />
+                  {/* Left face */}
+                  <path d="M-30,-15 L0,-30 L0,30 L-30,45 Z" fill="#0052CC" opacity="0.8" />
+                  {/* Front face */}
+                  <path d="M0,-30 L60,-30 L60,30 L0,30 Z" fill="url(#logoGradientPaket)" />
+                </g>
+              </svg>
+            </div>
+          </div>
+          
+          <div className="container relative">
+            <div className="max-w-6xl mx-auto text-center space-y-4">
+              
+              {/* Modern Trust Badge */}
+              <div ref={heroBadgeRef} className="inline-flex items-center justify-center gap-3 backdrop-blur-xl bg-white/70 border border-white/30 shadow-lg px-5 py-2 rounded-2xl">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-orange-500 rounded-full blur-md opacity-75 animate-pulse"></div>
+                  <HiSparkles className="w-5 h-5 text-orange-500 relative" />
+                </div>
+                <span className="text-sm font-bold bg-gradient-to-r from-blue-600 to-orange-600 bg-clip-text text-transparent">Paket Premium 2025</span>
+              </div>
 
-          <div className="container relative z-10 py-20">
-            <div className={`text-center max-w-4xl mx-auto ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}>
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white text-sm font-semibold mb-6">
-                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                Solusi Digital Terlengkap
+              <div className="space-y-2">
+                <h1 ref={heroTitleRef} className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-[1.05] tracking-tight">
+                  <span className="inline-block hero-title-word">
+                    <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 bg-clip-text text-transparent drop-shadow-lg">Paket Layanan</span>
+                  </span>
+                  <br />
+                  <span className="inline-block hero-title-word">
+                    <span className="bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 bg-clip-text text-transparent drop-shadow-lg">Terlengkap</span>
+                  </span>
+                  <br />
+                  <span className="text-slate-800 text-2xl md:text-3xl lg:text-4xl font-bold mt-2 inline-block drop-shadow hero-title-word">Untuk Semua Kebutuhan</span>
+                </h1>
+                
+                <p ref={heroDescRef} className="text-sm md:text-base lg:text-lg text-slate-600 leading-relaxed max-w-3xl mx-auto">
+                  Pilih paket yang <span className="font-bold text-blue-600">sesuai kebutuhan</span> bisnis Anda. Dari <span className="font-bold text-orange-600">startup hingga enterprise</span>, kami hadirkan solusi yang <span className="font-bold text-slate-800">menghasilkan hasil nyata</span>.
+                </p>
+              </div>
+
+              {/* Modern Stats Cards */}
+              <div className="scroll-fade-in" ref={fadeInRef}>
+                <div ref={heroStatsRef} className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-5xl mx-auto">
+                  {[
+                    { number: 4, suffix: '+', label: 'Kategori Paket', icon: <HiCheckCircle className="w-6 h-6" />, color: 'from-blue-600 to-cyan-500' },
+                    { number: 15, suffix: '+', label: 'Pilihan Paket', icon: <FaRocket className="w-5 h-5" />, color: 'from-orange-500 to-amber-500' },
+                    { number: 100, suffix: '%', label: 'Customizable', icon: <HiSparkles className="w-6 h-6" />, color: 'from-purple-600 to-pink-500' },
+                    { number: 24, suffix: '/7', label: 'Support', icon: <FaWhatsapp className="w-5 h-5" />, color: 'from-green-600 to-emerald-500' }
+                  ].map((stat, index) => {
+                    const StatCounter = () => {
+                      const { formattedValue, elementRef } = useCountUp({
+                        end: stat.number,
+                        duration: 2,
+                        suffix: stat.suffix,
+                        enableScrollTrigger: false
+                      });
+
+                      return (
+                        <div 
+                          ref={elementRef as React.RefObject<HTMLDivElement>}
+                          className={`text-2xl md:text-3xl font-black bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}
+                        >
+                          {formattedValue()}
+                        </div>
+                      );
+                    };
+
+                    return (
+                      <div key={index} className="scale-on-scroll group relative stat-card">
+                        <div className="relative backdrop-blur-xl bg-white/70 border border-white/30 rounded-2xl p-4 md:p-5 hover:bg-white/90 transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer overflow-hidden">
+                          <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
+                          <div className={`absolute -inset-1 bg-gradient-to-r ${stat.color} rounded-2xl blur opacity-0 group-hover:opacity-30 transition-opacity duration-500`}></div>
+                          
+                          <div className="relative text-center space-y-1 md:space-y-2">
+                            <div className={`inline-flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br ${stat.color} text-white shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 animate-pulse`}>
+                              {stat.icon}
+                            </div>
+                            <StatCounter />
+                            <div className="text-xs md:text-sm font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">
+                              {stat.label}
+                            </div>
+                            <div className="w-full h-1 bg-slate-200/50 rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full bg-gradient-to-r ${stat.color} transform origin-left transition-transform duration-1000 group-hover:scale-x-100 scale-x-0`}
+                                style={{ transitionDelay: `${index * 100}ms` }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
               
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-6 leading-tight">
-                Paket Layanan<br />
-                <span className="bg-gradient-to-r from-yellow-300 via-yellow-200 to-yellow-300 bg-clip-text text-transparent">
-                  Premium & Profesional
-                </span>
-              </h1>
-              
-              <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto leading-relaxed">
-                Pilih paket yang sesuai dengan kebutuhan bisnis Anda. Dari startup hingga enterprise, kami punya solusinya.
-              </p>
-
-              <div className="flex flex-wrap items-center justify-center gap-4">
-                <button
+              {/* Modern CTAs - Below Stats */}
+              <div ref={heroCTARef} className="flex flex-wrap gap-4 justify-center items-center mt-6">
+                <button 
                   onClick={() => {
                     const packagesSection = document.getElementById('packages');
                     if (packagesSection) {
-                      packagesSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      window.scrollTo({
+                        top: packagesSection.offsetTop - 80,
+                        behavior: 'smooth'
+                      });
                     }
                   }}
-                  className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-white text-blue-700 font-bold hover:bg-blue-50 transition-all duration-300 hover:scale-105 shadow-2xl hover:shadow-white/20"
+                  className="cta-button group relative backdrop-blur-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-110 hover:shadow-2xl inline-flex items-center gap-3 overflow-hidden hover:-translate-y-1"
                 >
-                  Lihat Paket
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                  </svg>
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-blue-500 rounded-2xl blur opacity-0 group-hover:opacity-75 transition-opacity duration-300"></div>
+                  <FaRocket className="w-5 h-5 relative transform group-hover:rotate-12 group-hover:scale-125 transition-all duration-300" />
+                  <span className="relative">Lihat Paket</span>
+                  <FaArrowRight className="w-5 h-5 relative transform group-hover:translate-x-2 transition-transform duration-300" />
+                  <span className="absolute inset-0 rounded-2xl">
+                    <span className="animate-ping absolute inset-0 rounded-2xl bg-blue-400 opacity-0 group-hover:opacity-20"></span>
+                  </span>
                 </button>
                 
                 <Link 
-                  to="/contact" 
-                  className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl bg-white/10 backdrop-blur-sm border-2 border-white/30 text-white font-bold hover:bg-white/20 transition-all duration-300"
+                  to="https://wa.me/6285950313360?text=Halo%20NexCube%20Digital%2C%20saya%20ingin%20berkonsultasi%20tentang%20paket%20layanan" 
+                  className="cta-button group relative backdrop-blur-xl bg-white/80 hover:bg-white border-2 border-slate-200 hover:border-orange-400 text-slate-700 hover:text-orange-600 px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-110 hover:shadow-2xl inline-flex items-center gap-3 overflow-hidden hover:-translate-y-1"
                 >
-                  Konsultasi Gratis
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
+                  <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-orange-500 rounded-2xl blur opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
+                  <FaWhatsapp className="w-6 h-6 text-green-500 relative group-hover:scale-125 group-hover:rotate-12 transition-all duration-300 animate-pulse" />
+                  <span className="relative">Konsultasi Gratis</span>
+                  <HiSparkles className="w-5 h-5 relative opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:rotate-180" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                 </Link>
               </div>
             </div>
           </div>
+        </section>
 
-          {/* Wave Shape Divider */}
-          <div className="absolute bottom-0 left-0 right-0">
-            <svg className="w-full h-20 text-slate-50" preserveAspectRatio="none" viewBox="0 0 1200 120" xmlns="http://www.w3.org/2000/svg">
-              <path d="M0 0v46.29c47.79 22.2 103.59 32.17 158 28 70.36-5.37 136.33-33.31 206.8-37.5 73.84-4.36 147.54 16.88 218.2 35.26 69.27 18 138.3 24.88 209.4 13.08 36.15-6 69.85-17.84 104.45-29.34C989.49 25 1113-14.29 1200 52.47V0z" fill="currentColor" opacity=".25"></path>
-              <path d="M0 0v15.81c13 21.11 27.64 41.05 47.69 56.24C99.41 111.27 165 111 224.58 91.58c31.15-10.15 60.09-26.07 89.67-39.8 40.92-19 84.73-46 130.83-49.67 36.26-2.85 70.9 9.42 98.6 31.56 31.77 25.39 62.32 62 103.63 73 40.44 10.79 81.35-6.69 119.13-24.28s75.16-39 116.92-43.05c59.73-5.85 113.28 22.88 168.9 38.84 30.2 8.66 59 6.17 87.09-7.5 22.43-10.89 48-26.93 60.65-49.24V0z" fill="currentColor" opacity=".5"></path>
-              <path d="M0 0v5.63C149.93 59 314.09 71.32 475.83 42.57c43-7.64 84.23-20.12 127.61-26.46 59-8.63 112.48 12.24 165.56 35.4C827.93 77.22 886 95.24 951.2 90c86.53-7 172.46-45.71 248.8-84.81V0z" fill="currentColor"></path>
-            </svg>
+        <div className="w-full py-16 relative" id="packages">
+          {/* Animated Dots Pattern Background */}
+          <div className="absolute inset-0 opacity-[0.02] pointer-events-none z-0">
+            <div className="absolute inset-0" style={{ 
+              backgroundImage: `radial-gradient(circle, #0066FF 2px, transparent 2px)`,
+              backgroundSize: '40px 40px'
+            }}></div>
           </div>
-        </div>
-
-        <div className="w-full py-16" id="packages">
+          
           {/* Sidebar - Floating (Show on scroll) */}
-          <aside className={`hidden lg:block fixed left-8 top-24 w-80 z-40 transition-all duration-500 ${showSidebar ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'}`}>
+          <aside className={`hidden lg:block fixed left-8 top-24 w-80 z-30 transition-all duration-500 ${showSidebar ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'}`}>
             <div className="sticky top-24">
-                <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl shadow-2xl overflow-hidden border border-white/10 backdrop-blur-sm">
+                <div className="backdrop-blur-xl bg-white/90 rounded-3xl shadow-2xl overflow-hidden border border-white/50">
                   {/* Header with Logo */}
-                  <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-blue-600 p-6">
+                  <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-orange-500 to-blue-600 p-6">
                     <div className="absolute inset-0 bg-black/20"></div>
                     <div className="relative z-10 flex items-center gap-3">
                       <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center ring-2 ring-white/30 shadow-lg">
@@ -473,7 +698,7 @@ export const Paket: React.FC = () => {
                       </div>
                       <div>
                         <h3 className="text-white font-black text-lg">Kategori Paket</h3>
-                        <p className="text-blue-100 text-xs">Pilih layanan terbaik</p>
+                        <p className="text-white/90 text-xs">Pilih layanan terbaik</p>
                       </div>
                     </div>
                   </div>
@@ -490,12 +715,12 @@ export const Paket: React.FC = () => {
                           onClick={() => handleCategoryClick(paket.id)}
                           className={`group relative w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all duration-300 overflow-hidden ${
                             activeTab === paket.id
-                              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-xl shadow-blue-500/50 scale-105'
-                              : 'text-slate-400 hover:text-white hover:bg-white/5 hover:scale-102 hover:translate-x-1'
+                              ? 'bg-gradient-to-r from-blue-600 to-orange-500 text-white shadow-xl shadow-blue-500/50 scale-105'
+                              : 'text-slate-700 hover:text-slate-900 hover:bg-slate-50 hover:scale-102 hover:translate-x-1'
                           }`}
                         >
                           {activeTab === paket.id && (
-                            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 animate-pulse"></div>
+                            <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-orange-400/20 animate-pulse"></div>
                           )}
                           <div className={`relative w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br ${paket.gradient} transition-all duration-300 ${
                             activeTab === paket.id ? 'shadow-lg ring-2 ring-white/30' : 'opacity-75 group-hover:opacity-100'
@@ -512,7 +737,7 @@ export const Paket: React.FC = () => {
                             <div className="relative w-2 h-2 rounded-full bg-white shadow-lg animate-pulse"></div>
                           ) : (
                             <div className="relative">
-                              <span className="px-2 py-1 rounded-lg bg-slate-700/50 text-slate-300 text-xs font-bold group-hover:bg-slate-600/50 transition-colors">
+                              <span className="px-2 py-1 rounded-lg bg-slate-100 text-slate-600 text-xs font-bold group-hover:bg-slate-200 transition-colors">
                                 {packageCount}
                               </span>
                             </div>
@@ -523,21 +748,21 @@ export const Paket: React.FC = () => {
                   </nav>
 
                   {/* Footer CTA */}
-                  <div className="mx-4 mb-4 p-4 rounded-2xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 backdrop-blur-sm">
+                  <div className="mx-4 mb-4 p-4 rounded-2xl bg-gradient-to-br from-blue-500/10 to-orange-500/10 border border-blue-500/20 backdrop-blur-sm">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-orange-500 flex items-center justify-center shadow-lg">
                         <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
                       </div>
                       <div className="flex-1">
-                        <p className="text-white text-sm font-bold">Butuh Bantuan?</p>
-                        <p className="text-slate-400 text-xs">Konsultasi gratis</p>
+                        <p className="text-slate-800 text-sm font-bold">Butuh Bantuan?</p>
+                        <p className="text-slate-600 text-xs">Konsultasi gratis</p>
                       </div>
                     </div>
                     <Link 
                       to="/contact"
-                      className="block w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white text-sm font-bold text-center hover:shadow-xl hover:shadow-purple-500/50 transition-all duration-300 hover:scale-105"
+                      className="block w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-orange-500 text-white text-sm font-bold text-center hover:shadow-xl hover:shadow-orange-500/50 transition-all duration-300 hover:scale-105"
                     >
                       💬 Hubungi Kami
                     </Link>
@@ -545,7 +770,7 @@ export const Paket: React.FC = () => {
 
                   {/* Footer Copyright */}
                   <div className="px-4 pb-4 text-center">
-                    <p className="text-white/40 text-xs font-medium">
+                    <p className="text-slate-500 text-xs font-medium">
                       © 2025 NexCube Digital
                     </p>
                   </div>
@@ -554,7 +779,7 @@ export const Paket: React.FC = () => {
           </aside>
 
           {/* Main Content Area - Full Width with Margin */}
-          <div className="max-w-[1600px] mx-auto px-4 lg:pl-96">
+          <div className="max-w-[1600px] mx-auto px-4 lg:pl-96 relative z-10">
             <main className="w-full" id="packages-content">
               {/* Display All Pricing Sections - Always show all categories */}
               <div className={`space-y-0 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-300'}`}>
