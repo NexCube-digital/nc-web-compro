@@ -1,0 +1,87 @@
+name: 🚀 Deploy Frontend to cPanel via FTP
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build & Deploy to Production
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm ci
+
+      - name: 🔨 Build Production
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+
+      - name: 📤 Deploy to cPanel via FTP
+        run: |
+          echo "🔄 Installing lftp..."
+          sudo apt-get update && sudo apt-get install -y lftp
+          
+          echo "📤 Uploading build to cPanel..."
+          lftp -c "
+            set ftp:ssl-allow no;
+            set ftp:passive-mode on;
+            open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
+            cd ${{ secrets.FTP_PATH }};
+            mirror --reverse --delete --verbose --parallel=10 \
+              --exclude-glob .git* \
+              --exclude-glob .env* \
+              --exclude-glob node_modules \
+              --exclude-glob src \
+              --exclude-glob public \
+              --exclude-glob *.md \
+              --exclude-glob .vscode \
+              dist/ .;
+            bye;
+          "
+          
+          echo "✅ Deployment completed!"
+
+      - name: 🏥 Health Check
+        run: |
+          echo "⏳ Waiting for server to process..."
+          sleep 10
+          echo "🔍 Checking website..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://nexcube-digital.com || echo "000")
+          if [ "$STATUS" = "200" ]; then
+            echo "✅ Website is live and responding!"
+          else
+            echo "⚠️ Website returned status: $STATUS"
+            exit 1
+          fi
+
+      - name: ✅ Deployment Success
+        if: success()
+        run: |
+          echo "🎉 Frontend deployed successfully!"
+          echo "🌐 URL: https://nexcube-digital.com"
+          echo "📅 Deployed at: $(date)"
+
+      - name: ❌ Deployment Failed
+        if: failure()
+        run: |
+          echo "❌ Deployment failed! Check logs above."
+          exit 1
+
+      - name: 🧹 Cleanup
+        if: always()
+        run: |
+          echo "🧹 Cleaning up temporary files..."
+          rm -rf dist node_modules
