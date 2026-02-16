@@ -16,6 +16,7 @@ const UndanganDigital = lazy(() => import('./paket/UndanganDigital').then(module
 const DesainGrafis = lazy(() => import('./paket/DesainGrafis').then(module => ({ default: module.DesainGrafis })))
 const MenuKatalog = lazy(() => import('./paket/MenuKatalog').then(module => ({ default: module.MenuKatalog })))
 const NotFound = lazy(() => import('./pages/NotFound').then(module => ({ default: module.NotFound })))
+const ErrorPage = lazy(() => import('./pages/ErrorPage').then(module => ({ default: module.ErrorPage })))
 const Login = lazy(() => import('./auth/Login').then(module => ({ default: module.Login })))
 const Dashboard = lazy(() => import('./dashboard/Dashboard').then(module => ({ default: module.Dashboard })))
 
@@ -72,13 +73,13 @@ const ScrollToTop = () => {
   return null
 }
 
-export default function App() {
+// Root layout wrapper component
+const RootLayout = () => {
   return (
     <ErrorBoundary>
       <HelmetProvider>
         <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 text-slate-800 font-sans antialiased">
           <ScrollToTop />
-          
           <Suspense fallback={<PageLoader />}>
             <PageTransition>
               <Routes>
@@ -106,4 +107,21 @@ export default function App() {
       </HelmetProvider>
     </ErrorBoundary>
   )
+}
+
+// Export routes configuration for createBrowserRouter
+export const routes = [
+  {
+    path: '/',
+    element: <RootLayout />,
+    errorElement: (
+      <Suspense fallback={<PageLoader />}>
+        <ErrorPage />
+      </Suspense>
+    ),
+  }
+]
+
+export default function App() {
+  return <RootLayout />
 }

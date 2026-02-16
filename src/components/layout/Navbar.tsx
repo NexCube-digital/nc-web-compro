@@ -125,77 +125,71 @@ export const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
       isScrolled 
-        ? 'bg-white/80 backdrop-blur-2xl shadow-2xl border-b border-white/20' 
-        : 'bg-gradient-to-b from-white/90 to-white/50 backdrop-blur-xl border-b border-white/30'
+        ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-slate-200' 
+        : 'bg-white/90 backdrop-blur-sm border-b border-slate-100'
     }`}>
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 opacity-0 hover:opacity-5 transition-opacity duration-300 bg-gradient-to-r from-blue-600 via-orange-500 to-blue-600"></div>
-
-      <div className="container mx-auto px-4 relative">
-        <div className="flex items-center justify-between h-16 lg:h-20">
-          {/* Logo with Enhanced Animation */}
-          <Link to="/" className="flex items-center space-x-3 group relative z-10">
-            <div className="relative" ref={logoRef}>
-              {/* Animated glow effect - NEXCUBE blue */}
-              <div className="logo-glow absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-400 rounded-full blur-xl opacity-0 transition-all duration-500"></div>
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-blue-400 to-orange-400 rounded-full blur-2xl opacity-0 group-hover:opacity-40 transition-all duration-500 scale-0 group-hover:scale-150 animate-pulse"></div>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 md:h-18">
+          {/* Logo - Clean and Modern */}
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="relative">
               <img 
                 src="/images/NexCube-full.png" 
                 alt="NexCube Digital" 
-                className="h-12 lg:h-14 w-auto transition-all duration-300 group-hover:scale-110 filter drop-shadow-sm group-hover:drop-shadow-2xl relative group-hover:brightness-110"
+                className="h-9 md:h-10 w-auto transition-transform duration-200 group-hover:scale-105"
               />
-              {/* Sparkle effect on hover - orange accent */}
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-orange-400 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:animate-ping"></div>
-              <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-blue-400 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:animate-ping" style={{ animationDelay: '0.2s' }}></div>
             </div>
-            <div className="hidden xs:block">
-              <div className="text-base lg:text-lg font-black bg-gradient-to-r from-slate-900 via-blue-600 to-orange-500 bg-clip-text text-transparent tracking-tight group-hover:from-blue-600 group-hover:via-blue-500 group-hover:to-orange-500 transition-all duration-300">
+            <div className="hidden sm:block">
+              <div className="text-base md:text-lg font-bold text-slate-900 tracking-tight">
                 NexCube
               </div>
-              <div className="text-xs lg:text-sm font-bold text-transparent bg-gradient-to-r from-blue-600 via-blue-500 to-orange-500 bg-clip-text animate-gradient-x">
-                Digital Studio
+              <div className="text-xs text-slate-600 font-medium">
+                Digital
               </div>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-1">
+          <div className="hidden lg:flex items-center gap-2">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 to={link.href}
-                className={`relative group px-4 py-2 text-sm font-bold transition-all duration-300 rounded-xl flex items-center gap-2 ${
+                className={`relative px-4 py-2 text-sm font-semibold transition-all duration-200 rounded-lg flex items-center gap-2 ${
                   isActive(link.href)
-                    ? 'text-blue-600 bg-gradient-to-r from-blue-50 via-orange-50 to-blue-50'
-                    : 'text-slate-700 hover:text-blue-700'
+                    ? 'text-blue-600 bg-blue-50'
+                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-50'
                 }`}
               >
-                {/* Animated background on hover */}
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-100/0 via-orange-100/0 to-blue-100/0 group-hover:from-blue-100 group-hover:via-orange-100 group-hover:to-blue-100 rounded-xl transition-all duration-300 -z-10"></div>
+                <span className="w-5 h-5">{link.icon}</span>
+                <span>{link.name}</span>
                 
-                <span className="transition-all duration-300 group-hover:scale-110 group-hover:rotate-12">{link.icon}</span>
-                <span className="hidden sm:inline">{link.name}</span>
-
-                {/* Animated underline */}
-                <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-orange-500 to-blue-600 rounded-full transition-all duration-300 ${
-                  isActive(link.href) 
-                    ? 'w-full opacity-100' 
-                    : 'w-0 opacity-0 group-hover:w-full group-hover:opacity-100'
-                }`}></div>
+                {/* Active indicator */}
+                {isActive(link.href) && (
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full"></div>
+                )}
               </Link>
             ))}
           </div>
 
-          {/* Login & CTA Buttons - Gen-Z Style */}
-          <div className="hidden lg:flex items-center space-x-3 relative z-10">
+          {/* Login & CTA Buttons */}
+          <div className="hidden lg:flex items-center gap-3">
             {isAuthenticated ? (
-              <div className="flex items-center gap-3">
-                <Link to="/dashboard" className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-orange-500 text-white font-semibold hover:shadow-lg transition-all">
-                  {userName ? `Halo, ${userName}` : 'Dashboard'}
+              <div className="flex items-center gap-2">
+                <Link 
+                  to="/dashboard" 
+                  className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors"
+                >
+                  {userName ? `Halo, ${userName.split(' ')[0]}` : 'Dashboard'}
                 </Link>
-                <button onClick={handleLogout} className="text-sm px-3 py-2 rounded-xl border border-white/20 hover:bg-white/5">Logout</button>
+                <button 
+                  onClick={handleLogout} 
+                  className="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors"
+                >
+                  Logout
+                </button>
               </div>
             ) : (
               <LoginButton />
@@ -205,10 +199,11 @@ export const Navbar: React.FC = () => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="lg:hidden p-3 rounded-xl hover:bg-gradient-to-r hover:from-blue-100 hover:to-orange-100 transition-all duration-300 relative z-10 group"
+            className="lg:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors"
             aria-label="Toggle menu"
+            aria-expanded={isMenuOpen}
           >
-            <svg className="w-6 h-6 text-slate-700 transition-all duration-300 group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+            <svg className="w-6 h-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
               {isMenuOpen ? (
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
               ) : (
@@ -222,79 +217,58 @@ export const Navbar: React.FC = () => {
           </button>
         </div>
 
-        {/* Mobile Menu with Gen-Z Premium Design */}
-        <div className={`lg:hidden absolute top-full left-0 right-0 bg-gradient-to-b from-white/95 via-white/92 to-white/90 backdrop-blur-2xl border-t border-white/30 shadow-2xl transition-all duration-300 overflow-hidden ${
+        {/* Mobile Menu */}
+        <div className={`lg:hidden absolute top-full left-0 right-0 bg-white border-b border-slate-200 shadow-lg transition-all duration-200 ${
           isMenuOpen 
-            ? 'opacity-100 visible translate-y-0' 
-            : 'opacity-0 invisible -translate-y-2 pointer-events-none'
+            ? 'opacity-100 visible' 
+            : 'opacity-0 invisible pointer-events-none'
         }`}>
-          <div className="px-4 py-8 space-y-3">
-            {navLinks.map((link, index) => (
+          <div className="px-4 py-4 space-y-1 max-h-[calc(100vh-4rem)] overflow-y-auto">
+            {navLinks.map((link) => (
               <Link
                 key={link.name}
                 to={link.href}
                 onClick={() => setIsMenuOpen(false)}
-                className={`flex px-5 py-4 text-base font-bold transition-all duration-300 rounded-xl group relative overflow-hidden items-center gap-3 ${
+                className={`flex items-center gap-3 px-4 py-3 text-base font-semibold rounded-lg transition-colors ${
                   isActive(link.href)
-                    ? 'text-blue-600 bg-gradient-to-r from-blue-100 via-orange-100 to-blue-100'
-                    : 'text-slate-700 hover:text-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-orange-50'
+                    ? 'text-blue-600 bg-blue-50'
+                    : 'text-slate-700 hover:bg-slate-50'
                 }`}
-                style={{ 
-                  animation: isMenuOpen ? `slideIn 0.3s ease-out ${index * 0.05}s forwards` : 'none',
-                  opacity: isMenuOpen ? 1 : 0
-                }}
               >
-                <span className="transition-all duration-300 group-hover:scale-120 group-hover:rotate-12 text-lg">{link.icon}</span>
-                <span className="tracking-tight">{link.name}</span>
+                <span className="w-5 h-5">{link.icon}</span>
+                <span>{link.name}</span>
               </Link>
             ))}
             
-            <div className="pt-6 border-t border-slate-200/50 space-y-3">
-              {/* Mobile: single LoginButton (modal) */}
-              <div>
-                {isAuthenticated ? (
-                  <div className="space-y-2">
-                    <Link
-                      to="/dashboard"
-                      onClick={() => setIsMenuOpen(false)}
-                      className="block w-full text-center px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-blue-600 to-orange-500 text-white hover:shadow-lg transition-all"
-                    >
-                      Dashboard
-                    </Link>
-                    <button
-                      onClick={() => {
-                        setIsMenuOpen(false)
-                        handleLogout()
-                      }}
-                      className="w-full px-6 py-3 rounded-xl font-semibold border border-white/10 text-slate-200 hover:bg-white/5"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                ) : (
-                  <div onClick={() => setIsMenuOpen(false)}>
-                    <LoginButton onCloseMenu={() => setIsMenuOpen(false)} />
-                  </div>
-                )}
-              </div>
+            <div className="pt-4 mt-4 border-t border-slate-200 space-y-2">
+              {isAuthenticated ? (
+                <>
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block w-full text-center px-4 py-3 rounded-lg font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false)
+                      handleLogout()
+                    }}
+                    className="w-full px-4 py-3 rounded-lg font-medium border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <div onClick={() => setIsMenuOpen(false)}>
+                  <LoginButton onCloseMenu={() => setIsMenuOpen(false)} />
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
-
-      {/* Add animation keyframes */}
-      <style>{`
-        @keyframes slideIn {
-          from {
-            opacity: 0;
-            transform: translateX(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-      `}</style>
     </nav>
   );
 };

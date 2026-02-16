@@ -424,7 +424,7 @@ export const Home: React.FC = () => {
                 <h1 className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight transition-all duration-500 delay-200 ${!showHero ? 'opacity-0 scale-95 -translate-y-10' : 'opacity-100 scale-100 translate-y-0'}`}>
                   <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 bg-clip-text text-transparent">Digital Excellence</span>
                   <br />
-                  <span className="text-slate-800 text-2xl md:text-3xl lg:text-4xl font-bold mt-2 inline-block">For Modern Business</span>
+                  <span className="bg-gradient-to-r from-blue-600 via-orange-500 to-orange-600 bg-clip-text text-transparent text-2xl md:text-3xl lg:text-4xl font-bold mt-2 inline-block">For Modern Business</span>
                 </h1>
                 
                 <p className={`text-base md:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto transition-all duration-500 delay-300 ${!showHero ? 'opacity-0 translate-y-10' : 'opacity-100 translate-y-0'}`}>
@@ -509,10 +509,10 @@ export const Home: React.FC = () => {
           <div className="container relative z-10">
             {/* Section Header */}
             <div className="text-center mb-12">
-              <h2 className="scroll-fade-in text-3xl md:text-4xl font-black text-slate-800 mb-3">
+              <h2 className="scroll-fade-in text-3xl md:text-4xl font-black bg-gradient-to-r from-blue-600 via-orange-500 to-orange-600 bg-clip-text text-transparent mb-3">
                 Premium Services
               </h2>
-              <p className="scroll-fade-in text-lg text-slate-600 max-w-2xl mx-auto">
+              <p className="scroll-fade-in text-lg bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent font-semibold max-w-2xl mx-auto">
                 Solusi digital terlengkap untuk bisnis modern
               </p>
             </div>
