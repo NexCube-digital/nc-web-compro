@@ -18,7 +18,7 @@ jobs:
       - name: ⚙️ Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '22'
           cache: 'npm'
 
       - name: 📦 Install Dependencies
@@ -38,29 +38,23 @@ jobs:
           du -sh dist/ || echo "⚠️ Could not calculate size"
 
       - name: 📤 Deploy to cPanel via FTP
-        run: |
-          echo "🔄 Installing lftp..."
-          sudo apt-get update && sudo apt-get install -y lftp
-          
-          echo "📤 Uploading build to cPanel..."
-          lftp -c "
-            set ftp:ssl-allow no;
-            set ftp:passive-mode on;
-            open -u ${{ secrets.FTP_USER }},${{ secrets.FTP_PASSWORD }} ${{ secrets.FTP_HOST }};
-            cd ${{ secrets.FTP_PATH }};
-            mirror --reverse --delete --verbose --parallel=10 \
-              --exclude-glob .git* \
-              --exclude-glob .env* \
-              --exclude-glob node_modules \
-              --exclude-glob src \
-              --exclude-glob public \
-              --exclude-glob *.md \
-              --exclude-glob .vscode \
-              dist/ .;
-            bye;
-          "
-          
-          echo "✅ Deployment completed!"
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./dist/
+          server-dir: ${{ secrets.FTP_PATH }}
+          protocol: ftps
+          port: 21
+          log-level: verbose
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/.vscode/**
+            **/*.md
 
       - name: 🏥 Health Check
         continue-on-error: true
