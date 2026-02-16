@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react'
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, useLocation, Outlet } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { Home } from './pages/Home'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -82,25 +82,7 @@ const RootLayout = () => {
           <ScrollToTop />
           <Suspense fallback={<PageLoader />}>
             <PageTransition>
-              <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/services" element={<Services />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/paket" element={<Paket />} />
-                <Route path="/paket/:tier" element={<PaketDetail />} />
-                <Route path="/paket/website" element={<Website />} />
-                <Route path="/paket/undangan-digital" element={<UndanganDigital />} />
-                <Route path="/paket/desain-grafis" element={<DesainGrafis />} />
-                <Route path="/paket/menu-katalog" element={<MenuKatalog />} />
-                
-                {/* Admin Routes */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/dashboard/*" element={<Dashboard />} />
-                
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <Outlet />
             </PageTransition>
           </Suspense>
         </div>
@@ -119,6 +101,22 @@ export const routes = [
         <ErrorPage />
       </Suspense>
     ),
+    children: [
+      { index: true, element: <Home /> },
+      { path: 'services', element: <Services /> },
+      { path: 'contact', element: <Contact /> },
+      { path: 'about', element: <About /> },
+      { path: 'paket', element: <Paket /> },
+      { path: 'paket/:tier', element: <PaketDetail /> },
+      { path: 'paket/website', element: <Website /> },
+      { path: 'paket/undangan-digital', element: <UndanganDigital /> },
+      { path: 'paket/desain-grafis', element: <DesainGrafis /> },
+      { path: 'paket/menu-katalog', element: <MenuKatalog /> },
+      { path: 'login', element: <Login /> },
+      { path: 'dashboard', element: <Dashboard /> },
+      { path: 'dashboard/*', element: <Dashboard /> },
+      { path: '*', element: <NotFound /> }
+    ]
   }
 ]
 
