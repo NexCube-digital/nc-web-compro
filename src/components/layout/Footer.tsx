@@ -17,9 +17,9 @@ export const Footer: React.FC = () => {
       { name: 'Katalog Digital', href: '/paket' },
     ],
     support: [
-      { name: 'Kontak', href: '/contact' },
-      { name: 'FAQ', href: '/paket#faq' },
-      { name: 'Konsultasi', href: 'https://wa.me/6285950313360?text=Halo%20NexCube%20Digital%2C%20saya%20ingin%20berkonsultasi%20tentang%20kebutuhan%20digital%20saya' },
+      { name: 'Kontak', href: '/contact', external: false },
+      { name: 'FAQ', href: '/paket#faq', external: false },
+      { name: 'Konsultasi', href: 'https://wa.me/6285950313360?text=Halo%20NexCube%20Digital%2C%20saya%20ingin%20berkonsultasi%20tentang%20kebutuhan%20digital%20saya', external: true },
     ]
   };
 
@@ -35,16 +35,16 @@ export const Footer: React.FC = () => {
     },
     {
       name: 'Instagram',
-      href: '#',
+      href: 'https://instagram.com/nexcube.digital',
       icon: (
         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 6.62 5.367 11.987 11.988 11.987s11.987-5.367 11.987-11.987C24.014 5.367 18.647.001 12.017.001zM8.449 16.988c-1.297 0-2.448-.49-3.32-1.297C4.198 14.794 3.708 13.643 3.708 12.346s.49-2.447 1.421-3.319c.872-.872 2.023-1.297 3.32-1.297s2.448.425 3.32 1.297c.931.872 1.421 2.022 1.421 3.319s-.49 2.448-1.421 3.32c-.872.807-2.023 1.322-3.32 1.322zm7.133-8.19c-.326 0-.653-.163-.871-.49-.218-.326-.218-.708 0-1.034.218-.327.545-.49.871-.49.327 0 .654.163.872.49.218.326.218.708 0 1.034-.218.327-.545.49-.872.49z"/>
+          <path d="M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12s.015 3.667.072 4.947c.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24s3.667-.015 4.947-.072c1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.687.072-4.947s-.015-3.667-.072-4.947c-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.26 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06l.045.03zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z"/>
         </svg>
       )
     },
     {
       name: 'LinkedIn',
-      href: '#',
+      href: 'https://linkedin.com/company/nexcube-digital',
       icon: (
         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
           <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
@@ -54,32 +54,33 @@ export const Footer: React.FC = () => {
   ];
 
   return (
-    <footer className="bg-gradient-to-b from-slate-50 to-white border-t border-slate-200">
-      <div className="container mx-auto px-4 py-16">
+    <footer className="bg-slate-900 text-slate-100">
+      <div className="container mx-auto px-4 py-12 md:py-16">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           {/* Company Info */}
           <div className="lg:col-span-1">
-            <Link to="/" className="inline-block mb-6">
+            <Link to="/" className="inline-block mb-4">
               <img 
                 src="/images/NexCube-full.png" 
                 alt="NexCube Digital" 
-                className="h-12 w-auto"
+                className="h-10 w-auto brightness-0 invert"
               />
             </Link>
-            <p className="text-slate-600 mb-6 leading-relaxed">
+            <p className="text-slate-300 mb-6 leading-relaxed text-sm">
               Studio kreatif premium yang menghadirkan solusi digital berkualitas internasional untuk transformasi bisnis Anda.
             </p>
             
             {/* Social Links */}
-            <div className="flex space-x-4">
+            <div className="flex space-x-3">
               {socialLinks.map((social) => (
                 <a
                   key={social.name}
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 bg-white rounded-lg shadow-sm border border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-300 transition-all duration-300 hover:scale-110"
+                  className="p-2.5 bg-slate-800 rounded-lg text-slate-400 hover:text-blue-400 hover:bg-slate-700 transition-all duration-300"
+                  aria-label={social.name}
                 >
                   {social.icon}
                 </a>
@@ -89,13 +90,13 @@ export const Footer: React.FC = () => {
 
           {/* Company Links */}
           <div>
-            <h3 className="font-semibold text-slate-800 mb-4">Perusahaan</h3>
-            <ul className="space-y-3">
+            <h3 className="font-bold text-white mb-4 text-sm uppercase tracking-wider">Perusahaan</h3>
+            <ul className="space-y-2.5">
               {footerLinks.company.map((link) => (
                 <li key={link.name}>
                   <Link
                     to={link.href}
-                    className="text-slate-600 hover:text-blue-600 transition-colors duration-300"
+                    className="text-slate-300 hover:text-blue-400 transition-colors duration-200 text-sm inline-block"
                   >
                     {link.name}
                   </Link>
@@ -106,13 +107,13 @@ export const Footer: React.FC = () => {
 
           {/* Services Links */}
           <div>
-            <h3 className="font-semibold text-slate-800 mb-4">Layanan</h3>
-            <ul className="space-y-3">
+            <h3 className="font-bold text-white mb-4 text-sm uppercase tracking-wider">Layanan</h3>
+            <ul className="space-y-2.5">
               {footerLinks.services.map((link) => (
                 <li key={link.name}>
                   <Link
                     to={link.href}
-                    className="text-slate-600 hover:text-blue-600 transition-colors duration-300"
+                    className="text-slate-300 hover:text-blue-400 transition-colors duration-200 text-sm inline-block"
                   >
                     {link.name}
                   </Link>
@@ -123,51 +124,63 @@ export const Footer: React.FC = () => {
 
           {/* Support Links */}
           <div>
-            <h3 className="font-semibold text-slate-800 mb-4">Dukungan</h3>
-            <ul className="space-y-3 mb-6">
+            <h3 className="font-bold text-white mb-4 text-sm uppercase tracking-wider">Dukungan</h3>
+            <ul className="space-y-2.5 mb-6">
               {footerLinks.support.map((link) => (
                 <li key={link.name}>
-                  <Link
-                    to={link.href}
-                    className="text-slate-600 hover:text-blue-600 transition-colors duration-300"
-                  >
-                    {link.name}
-                  </Link>
+                  {link.external ? (
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-slate-300 hover:text-blue-400 transition-colors duration-200 text-sm inline-block"
+                    >
+                      {link.name}
+                    </a>
+                  ) : (
+                    <Link
+                      to={link.href}
+                      className="text-slate-300 hover:text-blue-400 transition-colors duration-200 text-sm inline-block"
+                    >
+                      {link.name}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
 
             {/* Contact Info */}
-            <div className="space-y-2 text-sm text-slate-600">
+            <div className="space-y-2 text-sm text-slate-300">
               <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
                 <span>Indonesia</span>
               </div>
               <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                <span>info@nexcube.digital</span>
+                <a href="mailto:info@nexcube.digital" className="hover:text-blue-400 transition-colors">info@nexcube.digital</a>
               </div>
             </div>
           </div>
         </div>
 
         {/* Bottom Footer */}
-        <div className="border-t border-slate-200 pt-8">
+        <div className="border-t border-slate-800 pt-6 mt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="text-sm text-slate-600">
-              © {currentYear} NexCube Digital. All rights reserved.
+            <div className="text-sm text-slate-400">
+              © {currentYear} <span className="font-semibold text-slate-200">NexCube Digital</span>. All rights reserved.
             </div>
             
-            <div className="flex items-center gap-6 text-sm text-slate-600">
-              <Link to="/privacy" className="hover:text-blue-600 transition-colors">
+            <div className="flex items-center gap-6 text-sm text-slate-400">
+              <Link to="/privacy" className="hover:text-blue-400 transition-colors">
                 Privacy Policy
               </Link>
-              <Link to="/terms" className="hover:text-blue-600 transition-colors">
+              <span className="text-slate-700">•</span>
+              <Link to="/terms" className="hover:text-blue-400 transition-colors">
                 Terms of Service
               </Link>
             </div>

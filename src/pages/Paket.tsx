@@ -432,12 +432,10 @@ export const Paket: React.FC = () => {
           )}
         </div>
 
-        {/* Separator */}
-        {activeTab === 'all' && (
-          <div className="mt-20">
-            <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
-          </div>
-        )}
+        {/* Separator - Always show between categories */}
+        <div className="mt-24 mb-8">
+          <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+        </div>
       </div>
     );
   };
@@ -505,7 +503,7 @@ export const Paket: React.FC = () => {
         </Helmet>
 
         {/* Hero Section - Full Viewport Template from Home */}
-        <section className="relative h-screen flex items-start justify-center overflow-hidden pt-20">
+        <section className="relative h-screen flex items-center justify-center overflow-hidden">
           {/* Modern Gradient Mesh Background */}
           <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-orange-50/30"></div>
           
@@ -551,7 +549,7 @@ export const Paket: React.FC = () => {
           </div>
           
           <div className="container relative">
-            <div className="max-w-6xl mx-auto text-center space-y-4">
+            <div className="max-w-5xl mx-auto text-center space-y-3">
               
               {/* Modern Trust Badge */}
               <div ref={heroBadgeRef} className="inline-flex items-center justify-center gap-3 backdrop-blur-xl bg-white/70 border border-white/30 shadow-lg px-5 py-2 rounded-2xl">
@@ -563,7 +561,7 @@ export const Paket: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <h1 ref={heroTitleRef} className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-[1.05] tracking-tight">
+                <h1 ref={heroTitleRef} className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black leading-[1.05] tracking-tight">
                   <span className="inline-block hero-title-word">
                     <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 bg-clip-text text-transparent drop-shadow-lg">Paket Layanan</span>
                   </span>
@@ -572,17 +570,17 @@ export const Paket: React.FC = () => {
                     <span className="bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 bg-clip-text text-transparent drop-shadow-lg">Terlengkap</span>
                   </span>
                   <br />
-                  <span className="text-slate-800 text-2xl md:text-3xl lg:text-4xl font-bold mt-2 inline-block drop-shadow hero-title-word">Untuk Semua Kebutuhan</span>
+                  <span className="text-slate-800 text-xl md:text-2xl lg:text-3xl font-bold mt-2 inline-block drop-shadow hero-title-word">Untuk Semua Kebutuhan</span>
                 </h1>
                 
-                <p ref={heroDescRef} className="text-sm md:text-base lg:text-lg text-slate-600 leading-relaxed max-w-3xl mx-auto">
+                <p ref={heroDescRef} className="text-xs md:text-sm lg:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto">
                   Pilih paket yang <span className="font-bold text-blue-600">sesuai kebutuhan</span> bisnis Anda. Dari <span className="font-bold text-orange-600">startup hingga enterprise</span>, kami hadirkan solusi yang <span className="font-bold text-slate-800">menghasilkan hasil nyata</span>.
                 </p>
               </div>
 
               {/* Modern Stats Cards */}
               <div className="scroll-fade-in" ref={fadeInRef}>
-                <div ref={heroStatsRef} className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-5xl mx-auto">
+                <div ref={heroStatsRef} className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 max-w-4xl mx-auto">
                   {[
                     { number: 4, suffix: '+', label: 'Kategori Paket', icon: <HiCheckCircle className="w-6 h-6" />, color: 'from-blue-600 to-cyan-500' },
                     { number: 15, suffix: '+', label: 'Pilihan Paket', icon: <FaRocket className="w-5 h-5" />, color: 'from-orange-500 to-amber-500' },
@@ -600,7 +598,7 @@ export const Paket: React.FC = () => {
                       return (
                         <div 
                           ref={elementRef as React.RefObject<HTMLDivElement>}
-                          className={`text-2xl md:text-3xl font-black bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}
+                          className={`text-xl md:text-2xl font-black bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}
                         >
                           {formattedValue()}
                         </div>
@@ -609,12 +607,12 @@ export const Paket: React.FC = () => {
 
                     return (
                       <div key={index} className="scale-on-scroll group relative stat-card">
-                        <div className="relative backdrop-blur-xl bg-white/70 border border-white/30 rounded-2xl p-4 md:p-5 hover:bg-white/90 transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer overflow-hidden">
+                        <div className="relative backdrop-blur-xl bg-white/70 border border-white/30 rounded-2xl p-3 md:p-4 hover:bg-white/90 transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer overflow-hidden">
                           <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
                           <div className={`absolute -inset-1 bg-gradient-to-r ${stat.color} rounded-2xl blur opacity-0 group-hover:opacity-30 transition-opacity duration-500`}></div>
                           
                           <div className="relative text-center space-y-1 md:space-y-2">
-                            <div className={`inline-flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br ${stat.color} text-white shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 animate-pulse`}>
+                            <div className={`inline-flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br ${stat.color} text-white shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 animate-pulse`}>
                               {stat.icon}
                             </div>
                             <StatCounter />
@@ -636,7 +634,7 @@ export const Paket: React.FC = () => {
               </div>
               
               {/* Modern CTAs - Below Stats */}
-              <div ref={heroCTARef} className="flex flex-wrap gap-4 justify-center items-center mt-6">
+              <div ref={heroCTARef} className="flex flex-wrap gap-3 justify-center items-center mt-4">
                 <button 
                   onClick={() => {
                     const packagesSection = document.getElementById('packages');
@@ -647,7 +645,7 @@ export const Paket: React.FC = () => {
                       });
                     }
                   }}
-                  className="cta-button group relative backdrop-blur-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-110 hover:shadow-2xl inline-flex items-center gap-3 overflow-hidden hover:-translate-y-1"
+                  className="cta-button group relative backdrop-blur-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white text-sm px-5 py-2.5 rounded-2xl font-bold transition-all duration-300 hover:scale-110 hover:shadow-2xl inline-flex items-center gap-2 overflow-hidden hover:-translate-y-1"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                   <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-blue-500 rounded-2xl blur opacity-0 group-hover:opacity-75 transition-opacity duration-300"></div>
@@ -661,7 +659,7 @@ export const Paket: React.FC = () => {
                 
                 <Link 
                   to="https://wa.me/6285950313360?text=Halo%20NexCube%20Digital%2C%20saya%20ingin%20berkonsultasi%20tentang%20paket%20layanan" 
-                  className="cta-button group relative backdrop-blur-xl bg-white/80 hover:bg-white border-2 border-slate-200 hover:border-orange-400 text-slate-700 hover:text-orange-600 px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-110 hover:shadow-2xl inline-flex items-center gap-3 overflow-hidden hover:-translate-y-1"
+                  className="cta-button group relative backdrop-blur-xl bg-white/80 hover:bg-white border-2 border-slate-200 hover:border-orange-400 text-slate-700 hover:text-orange-600 text-sm px-5 py-2.5 rounded-2xl font-bold transition-all duration-300 hover:scale-110 hover:shadow-2xl inline-flex items-center gap-2 overflow-hidden hover:-translate-y-1"
                 >
                   <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-orange-500 rounded-2xl blur opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
                   <FaWhatsapp className="w-6 h-6 text-green-500 relative group-hover:scale-125 group-hover:rotate-12 transition-all duration-300 animate-pulse" />

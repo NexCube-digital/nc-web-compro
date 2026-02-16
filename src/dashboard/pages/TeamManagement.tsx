@@ -45,6 +45,18 @@ const TeamManagement: React.FC = () => {
 
   useEffect(() => { loadTeams() }, [])
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (showForm) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [showForm])
+
   const filteredTeams = teams
     .filter(t => {
       if (!query) return true
@@ -260,9 +272,9 @@ const TeamManagement: React.FC = () => {
         )}
       </div>
 
-      {/* Form Modal */}
+      {/* Form Modal - Fixed Position ICD */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowForm(false)} />
           {/** compute avatar URL to support uploads, full URLs, and data URIs */}
           {(() => {
@@ -273,88 +285,170 @@ const TeamManagement: React.FC = () => {
               else avatarUrl = form.image
             }
             return (
-              <form onSubmit={handleSubmit} className="relative z-10 bg-white/95 backdrop-blur-xl p-4 sm:p-6 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-auto transform transition-transform shadow-2xl border border-slate-200">
-            <div className="flex gap-3 sm:gap-4">
-              <div className="flex-shrink-0">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden mx-auto border-2 border-slate-200 shadow-md">
-                  <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
-                </div>
-                <div className="mt-2 text-center">
-                  <button type="button" onClick={() => fileInputRef.current?.click()} className="text-xs text-blue-600 hover:text-blue-700 font-medium">Ubah Foto</button>
-                </div>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-base sm:text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">{editing ? 'Edit Anggota' : 'Tambah Anggota'}</h3>
-                  <button type="button" onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                <div className="grid grid-cols-1 gap-2.5">
-                  <div>
-                    <label className="block text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Nama</label>
-                    <input autoFocus className="w-full border border-slate-300 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Posisi</label>
-                    <input className="w-full border border-slate-300 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" value={form.position} onChange={(e) => setForm({...form, position: e.target.value})} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Email</label>
-                      <input className="w-full border border-slate-300 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" value={(form as any).email || ''} onChange={(e) => setForm({...form, email: e.target.value})} />
+              <form onSubmit={handleSubmit} className="relative z-10 bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl border border-slate-200">
+                {/* Modal Header - Fixed */}
+                <div className="flex-shrink-0 p-4 sm:p-6 pb-3 border-b border-slate-200">
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 border-slate-200 shadow-md">
+                        <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="mt-2 text-center">
+                        <button type="button" onClick={() => fileInputRef.current?.click()} className="text-xs text-blue-600 hover:text-blue-700 font-medium">
+                          Ubah Foto
+                        </button>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Pengalaman</label>
-                      <input className="w-full border border-slate-300 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" value={form.experience} onChange={(e) => setForm({...form, experience: e.target.value})} />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Portfolio URL</label>
-                    <input className="w-full border border-slate-300 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" value={form.portfolioUrl} onChange={(e) => setForm({...form, portfolioUrl: e.target.value})} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Bank</label>
-                      <select className="w-full border border-slate-300 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm bg-white" value={(form as any).bank || ''} onChange={(e) => setForm({...form, bank: e.target.value})}>
-                        <option value="">Pilih Bank</option>
-                        <option value="BCA">BCA</option>
-                        <option value="Mandiri">Mandiri</option>
-                        <option value="BNI">BNI</option>
-                        <option value="BRI">BRI</option>
-                        <option value="SB">SEABANK</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-1">No. Rekening</label>
-                      <input className="w-full border border-slate-300 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" value={(form as any).accountNumber || ''} onChange={(e) => setForm({...form, accountNumber: e.target.value})} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-base sm:text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                          {editing ? 'Edit Anggota' : 'Tambah Anggota'}
+                        </h3>
+                        <button type="button" onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">Isi informasi anggota tim dengan lengkap</p>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-            <div className="mt-3">
-              <label className="block text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Keahlian (pisahkan koma)</label>
-              <input className="w-full border border-slate-300 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" value={Array.isArray(form.expertise) ? form.expertise.join(', ') : (form.expertise as any) || ''} onChange={(e) => setForm({...form, expertise: e.target.value.split(',').map(s => s.trim())})} />
-            </div>
 
-            <div className="mt-3">
-              <label className="block text-[10px] font-semibold text-slate-600 uppercase tracking-wider mb-1">Bio</label>
-              <textarea rows={3} className="w-full border border-slate-300 px-3 py-2 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm resize-none" value={form.bio} onChange={(e) => setForm({...form, bio: e.target.value})} />
-            </div>
+                {/* Modal Content - Scrollable */}
+                <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 gap-3">
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Nama Lengkap *</label>
+                        <input 
+                          autoFocus 
+                          required
+                          className="w-full border border-slate-300 px-3 py-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" 
+                          value={form.name} 
+                          onChange={(e) => setForm({...form, name: e.target.value})} 
+                          placeholder="Masukkan nama lengkap"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Posisi / Jabatan *</label>
+                        <input 
+                          required
+                          className="w-full border border-slate-300 px-3 py-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" 
+                          value={form.position} 
+                          onChange={(e) => setForm({...form, position: e.target.value})} 
+                          placeholder="Contoh: Senior Developer"
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1.5">Email</label>
+                          <input 
+                            type="email"
+                            className="w-full border border-slate-300 px-3 py-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" 
+                            value={(form as any).email || ''} 
+                            onChange={(e) => setForm({...form, email: e.target.value})} 
+                            placeholder="email@example.com"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1.5">Pengalaman</label>
+                          <input 
+                            className="w-full border border-slate-300 px-3 py-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" 
+                            value={form.experience} 
+                            onChange={(e) => setForm({...form, experience: e.target.value})} 
+                            placeholder="Contoh: 5 tahun"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Portfolio URL</label>
+                        <input 
+                          type="url"
+                          className="w-full border border-slate-300 px-3 py-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" 
+                          value={form.portfolioUrl} 
+                          onChange={(e) => setForm({...form, portfolioUrl: e.target.value})} 
+                          placeholder="https://portfolio.com"
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1.5">Bank</label>
+                          <select 
+                            className="w-full border border-slate-300 px-3 py-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm bg-white" 
+                            value={(form as any).bank || ''} 
+                            onChange={(e) => setForm({...form, bank: e.target.value})}
+                          >
+                            <option value="">Pilih Bank</option>
+                            <option value="BCA">BCA</option>
+                            <option value="Mandiri">Mandiri</option>
+                            <option value="BNI">BNI</option>
+                            <option value="BRI">BRI</option>
+                            <option value="CIMB">CIMB Niaga</option>
+                            <option value="SB">SEABANK</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-slate-700 mb-1.5">No. Rekening</label>
+                          <input 
+                            className="w-full border border-slate-300 px-3 py-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" 
+                            value={(form as any).accountNumber || ''} 
+                            onChange={(e) => setForm({...form, accountNumber: e.target.value})} 
+                            placeholder="1234567890"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Keahlian</label>
+                        <input 
+                          className="w-full border border-slate-300 px-3 py-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" 
+                          value={Array.isArray(form.expertise) ? form.expertise.join(', ') : (form.expertise as any) || ''} 
+                          onChange={(e) => setForm({...form, expertise: e.target.value.split(',').map(s => s.trim())})} 
+                          placeholder="React, Node.js, TypeScript"
+                        />
+                        <p className="text-xs text-slate-500 mt-1">Pisahkan dengan koma untuk multiple keahlian</p>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Bio / Deskripsi</label>
+                        <textarea 
+                          rows={4} 
+                          className="w-full border border-slate-300 px-3 py-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm resize-none" 
+                          value={form.bio} 
+                          onChange={(e) => setForm({...form, bio: e.target.value})} 
+                          placeholder="Ceritakan sedikit tentang anggota tim ini..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Modal Footer - Fixed */}
+                <div className="flex-shrink-0 p-4 sm:p-6 pt-3 border-t border-slate-200 bg-slate-50">
+                  <div className="flex items-center justify-end gap-2">
+                    <button 
+                      type="button" 
+                      onClick={() => setShowForm(false)} 
+                      className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white hover:bg-slate-50 transition-colors text-sm font-medium"
+                    >
+                      Batal
+                    </button>
+                    <button 
+                      type="submit" 
+                      disabled={loading} 
+                      className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg flex items-center gap-2 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                    >
+                      {loading && (
+                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                        </svg>
+                      )}
+                      <span>{editing ? 'Update Anggota' : 'Tambah Anggota'}</span>
+                    </button>
+                  </div>
+                </div>
 
                 <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileChange(e.target.files && e.target.files[0])} />
-
-                <div className="mt-6" />
-                <div className="mt-4 flex items-center justify-end gap-2">
-              <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 border border-slate-300 rounded-lg bg-white hover:bg-slate-50 transition-colors text-sm font-medium">Batal</button>
-              <button type="submit" disabled={loading} className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg flex items-center gap-2 shadow-lg shadow-blue-500/30 hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium">
-                {loading && <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>}
-                <span>{editing ? 'Update' : 'Buat'}</span>
-              </button>
-                </div>
               </form>
             )
           })()}

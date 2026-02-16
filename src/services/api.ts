@@ -5,6 +5,10 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 declare global {
   interface ImportMetaEnv {
     readonly VITE_API_URL?: string;
+    readonly VITE_API_TIMEOUT?: string;
+    readonly DEV: boolean;
+    readonly MODE: string;
+    readonly PROD: boolean;
   }
 
   interface ImportMeta {
@@ -13,6 +17,17 @@ declare global {
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+// Log API configuration in development
+if (import.meta.env.DEV) {
+  console.log('[API Config] Base URL:', API_BASE_URL);
+  console.log('[API Config] Environment:', import.meta.env.MODE);
+}
+
+// Log API URL for debugging
+if (import.meta.env.DEV) {
+  console.log('API Base URL:', API_BASE_URL);
+}
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -132,8 +147,11 @@ class ApiClient {
   constructor(baseUrl: string = API_BASE_URL) {
     this.axiosInstance = axios.create({
       baseURL: baseUrl,
+      timeout: 30000,
+      withCredentials: true,
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
     });
 
@@ -156,6 +174,10 @@ class ApiClient {
       (config) => {
         if (this.token) {
           config.headers.Authorization = `Bearer ${this.token}`;
+        }
+        // Log request in development
+        if (import.meta.env.DEV) {
+          console.log('[API Request]', config.method?.toUpperCase(), config.url);
         }
         // increment active requests and notify
         this.activeRequests = this.activeRequests + 1
@@ -236,17 +258,19 @@ class ApiClient {
 
       return response.data;
     } catch (error: any) {
-      console.error('API Error:', error);
+      console.error('[API Error]', error);
       
       if (error.response) {
         // Server responded with error status
-        throw new Error(error.response.data?.message || `HTTP error! status: ${error.response.status}`);
+        const message = error.response.data?.message || error.response.data?.error || `HTTP error! status: ${error.response.status}`;
+        throw new Error(message);
       } else if (error.request) {
-        // Request was made but no response received
-        throw new Error('Network error - please check your internet connection');
+        // Request was made but no response received (CORS, network, etc.)
+        console.error('[API Error] No response received:', error.request);
+        throw new Error('Tidak dapat terhubung ke server. Periksa koneksi internet Anda atau hubungi administrator.');
       } else {
         // Something else happened
-        throw new Error(error.message || 'An unexpected error occurred');
+        throw new Error(error.message || 'Terjadi kesalahan yang tidak terduga');
       }
     }
   }

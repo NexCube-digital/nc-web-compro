@@ -38,6 +38,33 @@ import { IoMdCube } from 'react-icons/io'
 const ThreeBackground = React.lazy(() => import('../components/ThreeBackground'))
 const HeroThree = React.lazy(() => import('../components/HeroThree'))
 
+// Separate StatCounter component to prevent re-initialization on scroll
+interface StatCounterProps {
+  number: number;
+  suffix: string;
+  color: string;
+}
+
+const StatCounter: React.FC<StatCounterProps> = React.memo(({ number, suffix, color }) => {
+  const { formattedValue, elementRef } = useCountUp({
+    end: number,
+    duration: 2,
+    suffix: suffix,
+    enableScrollTrigger: true
+  });
+
+  return (
+    <div 
+      ref={elementRef as React.RefObject<HTMLDivElement>}
+      className={`text-xl md:text-2xl font-black bg-gradient-to-r ${color} bg-clip-text text-transparent`}
+    >
+      {formattedValue()}
+    </div>
+  );
+});
+
+StatCounter.displayName = 'StatCounter';
+
 export const Home: React.FC = () => {
   const heroSectionRef = useRef<HTMLElement>(null);
   const portfolioSectionRef = useRef<HTMLElement>(null);
@@ -332,7 +359,7 @@ export const Home: React.FC = () => {
         {/* Hero Section - Full Viewport (1 Frame) */}
         <section 
           ref={heroSectionRef} 
-          className="relative h-screen flex items-start justify-center overflow-hidden pt-20"
+          className="relative h-screen flex items-center justify-center overflow-hidden"
         >
           {/* Three.js 3D NEXCUBE Logo in background */}
           <Suspense fallback={null}>
@@ -384,80 +411,48 @@ export const Home: React.FC = () => {
           </div>
           
           <div className="container relative">
-            <div className="max-w-6xl mx-auto text-center space-y-4">
+            <div className="max-w-5xl mx-auto text-center space-y-4 md:space-y-6">
 
               
               {/* Modern Trust Badge */}
-              <div className={`inline-flex items-center justify-center gap-3 backdrop-blur-xl bg-white/70 border border-white/30 shadow-lg px-5 py-2 rounded-2xl transition-all duration-700 delay-100 ${!showHero ? 'opacity-0 -translate-y-10' : 'opacity-100 translate-y-0'}`}>
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-orange-500 rounded-full blur-md opacity-75 animate-pulse"></div>
-                  <HiSparkles className="w-5 h-5 text-orange-500 relative" />
-                </div>
-                <span className="text-sm font-bold bg-gradient-to-r from-blue-600 to-orange-600 bg-clip-text text-transparent">Premium Digital Solutions 2025</span>
+              <div className={`inline-flex items-center justify-center gap-2 backdrop-blur-xl bg-white/70 border border-white/30 shadow-lg px-4 py-1.5 rounded-2xl transition-all duration-500 delay-100 ${!showHero ? 'opacity-0 -translate-y-10' : 'opacity-100 translate-y-0'}`}>
+                <HiSparkles className="w-4 h-4 text-orange-500" />
+                <span className="text-xs md:text-sm font-bold bg-gradient-to-r from-blue-600 to-orange-600 bg-clip-text text-transparent">Premium Digital Solutions 2025</span>
               </div>
 
-              <div className="space-y-2">
-                <h1 className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-[1.05] tracking-tight transition-all duration-700 delay-200 ${!showHero ? 'opacity-0 scale-95 -translate-y-10' : 'opacity-100 scale-100 translate-y-0'}`}>
-                  <span className="inline-block">
-                    <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 bg-clip-text text-transparent drop-shadow-lg">Digital</span>
-                  </span>
+              <div className="space-y-3 md:space-y-4">
+                <h1 className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight transition-all duration-500 delay-200 ${!showHero ? 'opacity-0 scale-95 -translate-y-10' : 'opacity-100 scale-100 translate-y-0'}`}>
+                  <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 bg-clip-text text-transparent">Digital Excellence</span>
                   <br />
-                  <span className="inline-block">
-                    <span className="bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 bg-clip-text text-transparent drop-shadow-lg">Excellence</span>
-                  </span>
-                  <br />
-                  <span className="text-slate-800 text-2xl md:text-3xl lg:text-4xl font-bold mt-2 inline-block drop-shadow">For Modern Business</span>
+                  <span className="text-slate-800 text-2xl md:text-3xl lg:text-4xl font-bold mt-2 inline-block">For Modern Business</span>
                 </h1>
                 
-                <p className={`text-sm md:text-base lg:text-lg text-slate-600 leading-relaxed max-w-3xl mx-auto transition-all duration-700 delay-300 ${!showHero ? 'opacity-0 translate-y-10' : 'opacity-100 translate-y-0'}`}>
-                  Transformasi bisnis Anda dengan <span className="font-bold text-blue-600">teknologi terdepan</span> dan <span className="font-bold text-orange-600">kreativitas tanpa batas</span>. Dari konsep hingga eksekusi, kami hadirkan solusi digital yang <span className="font-bold text-slate-800">menghasilkan impact nyata</span>.
+                <p className={`text-base md:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto transition-all duration-500 delay-300 ${!showHero ? 'opacity-0 translate-y-10' : 'opacity-100 translate-y-0'}`}>
+                  Transformasi bisnis Anda dengan teknologi terdepan dan kreativitas tanpa batas. Dari konsep hingga eksekusi, kami hadirkan solusi digital yang menghasilkan impact nyata.
                 </p>
               </div>
 
               {/* Modern Stats Cards with Counter Animation */}
               <div className="scroll-fade-in" ref={fadeInRef}>
-                <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-5xl mx-auto transition-all duration-700 delay-500 ${!showHero ? 'opacity-0 scale-90' : 'opacity-100 scale-100'}`}>
-                {stats.map((stat, index) => {
-                  // Counter hook untuk setiap stat
-                  const StatCounter = () => {
-                    const { formattedValue, elementRef } = useCountUp({
-                      end: stat.number,
-                      duration: 2,
-                      suffix: stat.suffix,
-                      enableScrollTrigger: false
-                    });
-
-                    return (
-                      <div 
-                        ref={elementRef as React.RefObject<HTMLDivElement>}
-                        className={`text-2xl md:text-3xl font-black bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}
-                      >
-                        {formattedValue()}
-                      </div>
-                    );
-                  };
-
-                  return (
+                <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-4xl mx-auto transition-all duration-500 delay-400 ${!showHero ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}>
+                {stats.map((stat, index) => (
                     <div key={index} className="scale-on-scroll group relative">
                       {/* Glassmorphism Card */}
-                      <div className="relative backdrop-blur-xl bg-white/70 border border-white/30 rounded-2xl p-4 md:p-5 hover:bg-white/90 transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer overflow-hidden">
+                      <div className="relative backdrop-blur-xl bg-white/80 border border-white/40 rounded-2xl p-4 md:p-5 hover:bg-white transition-all duration-300 hover:shadow-xl overflow-hidden">
                         {/* Gradient Overlay on Hover */}
-                        <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
+                        <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
                         
-                        {/* Glow Effect */}
-                        <div className={`absolute -inset-1 bg-gradient-to-r ${stat.color} rounded-2xl blur opacity-0 group-hover:opacity-30 transition-opacity duration-500`}></div>
-                        
-                        <div className="relative text-center space-y-1 md:space-y-2">
-                          {/* Icon with gradient & pulse animation */}
-                          <div className={`inline-flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br ${stat.color} text-white shadow-lg group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 animate-pulse`}>
-                            {stat.icon}
+                        <div className="relative text-center space-y-2">
+                          {/* Icon with gradient */}
+                          <div className={`inline-flex items-center justify-center w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br ${stat.color} text-white shadow-lg group-hover:scale-105 transition-all duration-300`}>
+                            <div className="w-4 h-4 md:w-5 md:h-5">{stat.icon}</div>
                           </div>
                           
                           {/* Animated Number Counter */}
-                          <StatCounter />
+                          <StatCounter number={stat.number} suffix={stat.suffix} color={stat.color} />
                           
                           {/* Label */}
-                          <div className="text-xs md:text-sm font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">
+                          <div className="text-xs md:text-sm font-semibold text-slate-600">
                             {stat.label}
                           </div>
 
@@ -471,64 +466,35 @@ export const Home: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
               
-              {/* Modern CTAs with Enhanced Animations - Moved Below Stats */}
-              <div className={`flex flex-wrap gap-4 justify-center items-center mt-6 transition-all duration-700 delay-600 ${!showHero ? 'opacity-0 translate-y-10' : 'opacity-100 translate-y-0'}`}>
+              {/* Modern CTAs - Below Stats */}
+              <div className={`flex flex-wrap gap-3 md:gap-4 justify-center items-center transition-all duration-500 delay-500 ${!showHero ? 'opacity-0 translate-y-10' : 'opacity-100 translate-y-0'}`}>
                 <button 
                   onClick={(e) => handleScrollToSection(portfolioSectionRef, e)} 
-                  className="group relative backdrop-blur-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-110 hover:shadow-2xl inline-flex items-center gap-3 overflow-hidden hover:-translate-y-1"
+                  className="group bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white px-6 py-3 rounded-xl text-sm md:text-base font-bold transition-all duration-300 hover:shadow-xl inline-flex items-center gap-2"
                 >
-                  {/* Animated Background Shine */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
-                  
-                  {/* Glow Effect */}
-                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-blue-500 rounded-2xl blur opacity-0 group-hover:opacity-75 transition-opacity duration-300"></div>
-                  
-                  <FaRocket className="w-5 h-5 relative transform group-hover:rotate-12 group-hover:scale-125 transition-all duration-300" />
-                  <span className="relative">Lihat Portfolio</span>
-                  <FaArrowRight className="w-5 h-5 relative transform group-hover:translate-x-2 transition-transform duration-300" />
-                  
-                  {/* Ripple Effect */}
-                  <span className="absolute inset-0 rounded-2xl">
-                    <span className="animate-ping absolute inset-0 rounded-2xl bg-blue-400 opacity-0 group-hover:opacity-20"></span>
-                  </span>
+                  <FaRocket className="w-4 h-4" />
+                  <span>Lihat Portfolio</span>
+                  <FaArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
                 
                 <Link 
                   to="https://wa.me/6285950313360?text=Halo%20NexCube%20Digital%2C%20saya%20ingin%20berkonsultasi%20tentang%20kebutuhan%20digital%20saya" 
-                  className="group relative backdrop-blur-xl bg-white/80 hover:bg-white border-2 border-slate-200 hover:border-orange-400 text-slate-700 hover:text-orange-600 px-6 py-3 rounded-2xl font-bold transition-all duration-300 hover:scale-110 hover:shadow-2xl inline-flex items-center gap-3 overflow-hidden hover:-translate-y-1"
+                  className="group bg-white hover:bg-gray-50 border-2 border-slate-200 hover:border-green-500 text-slate-700 hover:text-green-600 px-6 py-3 rounded-xl text-sm md:text-base font-bold transition-all duration-300 hover:shadow-xl inline-flex items-center gap-2"
                 >
-                  {/* Glow Effect */}
-                  <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-orange-500 rounded-2xl blur opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
-                  
-                  <FaWhatsapp className="w-6 h-6 text-green-500 relative group-hover:scale-125 group-hover:rotate-12 transition-all duration-300 animate-pulse" />
-                  <span className="relative">Konsultasi Gratis</span>
-                  <HiSparkles className="w-5 h-5 relative opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:rotate-180" />
-                  
-                  {/* Shine Effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+                  <FaWhatsapp className="w-5 h-5 text-green-500" />
+                  <span>Konsultasi Gratis</span>
                 </Link>
               </div>
-            </div>
-            
-            {/* Scroll Indicator - Animated */}
-            <div className="scroll-fade-in absolute left-1/2 -translate-x-1/2 animate-bounce">
-              <div className="flex flex-col items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors cursor-pointer">
-                <span className="text-xs font-semibold">Scroll Down</span>
-                <svg className="w-5 h-5 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                </svg>
-              </div>
-            </div>
             </div>
           </div>
         </section>
 
-        {/* Premium Services Section - Full Viewport (1 Frame) */}
-        <section className="relative h-screen flex items-center justify-center overflow-y-auto" ref={fadeInRef}>
+        {/* Premium Services Section */}
+        <section className="relative py-16 md:py-20" ref={fadeInRef}>
           {/* Modern Gradient Background */}
           <div className="absolute inset-0 bg-gradient-to-b from-white via-slate-50/30 to-white"></div>
           
@@ -540,27 +506,13 @@ export const Home: React.FC = () => {
             }}></div>
           </div>
 
-          <div className="container relative z-10 py-10">
+          <div className="container relative z-10">
             {/* Section Header */}
-            <div className="text-center mb-6">
-              <div className="scroll-fade-in inline-block relative mb-6 scale-on-scroll">
-                {/* Premium NEXCUBE Badge */}
-                <div className="relative group cursor-pointer">
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-orange-500 rounded-full blur-2xl opacity-75 group-hover:opacity-100 animate-pulse"></div>
-                  <div className="relative backdrop-blur-xl bg-gradient-to-r from-blue-600 to-orange-500 text-white px-8 py-4 rounded-full font-black text-sm md:text-base shadow-2xl border-4 border-white/50 flex items-center gap-2 group-hover:scale-110 transition-transform">
-                    <IoMdCube className="w-5 h-5" />
-                    <span>NEXCUBE</span>
-                    <HiSparkles className="w-4 h-4" />
-                  </div>
-                </div>
-              </div>
-
-              <h2 className="scroll-fade-in text-3xl md:text-4xl font-black text-slate-800 mb-2 flex items-center justify-center gap-3">
-                <HiSparkles className="w-8 h-8 text-orange-500" />
-                <span>Premium Services</span>
-                <HiSparkles className="w-8 h-8 text-blue-500" />
+            <div className="text-center mb-12">
+              <h2 className="scroll-fade-in text-3xl md:text-4xl font-black text-slate-800 mb-3">
+                Premium Services
               </h2>
-              <p className="scroll-fade-in text-base md:text-lg text-slate-600 font-medium max-w-2xl mx-auto">
+              <p className="scroll-fade-in text-lg text-slate-600 max-w-2xl mx-auto">
                 Solusi digital terlengkap untuk bisnis modern
               </p>
             </div>
@@ -573,61 +525,34 @@ export const Home: React.FC = () => {
                   className="scroll-fade-in scale-on-scroll group relative"
                   style={{ animationDelay: `${index * 150}ms` }}
                 >
-                  <div className="relative h-full backdrop-blur-xl bg-white/80 hover:bg-white/95 rounded-3xl p-4 md:p-6 border border-white/50 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden cursor-pointer">
-                    {/* Animated Shine Effect */}
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                    </div>
-                    
-                    {/* Gradient Border Effect on Hover */}
-                    <div className={`absolute -inset-[2px] bg-gradient-to-r ${service.gradient} rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm`}></div>
-                    
-                    <div className="relative space-y-3">
-                      {/* Gradient Icon with Multiple Animations */}
-                      <div className="flex items-center gap-3">
-                        <div className={`flex-shrink-0 p-4 rounded-2xl bg-gradient-to-br ${service.gradient} text-white shadow-xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 animate-pulse`}>
-                          <div className="group-hover:animate-spin-slow">
-                            {service.icon}
-                          </div>
+                  <div className="relative h-full bg-white rounded-2xl p-6 border border-slate-200 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div className="space-y-4">
+                      {/* Icon and Title */}
+                      <div className="flex items-center gap-4">
+                        <div className={`flex-shrink-0 p-3 rounded-xl bg-gradient-to-br ${service.gradient} text-white shadow-lg`}>
+                          {service.icon}
                         </div>
                         
-                        <h3 className="text-xl md:text-2xl font-black text-slate-800 group-hover:text-blue-600 transition-colors flex items-center gap-2">
+                        <h3 className="text-xl md:text-2xl font-bold text-slate-800">
                           {service.title}
-                          <FaBolt className="w-5 h-5 text-orange-500 opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:animate-bounce" />
                         </h3>
                       </div>
                       
-                      <p className="text-sm md:text-base text-slate-600 leading-relaxed group-hover:text-slate-700 transition-colors">
+                      <p className="text-base text-slate-600 leading-relaxed">
                         {service.description}
                       </p>
                       
-                      {/* Feature Tags with Stagger Animation */}
+                      {/* Feature Tags */}
                       <div className="flex flex-wrap gap-2">
                         {service.features.map((feature, idx) => (
                           <span 
                             key={idx} 
-                            className="inline-flex items-center gap-1 text-sm font-bold text-blue-600 bg-blue-50 px-4 py-2 rounded-full border border-blue-200 hover:bg-blue-100 hover:scale-110 transition-all duration-300"
-                            style={{ transitionDelay: `${idx * 50}ms` }}
+                            className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg"
                           >
-                            <FaCheckCircle className="w-3 h-3 group-hover:animate-spin" />
+                            <FaCheckCircle className="w-3 h-3" />
                             {feature}
                           </span>
                         ))}
-                      </div>
-
-                      {/* Progress indicator on hover */}
-                      <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <div 
-                          className={`h-full bg-gradient-to-r ${service.gradient} transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-1000`}
-                          style={{ transitionDelay: '200ms' }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    {/* Corner Badge */}
-                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:scale-100 scale-0">
-                      <div className={`bg-gradient-to-r ${service.gradient} text-white text-xs font-bold px-3 py-1 rounded-full shadow-xl animate-bounce`}>
-                        HOT
                       </div>
                     </div>
                   </div>
@@ -637,8 +562,8 @@ export const Home: React.FC = () => {
           </div>
         </section>
 
-        {/* NEXCUBE Brand Showcase - Full Viewport (1 Frame) */}
-        <section className="relative h-screen flex items-center justify-center overflow-hidden" ref={fadeInRef}>
+        {/* NEXCUBE Brand Showcase */}
+        <section className="relative overflow-hidden py-12 md:py-16" ref={fadeInRef}>
           {/* Modern Gradient Background */}
           <div className="absolute inset-0 bg-gradient-to-b from-white via-blue-50/30 to-white"></div>
           
@@ -651,70 +576,32 @@ export const Home: React.FC = () => {
           </div>
 
           <div className="container relative z-10">
-            {/* Main NEXCUBE 3D Logo */}
-            <div className="text-center mb-6">
-              <div className="scroll-fade-in scale-on-scroll inline-block relative">
-                {/* Animated Glow Rings */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                  <div className="w-[400px] h-[400px] rounded-full border-4 border-blue-200 animate-ping opacity-20"></div>
-                </div>
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" style={{ animationDelay: '0.5s' }}>
-                  <div className="w-[350px] h-[350px] rounded-full border-4 border-orange-200 animate-ping opacity-20"></div>
-                </div>
-                
-                {/* Main Logo Card - Glassmorphism */}
-                <div className="scale-on-scroll relative backdrop-blur-2xl bg-gradient-to-br from-blue-600 via-blue-500 to-orange-500 rounded-[30px] p-6 md:p-8 shadow-[0_30px_60px_-20px_rgba(0,102,255,0.5)] border-2 border-white/30">
-                  {/* NEXCUBE Real Logo - Enhanced */}
-                  <div className="mb-4 flex justify-center relative">
-                    <div className="relative group cursor-pointer">
-                      <div className="absolute inset-0 bg-white/30 rounded-2xl blur-2xl group-hover:blur-3xl transition-all animate-pulse"></div>
-                      <div className="relative backdrop-blur-xl bg-white/10 rounded-2xl p-4 border-2 border-white/30 shadow-2xl group-hover:scale-110 transition-transform duration-500">
-                        <img 
-                          src="/images/NexCube-full.png" 
-                          alt="NEXCUBE Digital Logo" 
-                          className="h-16 md:h-20 w-auto drop-shadow-2xl relative group-hover:rotate-3 transition-all duration-500"
-                        />
-                      </div>
-                    </div>
+            {/* Main NEXCUBE Logo */}
+            <div className="text-center mb-12">
+              <div className="scroll-fade-in inline-block">
+                <div className="bg-gradient-to-br from-blue-600 to-orange-500 rounded-2xl p-8 shadow-xl">
+                  <div className="mb-4 flex justify-center">
+                    <img 
+                      src="/images/NexCube-full.png" 
+                      alt="NEXCUBE Digital Logo" 
+                      className="h-16 md:h-20 w-auto"
+                    />
                   </div>
                   
-                  {/* Typography - Modern 2025 */}
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-center gap-2">
-                      <h2 className="text-4xl md:text-5xl font-black text-white drop-shadow-2xl">
-                        <span className="inline-block hover:scale-110 transition-transform">NEX</span>
-                        <span className="inline-block text-orange-200 hover:scale-110 transition-transform">CUBE</span>
-                      </h2>
-                      <HiSparkles className="w-8 h-8 text-orange-300 animate-pulse" />
-                    </div>
-                    <div className="text-xl font-black text-orange-200 tracking-wider">
-                      Digital.
-                    </div>
-                    <div className="text-sm font-bold text-white/90 max-w-2xl mx-auto">
+                  <div className="space-y-2">
+                    <h2 className="text-3xl md:text-4xl font-black text-white">
+                      NEXCUBE Digital.
+                    </h2>
+                    <p className="text-white/90">
                       Your Trusted Digital Transformation Partner
-                    </div>
-                    
-                    {/* Feature Pills - Modern */}
-                    <div className="flex flex-wrap gap-2 justify-center mt-2">
-                      {[
-                        { text: 'Premium Quality', icon: <FaGem className="w-3 h-3" /> },
-                        { text: 'Lightning Fast', icon: <HiLightningBolt className="w-3 h-3" /> },
-                        { text: '24/7 Support', icon: <FaClock className="w-3 h-3" /> },
-                        { text: 'Best Value', icon: <FaStar className="w-3 h-3" /> }
-                      ].map((badge, i) => (
-                        <div key={i} className="scroll-fade-in group cursor-pointer backdrop-blur-xl bg-white/20 hover:bg-white/30 px-4 py-2 rounded-full text-white text-sm font-bold border border-white/30 hover:border-white/50 transition-all duration-300 hover:scale-110 inline-flex items-center gap-2" style={{ animationDelay: `${i * 0.1}s` }}>
-                          {badge.icon}
-                          <span>{badge.text}</span>
-                        </div>
-                      ))}
-                    </div>
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Why Choose NEXCUBE - Modern Cards */}
-            <div className="grid md:grid-cols-3 gap-4 md:gap-5">
+            {/* Why Choose NEXCUBE */}
+            <div className="grid md:grid-cols-3 gap-6">
               {[
                 {
                   icon: <FaRocket className="w-12 h-12" />,
@@ -735,19 +622,16 @@ export const Home: React.FC = () => {
                   gradient: 'from-orange-500 to-amber-500'
                 }
               ].map((item, index) => (
-                <div key={index} className="scroll-fade-in scale-on-scroll group" style={{ animationDelay: `${index * 0.2}s` }}>
-                  <div className="relative backdrop-blur-xl bg-white/60 hover:bg-white/80 border border-white/40 rounded-3xl p-5 shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden">
-                    {/* Gradient Overlay */}
-                    <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}></div>
-                    
-                    <div className="relative text-center space-y-3">
+                <div key={index} className="scroll-fade-in" style={{ animationDelay: `${index * 0.15}s` }}>
+                  <div className="bg-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300">
+                    <div className="text-center space-y-3">
                       {/* Icon */}
-                      <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br ${item.gradient} text-white shadow-2xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-                        <div className="w-8 h-8">{item.icon}</div>
+                      <div className={`inline-flex items-center justify-center w-14 h-14 rounded-xl bg-gradient-to-br ${item.gradient} text-white shadow-lg`}>
+                        <div className="w-7 h-7">{item.icon}</div>
                       </div>
                       
                       {/* Title */}
-                      <h3 className="text-lg font-black text-slate-800 bg-gradient-to-r ${item.gradient} bg-clip-text group-hover:text-transparent transition-all duration-300">
+                      <h3 className="text-lg font-bold text-slate-800">
                         {item.title}
                       </h3>
                       
@@ -763,12 +647,12 @@ export const Home: React.FC = () => {
           </div>
         </section>
 
-        {/* Trusted By Section - Full Viewport (1 Frame) */}
-        <section className="relative h-screen flex items-center justify-center overflow-hidden" ref={fadeInRef}>
+        {/* Trusted By Section - Compact */}
+        <section className="relative overflow-hidden py-12 md:py-16" ref={fadeInRef}>
           {/* Modern Background */}
           <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-white to-orange-50/50"></div>
           
-          {/* 3D NEXCUBE Pattern Background */}
+          {/* 3D NEXCUBE Pattern Background - Subtle */}
           <div className="absolute inset-0 opacity-5 overflow-hidden">
             <div className="grid grid-cols-8 gap-6 p-8 rotate-12 scale-150">
               {[...Array(32)].map((_, i) => (
@@ -787,29 +671,29 @@ export const Home: React.FC = () => {
           </div>
           
           <div className="container relative z-10">
-            <div className="text-center mb-12">
-              <div className="scroll-fade-in inline-flex items-center gap-3 backdrop-blur-xl bg-white/80 border border-white/40 px-6 py-3 rounded-2xl text-sm font-bold text-slate-700 shadow-xl mb-6">
-                <FaCheckCircle className="w-5 h-5 text-green-500" />
+            <div className="text-center mb-6">
+              <div className="scroll-fade-in inline-flex items-center gap-2 backdrop-blur-xl bg-white/80 border border-white/40 px-4 py-2 rounded-xl text-xs md:text-sm font-bold text-slate-700 shadow-lg mb-3">
+                <FaCheckCircle className="w-4 h-4 text-green-500" />
                 <span>Dipercaya oleh <span className="text-blue-600">30+</span> Bisnis di Indonesia</span>
               </div>
               
-              <h2 className="scroll-fade-in text-4xl font-black text-slate-800">
+              <h2 className="scroll-fade-in text-xl md:text-2xl font-bold text-slate-800">
                 Partner Terpercaya untuk <span className="bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent">Transformasi Digital</span>
               </h2>
             </div>
             
-            <div className="flex flex-wrap justify-center items-center gap-8">
+            <div className="flex flex-wrap justify-center items-center gap-4 md:gap-6">
               {[1, 2, 3, 4, 5].map((item, index) => (
                 <div 
                   key={index}
                   style={{ animationDelay: `${index * 0.1}s` }}
                   className="scroll-fade-in group"
                 >
-                  <div className="backdrop-blur-xl bg-white/70 hover:bg-white/90 p-6 rounded-2xl border border-white/50 hover:shadow-2xl transition-all duration-300 hover:scale-110">
+                  <div className="backdrop-blur-xl bg-white/70 hover:bg-white/90 p-3 md:p-4 rounded-xl border border-white/50 hover:shadow-xl transition-all duration-300 hover:scale-105">
                     <img 
                       src={`/images/clients/client-${item}.png`} 
                       alt={`Client Logo ${item}`}
-                      className="h-12 w-auto object-contain opacity-60 group-hover:opacity-100 transition-opacity" 
+                      className="h-8 md:h-10 w-auto object-contain opacity-60 group-hover:opacity-100 transition-opacity" 
                     />
                   </div>
                 </div>
@@ -823,10 +707,10 @@ export const Home: React.FC = () => {
           <Portfolio />
         </section>
 
-        {/* Testimonials - Full Viewport (1 Frame) */}
+        {/* Testimonials */}
         <section 
           ref={testimonialSectionRef}
-          className="relative h-screen flex items-center justify-center overflow-hidden"
+          className="relative overflow-hidden py-16 md:py-20"
         >
           {/* Modern Gradient Background */}
           <div className="absolute inset-0 bg-gradient-to-b from-white via-slate-50/50 to-white"></div>
@@ -841,17 +725,17 @@ export const Home: React.FC = () => {
           
           <div className="container relative z-10">
             <div className="text-center max-w-3xl mx-auto mb-12">
-              <div className="scroll-fade-in inline-flex items-center gap-2 backdrop-blur-xl bg-white/80 border border-white/40 px-6 py-3 rounded-2xl text-sm font-bold text-orange-600 shadow-xl mb-6">
-                <FaStar className="w-5 h-5" />
+              <div className="scroll-fade-in inline-flex items-center gap-2 bg-orange-50 px-4 py-2 rounded-lg text-sm font-semibold text-orange-600 mb-4">
+                <FaStar className="w-4 h-4" />
                 <span>4.9/5 Rating dari 30+ Klien Puas</span>
               </div>
               
-              <h2 className="scroll-fade-in text-5xl font-black text-slate-800 mb-6">
-                Cerita Sukses <span className="bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent">Klien Kami</span>
+              <h2 className="scroll-fade-in text-3xl md:text-4xl font-black text-slate-800 mb-4">
+                Cerita Sukses Klien Kami
               </h2>
               
               <p className="scroll-fade-in text-lg text-slate-600">
-                Kepuasan dan kesuksesan klien adalah prioritas utama dalam setiap proyek digital kami
+                Kepuasan dan kesuksesan klien adalah prioritas utama kami
               </p>
             </div>
 
@@ -862,11 +746,8 @@ export const Home: React.FC = () => {
                   className="scroll-fade-in scale-on-scroll group"
                   style={{ animationDelay: `${index * 0.2}s` }}
                 >
-                  <div className="relative h-full backdrop-blur-2xl bg-white/80 hover:bg-white/95 border border-white/60 rounded-3xl p-6 md:p-8 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 overflow-hidden">
-                    {/* Gradient Overlay on Hover */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                    
-                    <div className="relative space-y-6">
+                  <div className="h-full bg-white border border-slate-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300">
+                    <div className="space-y-4">
                       {/* Rating Stars */}
                       <div className="flex gap-1">
                         {[...Array(testimonial.rating)].map((_, i) => (
@@ -875,22 +756,22 @@ export const Home: React.FC = () => {
                       </div>
                       
                       {/* Testimonial Text */}
-                      <blockquote className="text-slate-700 leading-relaxed italic text-lg group-hover:text-slate-800 transition-colors">
+                      <blockquote className="text-slate-700 leading-relaxed text-base">
                         "{testimonial.text}"
                       </blockquote>
                       
                       {/* Client Info */}
-                      <div className="flex items-center gap-4 pt-4 border-t border-slate-200">
-                        <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-blue-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                          <span className="text-white font-black text-xl drop-shadow">
+                      <div className="flex items-center gap-3 pt-4 border-t border-slate-200">
+                        <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-orange-500 rounded-xl flex items-center justify-center shadow-md">
+                          <span className="text-white font-bold text-lg">
                             {testimonial.name.charAt(0)}
                           </span>
                         </div>
                         <div>
-                          <div className="font-black text-slate-800 group-hover:text-blue-600 transition-colors text-lg">
+                          <div className="font-bold text-slate-800">
                             {testimonial.name}
                           </div>
-                          <div className="text-sm font-semibold text-slate-500 flex items-center gap-2">
+                          <div className="text-sm text-slate-500 flex items-center gap-1.5">
                             <FaCheckCircle className="w-3 h-3 text-green-500" />
                             {testimonial.company}
                           </div>
