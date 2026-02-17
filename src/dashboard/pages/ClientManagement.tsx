@@ -96,6 +96,9 @@ export const ClientManagement: React.FC = () => {
     // Handle packageDuration as number
     if (name === 'packageDuration') {
       setFormData(prev => ({ ...prev, [name]: value ? parseInt(value) : null }))
+    } else if (name === 'service' || name === 'budget') {
+      // Convert empty string to undefined for enum fields
+      setFormData(prev => ({ ...prev, [name]: value || undefined }))
     } else {
       setFormData(prev => ({ ...prev, [name]: value }))
     }
@@ -131,8 +134,13 @@ export const ClientManagement: React.FC = () => {
       } else {
         // Create new contact
         const response = await apiClient.submitContact({
-          ...formData,
-          message: formData.message || 'Client created from dashboard'
+          name: formData.name,
+          email: formData.email,
+          message: formData.message || 'Client created from dashboard',
+          company: formData.company || undefined,
+          phone: formData.phone || undefined,
+          service: formData.service,
+          budget: formData.budget
         })
         if (response.success) {
           await loadClients() // Refresh the list
