@@ -27,6 +27,16 @@ export const InvoicePDFModal: React.FC<InvoicePDFModalProps> = ({
     }
   }
 
+  if (priceBreakdown.length === 0 && invoice.amount) {
+    priceBreakdown = [
+      {
+        id: 'fallback',
+        description: invoice.description || invoice.service || 'Item',
+        price: invoice.amount,
+      },
+    ]
+  }
+
   const total = Array.isArray(priceBreakdown) && priceBreakdown.length > 0
     ? priceBreakdown.reduce((sum, item) => sum + (item.price || 0), 0)
     : invoice.amount

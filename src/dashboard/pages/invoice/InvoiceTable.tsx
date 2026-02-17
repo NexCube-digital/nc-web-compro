@@ -297,6 +297,15 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                           console.warn('Failed to parse price breakdown:', err)
                         }
                       }
+                      if (breakdown.length === 0 && selectedInvoice.amount) {
+                        breakdown = [
+                          {
+                            id: 'fallback',
+                            description: selectedInvoice.description || selectedInvoice.service || 'Item',
+                            price: selectedInvoice.amount,
+                          },
+                        ]
+                      }
                       return Array.isArray(breakdown) && breakdown.length > 0 ? (
                         breakdown.map((item, index) => (
                           <tr key={item.id || index} className="border-b border-slate-200 hover:bg-slate-50">

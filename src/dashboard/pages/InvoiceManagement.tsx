@@ -131,15 +131,28 @@ export const InvoiceManagement: React.FC = () => {
       setLoading(true)
       setError('')
 
-      // Prepare data with priceBreakdown as JSON string
+      // Prepare data with priceBreakdown as JSON string or null
+      let priceBreakdownValue = null;
+      if (formData.priceBreakdown) {
+        if (typeof formData.priceBreakdown === 'string' && formData.priceBreakdown.trim() !== '') {
+          try {
+            // Validate it's valid JSON
+            const parsed = JSON.parse(formData.priceBreakdown);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              priceBreakdownValue = formData.priceBreakdown;
+            }
+          } catch (e) {
+            // Invalid JSON, set to null
+            priceBreakdownValue = null;
+          }
+        } else if (typeof formData.priceBreakdown === 'object' && Array.isArray(formData.priceBreakdown) && (formData.priceBreakdown as any[]).length > 0) {
+          priceBreakdownValue = JSON.stringify(formData.priceBreakdown);
+        }
+      }
+
       const submitData = {
         ...formData,
-        // Ensure priceBreakdown is a JSON string or empty string
-        priceBreakdown: formData.priceBreakdown && typeof formData.priceBreakdown === 'string' 
-          ? formData.priceBreakdown 
-          : (formData.priceBreakdown && typeof formData.priceBreakdown === 'object'
-              ? JSON.stringify(formData.priceBreakdown)
-              : '')
+        priceBreakdown: priceBreakdownValue
       }
 
       if (editingId) {
