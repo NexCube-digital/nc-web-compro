@@ -286,22 +286,47 @@ export const ClientManagement: React.FC = () => {
             <span className="text-sm text-slate-700">Updating...</span>
           </div>
         )}
+
+        {/* NewDataBanner - Always at top */}
+        {(hasNewClients && newClients) || (typeof (window as any)._clientsSSE !== 'undefined' && (window as any)._clientsSSE) ? (
+          <NewDataBanner
+            message="Data klien terbaru tersedia"
+            onRefresh={async () => {
+              setLoading(true)
+              try {
+                if (hasNewClients && newClients) { setClients(newClients); clearNewClients() }
+                else if ((window as any)._clientsSSE) { await loadClients(); (window as any)._clientsSSE = false }
+              } finally { setLoading(false) }
+            }}
+            onDismiss={() => clearNewClients()}
+          />
+        ) : null}
+
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Manajemen Klien</h1>
             <p className="text-slate-600 mt-2">Kelola data klien dan informasi hosting</p>
           </div>
           {!showForm && (
-            <button
-              onClick={() => {
-                setIsPageTransitioning(true)
-                setTimeout(() => navigate('/dashboard/clients/formclient'), 150)
-              }}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition-all hover:scale-105"
-            >
-              + Tambah Klien
-            </button>
+            <div className="flex items-center gap-4">
+              <input
+                type="text"
+                placeholder="Cari klien..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+              />
+              <button
+                onClick={() => {
+                  setIsPageTransitioning(true)
+                  setTimeout(() => navigate('/dashboard/clients/formclient'), 150)
+                }}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition-all hover:scale-105 whitespace-nowrap"
+              >
+                + Tambah Klien
+              </button>
+            </div>
           )}
         </div>
 
@@ -322,28 +347,49 @@ export const ClientManagement: React.FC = () => {
         {/* Table & Stats - Only show when not in form view */}
         {!showForm && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {(hasNewClients && newClients) || (typeof (window as any)._clientsSSE !== 'undefined' && (window as any)._clientsSSE) ? (
-              <NewDataBanner
-                message="Data klien terbaru tersedia"
-                onRefresh={async () => {
-                  setLoading(true)
-                  try {
-                    if (hasNewClients && newClients) { setClients(newClients); clearNewClients() }
-                    else if ((window as any)._clientsSSE) { await loadClients(); (window as any)._clientsSSE = false }
-                  } finally { setLoading(false) }
-                }}
-                onDismiss={() => clearNewClients()}
-              />
-            ) : null}
-            {/* Search & Filter */}
-            <div className="mb-6 flex gap-4">
-              <input
-                type="text"
-                placeholder="Cari klien..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1 px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-slate-600 text-sm font-medium mb-1">Total Klien</p>
+                    <p className="text-3xl font-bold text-slate-900">{Array.isArray(clients) ? clients.length : 0}</p>
+                  </div>
+                  <div className="bg-blue-100 p-3 rounded-lg">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292m7.753 2.354a4 4 0 11-5.292-5.292m3.715 9.946h1.946a2 2 0 002-2v-5.36m-13.38 1.946a4 4 0 110-5.292M5.106 12.694a4 4 0 105.292 5.292" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-slate-600 text-sm font-medium mb-1">Responded</p>
+                    <p className="text-3xl font-bold text-green-600">{Array.isArray(clients) ? clients.filter(c => c.status === 'responded').length : 0}</p>
+                  </div>
+                  <div className="bg-green-100 p-3 rounded-lg">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-slate-600 text-sm font-medium mb-1">New Leads</p>
+                    <p className="text-3xl font-bold text-blue-600">{Array.isArray(clients) ? clients.filter(c => c.status === 'new').length : 0}</p>
+                  </div>
+                  <div className="bg-blue-100 p-3 rounded-lg">
+                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Clients Table Section Header */}
@@ -354,29 +400,13 @@ export const ClientManagement: React.FC = () => {
 
             {/* Unified Client & cPanel Table */}
             <CPanelTable 
-              clients={clients}
+              clients={filteredClients}
               onUpdate={handleUpdateCPanel}
               loading={loading}
               onEditClient={handleEditClient}
               onDeleteClient={handleDeleteClient}
               onViewDetail={handleViewDetail}
             />
-
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-              <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
-                <p className="text-slate-600 text-sm mb-2">Total Klien</p>
-                <p className="text-3xl font-bold text-slate-900">{Array.isArray(clients) ? clients.length : 0}</p>
-              </div>
-              <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
-                <p className="text-slate-600 text-sm mb-2">Responded</p>
-                <p className="text-3xl font-bold text-green-600">{Array.isArray(clients) ? clients.filter(c => c.status === 'responded').length : 0}</p>
-              </div>
-              <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
-                <p className="text-slate-600 text-sm mb-2">New Leads</p>
-                <p className="text-3xl font-bold text-blue-600">{Array.isArray(clients) ? clients.filter(c => c.status === 'new').length : 0}</p>
-              </div>
-            </div>
           </div>
         )}
 
