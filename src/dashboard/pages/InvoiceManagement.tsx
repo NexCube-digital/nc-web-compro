@@ -320,20 +320,29 @@ export const InvoiceManagement: React.FC = () => {
           />
         ) : null}
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Manajemen Invoice</h1>
             <p className="text-slate-600 mt-2">Kelola invoice dan pembayaran klien</p>
           </div>
           {!showForm && (
-            <button
-              onClick={() => {
-                setTimeout(() => navigate('/dashboard/invoices/forminvoice'), 150)
-              }}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition-all hover:scale-105"
-            >
-              + Buat Invoice
-            </button>
+            <div className="flex items-center gap-4">
+              <input
+                type="text"
+                placeholder="Cari invoice..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+              />
+              <button
+                onClick={() => {
+                  setTimeout(() => navigate('/dashboard/invoices/forminvoice'), 150)
+                }}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition-all hover:scale-105 whitespace-nowrap"
+              >
+                + Buat Invoice
+              </button>
+            </div>
           )}
         </div>
 
@@ -377,19 +386,8 @@ export const InvoiceManagement: React.FC = () => {
               </div>
             </div>
 
-            {/* Search & Filter */}
-            <div className="mb-6 flex gap-4">
-              <input
-                type="text"
-                placeholder="Cari invoice..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="flex-1 px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
             {/* Invoice Table Section Header */}
-            <div className="mb-4">
+            <div className="mb-4 mt-8">
               <h2 className="text-lg font-bold text-slate-900">Daftar Invoice</h2>
               <p className="text-sm text-slate-600">Kelola semua invoice dan pembayaran</p>
             </div>
