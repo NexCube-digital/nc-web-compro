@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Invoice, Contact } from '../../../services/api'
+import { generateNextInvoiceNumber, calculateDueDate } from '../../../utils/invoiceUtils'
 
 interface PriceBreakdownItem {
   id: string
@@ -12,6 +13,7 @@ interface FormInvoiceProps {
   editingId: string | null;
   loading: boolean;
   clients: Contact[];
+  invoices: Invoice[];
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   onSubmit: (e: React.FormEvent) => Promise<void>;
   onCancel: () => void;
@@ -25,6 +27,7 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
   editingId,
   loading,
   clients,
+  invoices,
   onInputChange,
   onSubmit,
   onCancel,
@@ -34,22 +37,49 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
     { id: '1', description: '', price: 0 }
   ])
 
-  // Load priceBreakdown from database when editing
+  // Auto-generate invoice number and due date on component mount (creation mode only)
+  useEffect(() => {
+    if (!editingId) {
+      // Auto-generate invoice number only if it's empty (first time opening form)
+      if (!formData.invoiceNumber) {
+        const nextNumber = generateNextInvoiceNumber(invoices)
+        onInputChange({
+          target: { name: 'invoiceNumber', value: nextNumber }
+        } as any)
+      }
+
+      // Auto-set issue date to today if not already set
+      if (!formData.issueDate) {
+        const today = new Date().toISOString().split('T')[0]
+        onInputChange({
+          target: { name: 'issueDate', value: today }
+        } as any)
+        const dueDate = calculateDueDate(today)
+        onInputChange({
+          target: { name: 'dueDate', value: dueDate }
+        } as any)
+      }
+    }
+    // Include invoices in dependency but don't regenerate if already set
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editingId])
+
+  // Load priceBreakdown from database when entering edit mode
   useEffect(() => {
     if (editingId && formData.priceBreakdown) {
       try {
         const parsed = JSON.parse(formData.priceBreakdown as any)
         if (Array.isArray(parsed) && parsed.length > 0) {
           setPriceBreakdown(parsed)
+        } else {
+          setPriceBreakdown([{ id: '1', description: '', price: 0 }])
         }
       } catch (err) {
         console.warn('Failed to parse price breakdown:', err)
         setPriceBreakdown([{ id: '1', description: '', price: 0 }])
       }
-    } else {
-      setPriceBreakdown([{ id: '1', description: '', price: 0 }])
     }
-  }, [editingId, formData.priceBreakdown])
+  }, [editingId]) // Only depend on editingId to avoid resetting when formData changes
 
   // Find selected client to auto-fill email
   const selectedClient = clients.find(c => c.name === formData.clientName)
@@ -69,6 +99,22 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
       onInputChange({
         ...e,
         target: { ...e.target, name: 'clientEmail', value: client.email }
+      } as any)
+    }
+  }
+
+  // Handle issueDate change and auto-calculate dueDate
+  const handleIssueDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const issueDate = e.target.value
+    
+    // Update issueDate
+    onInputChange(e)
+    
+    // Auto-calculate dueDate (3 days after issueDate)
+    if (issueDate) {
+      const dueDate = calculateDueDate(issueDate)
+      onInputChange({
+        target: { name: 'dueDate', value: dueDate }
       } as any)
     }
   }
@@ -134,10 +180,14 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
               name="invoiceNumber"
               value={formData.invoiceNumber}
               onChange={onInputChange}
+              readOnly={!editingId}
               required
-              className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                !editingId ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : ''
+              }`}
               placeholder="INV-2024-001"
             />
+            {!editingId && <p className="text-xs text-slate-500 mt-1">Auto-generated</p>}
           </div>
 
           <div>
@@ -148,7 +198,7 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
               type="date"
               name="issueDate"
               value={formData.issueDate}
-              onChange={onInputChange}
+              onChange={handleIssueDateChange}
               required
               className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
@@ -166,6 +216,7 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
               required
               className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
+            {!editingId && <p className="text-xs text-slate-500 mt-1">Auto-calculated (+3 hari)</p>}
           </div>
         </div>
 

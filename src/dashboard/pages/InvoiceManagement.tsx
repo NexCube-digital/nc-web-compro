@@ -345,6 +345,7 @@ export const InvoiceManagement: React.FC = () => {
               editingId={editingId}
               loading={loading}
               clients={clients}
+              invoices={invoices}
               onInputChange={handleInputChange}
               onSubmit={handleSubmit}
               onCancel={handleCancel}
