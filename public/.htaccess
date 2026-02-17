@@ -8,6 +8,9 @@
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   
+  # Don't rewrite API calls or special paths
+  RewriteCond %{REQUEST_URI} !^/api/
+  
   # Rewrite all other requests to index.html
   RewriteRule ^ index.html [L]
 </IfModule>

@@ -78,11 +78,12 @@ export const ClientManagement: React.FC = () => {
 
   const [sseUpdating, setSseUpdating] = useState(false)
 
-  useSSE('/api/stream', {
-    'contact:created': async (d: any) => { setSseUpdating(true); try { await loadClients() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) } },
-    'contact:updated': async (d: any) => { setSseUpdating(true); try { await loadClients() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) } },
-    'contact:deleted': async (d: any) => { setSseUpdating(true); try { await loadClients() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) } },
-  })
+  // SSE temporarily disabled - backend doesn't support it yet
+  // useSSE('/stream', {
+  //   'contact:created': async (d: any) => { setSseUpdating(true); try { await loadClients() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) } },
+  //   'contact:updated': async (d: any) => { setSseUpdating(true); try { await loadClients() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) } },
+  //   'contact:deleted': async (d: any) => { setSseUpdating(true); try { await loadClients() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) } },
+  // })
 
   const filteredClients = Array.isArray(clients) ? clients.filter(client =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

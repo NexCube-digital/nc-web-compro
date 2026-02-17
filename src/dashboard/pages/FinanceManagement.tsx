@@ -82,11 +82,12 @@ export const FinanceManagement: React.FC = () => {
 
   const [sseUpdating, setSseUpdating] = useState(false)
 
-  useSSE('/api/stream', {
-    'finance:created': async (d: any) => { setSseUpdating(true); try { await loadFinances() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) } },
-    'finance:updated': async (d: any) => { setSseUpdating(true); try { await loadFinances() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) } },
-    'finance:deleted': async (d: any) => { setSseUpdating(true); try { await loadFinances() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) } },
-  })
+  // SSE temporarily disabled - backend doesn't support it yet
+  // useSSE('/stream', {
+  //   'finance:created': async (d: any) => { setSseUpdating(true); try { await loadFinances() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) } },
+  //   'finance:updated': async (d: any) => { setSseUpdating(true); try { await loadFinances() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) } },
+  //   'finance:deleted': async (d: any) => { setSseUpdating(true); try { await loadFinances() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) } },
+  // })
 
   const filteredFinances = Array.isArray(finances) ? finances.filter(finance =>
     finance.description.toLowerCase().includes(searchTerm.toLowerCase()) ||

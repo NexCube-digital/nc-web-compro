@@ -98,9 +98,13 @@ export const Contact: React.FC = () => {
 
     try {
       await apiClient.submitContact({
-        ...formData,
-        service: formData.service as any || undefined,
-        budget: formData.budget as any || undefined
+        name: formData.name,
+        email: formData.email,
+        message: formData.message,
+        company: formData.company || undefined,
+        phone: formData.phone || undefined,
+        service: formData.service ? formData.service as any : undefined,
+        budget: formData.budget ? formData.budget as any : undefined
       });
       
       setSubmitted(true);

@@ -93,21 +93,21 @@ export const InvoiceManagement: React.FC = () => {
   )
   const [sseUpdating, setSseUpdating] = useState(false)
 
-  // SSE: auto-fetch when invoice events arrive and show a small micro-animation
-  useSSE('/api/stream', {
-    'invoice:created': async (d: any) => {
-      setSseUpdating(true)
-      try { await loadInvoices() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) }
-    },
-    'invoice:updated': async (d: any) => {
-      setSseUpdating(true)
-      try { await loadInvoices() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) }
-    },
-    'invoice:deleted': async (d: any) => {
-      setSseUpdating(true)
-      try { await loadInvoices() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) }
-    },
-  })
+  // SSE temporarily disabled - backend doesn't support it yet
+  // useSSE('/stream', {
+  //   'invoice:created': async (d: any) => {
+  //     setSseUpdating(true)
+  //     try { await loadInvoices() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) }
+  //   },
+  //   'invoice:updated': async (d: any) => {
+  //     setSseUpdating(true)
+  //     try { await loadInvoices() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) }
+  //   },
+  //   'invoice:deleted': async (d: any) => {
+  //     setSseUpdating(true)
+  //     try { await loadInvoices() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) }
+  //   },
+  // })
 
   const filteredInvoices = Array.isArray(invoices) ? invoices.filter(invoice =>
     invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||

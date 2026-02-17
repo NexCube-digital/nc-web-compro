@@ -2,12 +2,16 @@ import { useEffect, useRef } from 'react'
 
 type Handlers = { [event: string]: (data: any) => void }
 
-export default function useSSE(url = '/api/stream', handlers: Handlers = {}) {
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+export default function useSSE(url = '/stream', handlers: Handlers = {}) {
   const ev = useRef<EventSource | null>(null)
 
   useEffect(() => {
     if (!('EventSource' in window)) return
-    const es = new EventSource(url)
+    // Convert relative URL to absolute API URL
+    const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`
+    const es = new EventSource(fullUrl)
     ev.current = es
 
     es.onmessage = (e) => {
@@ -39,4 +43,6 @@ export default function useSSE(url = '/api/stream', handlers: Handlers = {}) {
       ev.current = null
     }
   }, [url])
+
+  return ev
 }
