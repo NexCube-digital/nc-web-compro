@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Contact } from '../../../services/api'
 
 interface ClientDetailModalProps {
@@ -8,6 +8,8 @@ interface ClientDetailModalProps {
 }
 
 export const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ isOpen, client, onClose }) => {
+  const [showPassword, setShowPassword] = useState(false);
+
   if (!isOpen || !client) return null;
 
   const getStatusColor = (status: string) => {
@@ -118,8 +120,35 @@ export const ClientDetailModal: React.FC<ClientDetailModalProps> = ({ isOpen, cl
                   )}
                   {client.cpanelPassword && (
                     <div className="bg-slate-50 p-4 rounded-lg">
-                      <p className="text-sm text-slate-600 mb-2">Password</p>
-                      <p className="font-mono text-slate-900">{'●'.repeat(Math.min(client.cpanelPassword.length, 12))}</p>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-sm text-slate-600">Password</p>
+                        <button
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 text-xs font-semibold transition-colors"
+                          title={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+                        >
+                          {showPassword ? (
+                            <>
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M3.707 2.293a1 1 0 00-1.414 1.414l14 14a1 1 0 001.414-1.414l-1.473-1.473A10.014 10.014 0 0019.542 10C18.268 5.943 14.478 3 10 3a9.958 9.958 0 00-4.512 1.074l-1.78-1.781zm4.261 4.26l1.514 1.515a2.003 2.003 0 012.45 2.45l1.514 1.514a4 4 0 00-5.478-5.478z" clipRule="evenodd" fillRule="evenodd" />
+                                <path d="M15.171 13.576l1.407 1.407A10.019 10.019 0 0020 10c-1.274-4.057-5.065-7-9.541-7a9.986 9.986 0 00-5.59 1.773l1.432 1.432c1.331-.676 2.84-1.05 4.158-1.05a7 7 0 017 7c0 1.317-.374 2.826-1.049 4.158z" />
+                              </svg>
+                              Sembunyikan
+                            </>
+                          ) : (
+                            <>
+                              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                                <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                              </svg>
+                              Tampilkan
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <p className="font-mono text-slate-900">
+                        {showPassword ? client.cpanelPassword : '●'.repeat(Math.min(client.cpanelPassword.length, 12))}
+                      </p>
                     </div>
                   )}
                 </div>
