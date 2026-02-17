@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import apiClient, { User } from '../../services/api'
 import { useTheme } from '../ThemeContext'
+import { ActivityHistoryModal } from './ActivityHistoryModal'
 
 interface HeaderProps {
   sidebarOpen: boolean
@@ -16,6 +17,8 @@ export const DashboardHeader: React.FC<HeaderProps> = ({
 }) => {
   const { theme, setTheme } = useTheme()
   const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const [showActivityHistory, setShowActivityHistory] = useState(false)
+  const [hasUnreadActivity, setHasUnreadActivity] = useState(true)
   const navigate = useNavigate()
 
   React.useEffect(() => {
@@ -86,17 +89,6 @@ export const DashboardHeader: React.FC<HeaderProps> = ({
 
       {/* Right Section */}
       <div className="flex items-center gap-2 sm:gap-4 lg:gap-6">
-        {/* Search */}
-        <div className="hidden md:flex items-center gap-2 bg-white/80 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-slate-200/50 hover:border-blue-500/30 hover:shadow-md transition-all duration-300 ring-1 ring-slate-200/50 hover:ring-blue-500/30">
-          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Cari..."
-            className="bg-transparent outline-none text-xs w-32 placeholder:text-slate-400"
-          />
-        </div>
 
         {/* Theme Selector */}
         <div className="hidden sm:flex items-center gap-1.5 bg-white/80 backdrop-blur-sm p-1 rounded-lg border border-slate-200/50 shadow-sm">
@@ -118,11 +110,20 @@ export const DashboardHeader: React.FC<HeaderProps> = ({
         </div>
 
         {/* Notifications */}
-        <button className="relative p-2 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 rounded-lg transition-all duration-300 hover:scale-105 ring-1 ring-slate-200/50 hover:ring-blue-500/30 hover:shadow-md group">
+        <button 
+          onClick={() => {
+            setShowActivityHistory(true)
+            setHasUnreadActivity(false)
+          }}
+          className="relative p-2 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 rounded-lg transition-all duration-300 hover:scale-105 ring-1 ring-slate-200/50 hover:ring-blue-500/30 hover:shadow-md group"
+          title="Riwayat Kegiatan"
+        >
           <svg className="w-5 h-5 text-slate-600 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
           </svg>
-          <span className="absolute top-1 right-1 w-2 h-2 bg-gradient-to-br from-red-500 to-pink-600 rounded-full shadow-lg shadow-red-500/50 animate-pulse"></span>
+          {hasUnreadActivity && (
+            <span className="absolute top-1 right-1 w-2 h-2 bg-gradient-to-br from-red-500 to-pink-600 rounded-full shadow-lg shadow-red-500/50 animate-pulse"></span>
+          )}
         </button>
 
         {/* User Profile Dropdown */}
@@ -252,6 +253,13 @@ export const DashboardHeader: React.FC<HeaderProps> = ({
           )}
         </div>
       </div>
+
+      {/* Activity History Modal */}
+      <ActivityHistoryModal 
+        isOpen={showActivityHistory}
+        onClose={() => setShowActivityHistory(false)}
+        onOpen={() => setHasUnreadActivity(false)}
+      />
     </header>
   )
 }
