@@ -2,18 +2,11 @@ import axios, { AxiosInstance, AxiosResponse } from 'axios';
 
 /// <reference types="vite/client" />
 
-declare global {
-  interface ImportMetaEnv {
-    readonly VITE_API_URL?: string;
-    readonly VITE_API_TIMEOUT?: string;
-    readonly DEV: boolean;
-    readonly MODE: string;
-    readonly PROD: boolean;
-  }
-
-  interface ImportMeta {
-    readonly env: ImportMetaEnv;
-  }
+// Extend ImportMetaEnv hanya untuk variabel custom project ini.
+// DEV, MODE, PROD sudah di-declare oleh vite/client — tidak perlu di-declare ulang.
+interface ImportMetaEnv {
+  readonly VITE_API_URL?: string;
+  readonly VITE_API_TIMEOUT?: string;
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';

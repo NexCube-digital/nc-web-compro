@@ -35,7 +35,7 @@ class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
     // Log error details for debugging
     console.error('Error Boundary caught an error:', error, errorInfo)
-    
+
     this.setState({
       error,
       errorInfo,
@@ -91,7 +91,7 @@ class ErrorBoundary extends Component<Props, State> {
               </p>
 
               {/* Error Details (Development Only) */}
-              {process.env.NODE_ENV === 'development' && this.state.error && (
+              {import.meta.env.DEV && this.state.error && (
                 <details className="mb-6 text-left">
                   <summary className="cursor-pointer text-sm font-semibold text-slate-700 hover:text-slate-900 mb-2">
                     Detail Error (Dev Mode)

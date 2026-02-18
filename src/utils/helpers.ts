@@ -42,7 +42,7 @@ export const formatDate = (date: string | Date, includeTime: boolean = false): s
 
   try {
     const dateObj = typeof date === 'string' ? new Date(date) : date
-    
+
     if (isNaN(dateObj.getTime())) return '-'
 
     const options: Intl.DateTimeFormatOptions = {
@@ -73,7 +73,7 @@ export const formatDateShort = (date: string | Date): string => {
 
   try {
     const dateObj = typeof date === 'string' ? new Date(date) : date
-    
+
     if (isNaN(dateObj.getTime())) return '-'
 
     const day = String(dateObj.getDate()).padStart(2, '0')
@@ -192,7 +192,7 @@ export const debounce = <T extends (...args: any[]) => any>(
   func: T,
   wait: number
 ): ((...args: Parameters<T>) => void) => {
-  let timeout: NodeJS.Timeout | null = null
+  let timeout: ReturnType<typeof setTimeout> | null = null
 
   return (...args: Parameters<T>) => {
     if (timeout) clearTimeout(timeout)
@@ -260,11 +260,11 @@ export const sleep = (ms: number): Promise<void> => {
  */
 export const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes'
-  
+
   const k = 1024
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  
+
   return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i]
 }
 
@@ -276,7 +276,7 @@ export const formatFileSize = (bytes: number): string => {
  */
 export const getInitials = (name: string, maxLength: number = 2): string => {
   if (!name) return ''
-  
+
   return name
     .split(' ')
     .filter(word => word.length > 0)
