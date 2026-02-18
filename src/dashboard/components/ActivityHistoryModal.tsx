@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import apiClient from '../../services/api'
 
 interface Activity {
   id: number
@@ -15,64 +16,39 @@ interface ActivityHistoryModalProps {
   onOpen?: () => void
 }
 
-export const ActivityHistoryModal: React.FC<ActivityHistoryModalProps> = ({ isOpen, onClose, onOpen }) => {
-  const [activities, setActivities] = useState<Activity[]>([
-    {
-      id: 1,
-      action: 'Buat Invoice',
-      description: 'Invoice INV-2026-01 berhasil dibuat untuk klien PT. Mitra Jaya',
-      timestamp: new Date(Date.now() - 5 * 60000).toISOString(),
-      icon: 'create',
-      type: 'success'
-    },
-    {
-      id: 2,
-      action: 'Edit Klien',
-      description: 'Data klien "Acme Corporation" berhasil diperbarui',
-      timestamp: new Date(Date.now() - 15 * 60000).toISOString(),
-      icon: 'edit',
-      type: 'info'
-    },
-    {
-      id: 3,
-      action: 'Hapus Invoice',
-      description: 'Invoice INV-2025-12 berhasil dihapus dari sistem',
-      timestamp: new Date(Date.now() - 30 * 60000).toISOString(),
-      icon: 'delete',
-      type: 'warning'
-    },
-    {
-      id: 4,
-      action: 'Login',
-      description: 'Admin berhasil login ke dashboard',
-      timestamp: new Date(Date.now() - 60 * 60000).toISOString(),
-      icon: 'login',
-      type: 'success'
-    },
-    {
-      id: 5,
-      action: 'Export Data',
-      description: 'Laporan invoice Q1 2026 berhasil di-export ke PDF',
-      timestamp: new Date(Date.now() - 2 * 60 * 60000).toISOString(),
-      icon: 'export',
-      type: 'success'
-    },
-    {
-      id: 6,
-      action: 'View Detail',
-      description: 'Melihat detail invoice INV-2026-02',
-      timestamp: new Date(Date.now() - 3 * 60 * 60000).toISOString(),
-      icon: 'view',
-      type: 'info'
-    }
-  ])
+export const ActivityHistoryModal = ({ isOpen, onClose, onOpen }: ActivityHistoryModalProps) => {
+  const [activities, setActivities] = useState<Activity[]>([])
+  const [loading, setLoading] = useState(false)
 
-  // Trigger onOpen callback when modal is opened
-  React.useEffect(() => {
-    if (isOpen && onOpen) {
-      onOpen()
+  useEffect(() => {
+    if (isOpen) {
+      fetchActivities()
+      if (onOpen) onOpen()
     }
   }, [isOpen, onOpen])
+
+  const fetchActivities = async () => {
+    try {
+      setLoading(true)
+      const response = await apiClient.getActivities(20)
+      if (response && response.data && (response.data as any).items && Array.isArray((response.data as any).items)) {
+        const items = (response.data as any).items;
+        const mappedHelper = (item: any): Activity => ({
+          id: item.id,
+          action: item.action,
+          description: item.description,
+          timestamp: item.createdAt,
+          icon: item.icon as any,
+          type: item.type as any
+        })
+        setActivities(items.map(mappedHelper))
+      }
+    } catch (error) {
+      console.error('Failed to fetch activities:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const getActivityIcon = (icon: string) => {
     switch (icon) {
@@ -167,67 +143,70 @@ export const ActivityHistoryModal: React.FC<ActivityHistoryModalProps> = ({ isOp
 
   return (
     <>
-      {/* Backdrop */}
       <div
         className="fixed inset-0 z-30"
         onClick={onClose}
       />
 
-      {/* Modal - Top Right Like Dropdown */}
       <div className="fixed top-20 right-4 z-40 max-w-sm w-[calc(100vw-2rem)] sm:w-96">
         <div className="bg-white rounded-lg shadow-lg max-h-[60vh] overflow-hidden flex flex-col animate-in fade-in slide-in-from-top-2 duration-300">
-          {/* Header */}
           <div className="sticky top-0 bg-gray-50 border-b border-gray-200 px-4 py-3">
             <h2 className="text-sm font-semibold text-gray-800">Riwayat Kegiatan</h2>
           </div>
 
-          {/* Activity List */}
           <div className="overflow-y-auto flex-1">
-            <div className="divide-y divide-gray-100">
-              {activities.map((activity) => (
-                <div
-                  key={activity.id}
-                  className="p-3 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex gap-2.5">
-                    {/* Icon */}
-                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${getIconBgColor(activity.type)}`}>
-                      <div
-                        className={
-                          activity.type === 'success'
-                            ? 'text-green-600'
-                            : activity.type === 'error'
-                            ? 'text-red-600'
-                            : activity.type === 'warning'
-                            ? 'text-yellow-600'
-                            : 'text-blue-600'
-                        }
-                      >
-                        {getActivityIcon(activity.icon)}
-                      </div>
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h3 className="font-medium text-gray-900 text-xs">{activity.action}</h3>
-                          <p className="text-gray-500 text-[11px] mt-0.5 line-clamp-2">
-                            {activity.description}
-                          </p>
+            {loading ? (
+              <div className="flex items-center justify-center p-8">
+                <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : activities.length > 0 ? (
+              <div className="divide-y divide-gray-100">
+                {activities.map((activity) => (
+                  <div
+                    key={activity.id}
+                    className="p-3 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex gap-2.5">
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${getIconBgColor(activity.type)}`}>
+                        <div
+                          className={
+                            activity.type === 'success'
+                              ? 'text-green-600'
+                              : activity.type === 'error'
+                                ? 'text-red-600'
+                                : activity.type === 'warning'
+                                  ? 'text-yellow-600'
+                                  : 'text-blue-600'
+                          }
+                        >
+                          {getActivityIcon(activity.icon)}
                         </div>
-                        <span className="text-[10px] text-gray-400 whitespace-nowrap">
-                          {formatTime(activity.timestamp)}
-                        </span>
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h3 className="font-medium text-gray-900 text-xs">{activity.action}</h3>
+                            <p className="text-gray-500 text-[11px] mt-0.5 line-clamp-2">
+                              {activity.description}
+                            </p>
+                          </div>
+                          <span className="text-[10px] text-gray-400 whitespace-nowrap">
+                            {formatTime(activity.timestamp)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center p-8 text-center">
+                <p className="text-xs text-gray-400 italic">Belum ada riwayat kegiatan</p>
+              </div>
+            )}
           </div>
 
-          {/* Footer */}
           <div className="bg-gray-50 px-4 py-2 border-t border-gray-200 text-center text-[11px] text-gray-500">
             {activities.length} kegiatan
           </div>

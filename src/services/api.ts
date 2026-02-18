@@ -230,7 +230,7 @@ class ApiClient {
       this.loadingListeners.forEach((cb) => {
         try { cb(loading) } catch (e) { /* ignore listener errors */ }
       })
-    } catch {}
+    } catch { }
   }
 
   setToken(token: string | null): void {
@@ -259,7 +259,7 @@ class ApiClient {
       return response.data;
     } catch (error: any) {
       console.error('[API Error]', error);
-      
+
       if (error.response) {
         // Server responded with error status
         const message = error.response.data?.message || error.response.data?.error || `HTTP error! status: ${error.response.status}`;
@@ -519,6 +519,10 @@ class ApiClient {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
     return response.data
+  }
+
+  async getActivities(limit: number = 20): Promise<ApiResponse<any>> {
+    return this.request<any>(`/activities?limit=${limit}`, 'GET');
   }
 }
 

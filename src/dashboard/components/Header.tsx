@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import apiClient, { User } from '../../services/api'
 import { useTheme } from '../ThemeContext'
@@ -10,16 +10,44 @@ interface HeaderProps {
   user: User | null
 }
 
-export const DashboardHeader: React.FC<HeaderProps> = ({ 
-  sidebarOpen, 
+export const DashboardHeader: React.FC<HeaderProps> = ({
+  sidebarOpen,
   setSidebarOpen,
   user
 }) => {
   const { theme, setTheme } = useTheme()
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [showActivityHistory, setShowActivityHistory] = useState(false)
-  const [hasUnreadActivity, setHasUnreadActivity] = useState(true)
+  const [hasUnreadActivity, setHasUnreadActivity] = useState(false)
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const checkUnreadActivities = async () => {
+      try {
+        const response = await apiClient.getActivities(1)
+        if (response && response.data && (response.data as any).items?.length > 0) {
+          const latestTimestamp = (response.data as any).items[0].createdAt
+          const lastSeen = localStorage.getItem('lastSeenActivity')
+          if (!lastSeen || new Date(latestTimestamp) > new Date(lastSeen)) {
+            setHasUnreadActivity(true)
+          }
+        }
+      } catch (error) {
+        // Silently fail for unread check
+      }
+    }
+
+    checkUnreadActivities()
+    // Poll every 2 minutes
+    const interval = setInterval(checkUnreadActivities, 2 * 60 * 1000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const handleOpenActivities = () => {
+    setShowActivityHistory(true)
+    setHasUnreadActivity(false)
+    localStorage.setItem('lastSeenActivity', new Date().toISOString())
+  }
 
   React.useEffect(() => {
     if (user) {
@@ -42,10 +70,10 @@ export const DashboardHeader: React.FC<HeaderProps> = ({
     localStorage.removeItem('user')
     localStorage.removeItem('savedEmail')
     localStorage.removeItem('savedPassword')
-    
+
     // Clear apiClient token
     apiClient.setToken(null)
-    
+
     // Redirect to login
     navigate('/login')
   }
@@ -80,7 +108,7 @@ export const DashboardHeader: React.FC<HeaderProps> = ({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
-        
+
         <div>
           <h1 className="text-base sm:text-lg lg:text-xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent">Dashboard</h1>
           <p className="text-[10px] sm:text-xs text-slate-600 hidden sm:block">Selamat datang, <span className="font-semibold text-blue-600">{user?.name}</span></p>
@@ -110,11 +138,8 @@ export const DashboardHeader: React.FC<HeaderProps> = ({
         </div>
 
         {/* Notifications */}
-        <button 
-          onClick={() => {
-            setShowActivityHistory(true)
-            setHasUnreadActivity(false)
-          }}
+        <button
+          onClick={handleOpenActivities}
           className="relative p-2 hover:bg-gradient-to-br hover:from-blue-50 hover:to-indigo-50 rounded-lg transition-all duration-300 hover:scale-105 ring-1 ring-slate-200/50 hover:ring-blue-500/30 hover:shadow-md group"
           title="Riwayat Kegiatan"
         >
@@ -154,10 +179,10 @@ export const DashboardHeader: React.FC<HeaderProps> = ({
                 className="fixed inset-0 z-30 bg-slate-900/20 backdrop-blur-sm"
                 onClick={() => setShowProfileMenu(false)}
               />
-              
+
               {/* Menu */}
               <div className="absolute right-0 mt-2 w-64 bg-white/95 backdrop-blur-xl rounded-xl shadow-2xl shadow-slate-900/10 border border-slate-200/50 overflow-hidden z-40 animate-in fade-in slide-in-from-top-2 duration-200 ring-1 ring-slate-200/50">
-                
+
                 {/* User Info Section */}
                 <div className="p-3 bg-gradient-to-br from-blue-50/80 via-indigo-50/80 to-purple-50/80 backdrop-blur-sm border-b border-slate-200/50">
                   <div className="flex items-center gap-2.5 mb-3">
@@ -255,7 +280,7 @@ export const DashboardHeader: React.FC<HeaderProps> = ({
       </div>
 
       {/* Activity History Modal */}
-      <ActivityHistoryModal 
+      <ActivityHistoryModal
         isOpen={showActivityHistory}
         onClose={() => setShowActivityHistory(false)}
         onOpen={() => setHasUnreadActivity(false)}
