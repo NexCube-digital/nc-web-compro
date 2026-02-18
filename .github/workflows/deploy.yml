@@ -48,7 +48,10 @@ jobs:
           protocol: ftps
           port: 21
           log-level: verbose
-          dangerous-clean-slate: true
+          # Disable clean-slate as it often causes timeouts on shared hosting
+          dangerous-clean-slate: false
+          # Use state file to track changes and only upload modified files
+          state-name: .ftp-deploy-sync-state.json
           exclude: |
             **/.git*
             **/.git*/**
