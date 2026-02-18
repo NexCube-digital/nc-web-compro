@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import apiClient, { Invoice, Contact } from '../../services/api'
@@ -38,7 +38,7 @@ export const InvoiceManagement: React.FC = () => {
   })
 
   // Load invoices from backend
-  const loadInvoices = async () => {
+  const loadInvoices = useCallback(async () => {
     try {
       setLoading(true)
       setError('')
@@ -56,10 +56,10 @@ export const InvoiceManagement: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   // Load clients from backend
-  const loadClients = async () => {
+  const loadClients = useCallback(async () => {
     try {
       const response = await apiClient.getContacts()
       if (response.success && response.data) {
@@ -73,12 +73,12 @@ export const InvoiceManagement: React.FC = () => {
       console.error('Failed to load clients:', err.message)
       setClients([])
     }
-  }
+  }, [])
 
   useEffect(() => {
     loadInvoices()
     loadClients()
-  }, [])
+  }, [loadInvoices, loadClients])
 
   // Background refresh: poll for new invoices silently and notify user
   const { hasNew: hasNewInvoices, newData: newInvoices, clearNew: clearNewInvoices } = useBackgroundRefresh<Invoice[]>(
@@ -109,20 +109,24 @@ export const InvoiceManagement: React.FC = () => {
   //   },
   // })
 
-  const filteredInvoices = Array.isArray(invoices) ? invoices.filter(invoice =>
-    invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (invoice.clientName?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
-    (invoice.clientEmail?.toLowerCase().includes(searchTerm.toLowerCase()) || false)
-  ) : []
+  const filteredInvoices = useMemo(() => {
+    if (!Array.isArray(invoices)) return [] as Invoice[]
+    const q = searchTerm.toLowerCase()
+    return invoices.filter(invoice =>
+      invoice.invoiceNumber.toLowerCase().includes(q) ||
+      (invoice.clientName?.toLowerCase().includes(q) || false) ||
+      (invoice.clientEmail?.toLowerCase().includes(q) || false)
+    )
+  }, [invoices, searchTerm])
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     if (name === 'amount') {
       setFormData(prev => ({ ...prev, [name]: parseFloat(value) || 0 }))
     } else {
       setFormData(prev => ({ ...prev, [name]: value }))
     }
-  }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -270,11 +274,14 @@ export const InvoiceManagement: React.FC = () => {
   }
 
   // Calculate stats
-  const invoiceArray = Array.isArray(invoices) ? invoices : []
-  const totalInvoices = invoiceArray.length
-  const paidInvoices = invoiceArray.filter(inv => inv.status === 'paid').length
-  const totalAmount = invoiceArray.reduce((sum, inv) => sum + inv.amount, 0)
-  const paidAmount = invoiceArray.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + inv.amount, 0)
+  const invoiceStats = useMemo(() => {
+    const invoiceArray = Array.isArray(invoices) ? invoices : []
+    const totalInvoices = invoiceArray.length
+    const paidInvoices = invoiceArray.filter(inv => inv.status === 'paid').length
+    const totalAmount = invoiceArray.reduce((sum, inv) => sum + inv.amount, 0)
+    const paidAmount = invoiceArray.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + inv.amount, 0)
+    return { totalInvoices, paidInvoices, totalAmount, paidAmount }
+  }, [invoices])
 
   return (
     <div>
@@ -370,19 +377,19 @@ export const InvoiceManagement: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
                 <p className="text-slate-600 text-sm mb-2">Total Invoice</p>
-                <p className="text-3xl font-bold text-slate-900">{totalInvoices}</p>
+                <p className="text-3xl font-bold text-slate-900">{invoiceStats.totalInvoices}</p>
               </div>
               <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
                 <p className="text-slate-600 text-sm mb-2">Invoice Terbayar</p>
-                <p className="text-3xl font-bold text-green-600">{paidInvoices}</p>
+                <p className="text-3xl font-bold text-green-600">{invoiceStats.paidInvoices}</p>
               </div>
               <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
                 <p className="text-slate-600 text-sm mb-2">Total Nominal</p>
-                <p className="text-xl font-bold text-slate-900">Rp {Math.round(totalAmount).toLocaleString('id-ID')}</p>
+                <p className="text-xl font-bold text-slate-900">Rp {Math.round(invoiceStats.totalAmount).toLocaleString('id-ID')}</p>
               </div>
               <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
                 <p className="text-slate-600 text-sm mb-2">Sudah Terbayar</p>
-                <p className="text-xl font-bold text-green-600">Rp {Math.round(paidAmount).toLocaleString('id-ID')}</p>
+                <p className="text-xl font-bold text-green-600">Rp {Math.round(invoiceStats.paidAmount).toLocaleString('id-ID')}</p>
               </div>
             </div>
 

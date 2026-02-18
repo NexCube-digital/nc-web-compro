@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import apiClient, { Contact } from '../../services/api'
@@ -45,7 +45,7 @@ export const ClientManagement: React.FC = () => {
   })
 
   // Load contacts/clients from backend
-  const loadClients = async () => {
+  const loadClients = useCallback(async () => {
     try {
       setLoading(true)
       setError('')
@@ -58,11 +58,11 @@ export const ClientManagement: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     loadClients()
-  }, [])
+  }, [loadClients])
 
   // Background refresh for clients list
   const { hasNew: hasNewClients, newData: newClients, clearNew: clearNewClients } = useBackgroundRefresh<Contact[]>(
@@ -85,13 +85,17 @@ export const ClientManagement: React.FC = () => {
   //   'contact:deleted': async (d: any) => { setSseUpdating(true); try { await loadClients() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) } },
   // })
 
-  const filteredClients = Array.isArray(clients) ? clients.filter(client =>
-    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.company?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) : []
+  const filteredClients = useMemo(() => {
+    if (!Array.isArray(clients)) return [] as Client[]
+    const q = searchTerm.toLowerCase()
+    return clients.filter(client =>
+      client.name.toLowerCase().includes(q) ||
+      client.email.toLowerCase().includes(q) ||
+      client.company?.toLowerCase().includes(q)
+    )
+  }, [clients, searchTerm])
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     // Handle packageDuration as number
     if (name === 'packageDuration') {
@@ -102,7 +106,7 @@ export const ClientManagement: React.FC = () => {
     } else {
       setFormData(prev => ({ ...prev, [name]: value }))
     }
-  }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -264,6 +268,15 @@ export const ClientManagement: React.FC = () => {
     }
   }
 
+  const clientStats = useMemo(() => {
+    const safeClients = Array.isArray(clients) ? clients : []
+    return {
+      total: safeClients.length,
+      responded: safeClients.filter(c => c.status === 'responded').length,
+      newLeads: safeClients.filter(c => c.status === 'new').length
+    }
+  }, [clients])
+
   return (
     <div>
       <Helmet>
@@ -353,7 +366,7 @@ export const ClientManagement: React.FC = () => {
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-slate-600 text-sm font-medium mb-1">Total Klien</p>
-                    <p className="text-3xl font-bold text-slate-900">{Array.isArray(clients) ? clients.length : 0}</p>
+                    <p className="text-3xl font-bold text-slate-900">{clientStats.total}</p>
                   </div>
                   <div className="bg-blue-100 p-3 rounded-lg">
                     <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -367,7 +380,7 @@ export const ClientManagement: React.FC = () => {
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-slate-600 text-sm font-medium mb-1">Responded</p>
-                    <p className="text-3xl font-bold text-green-600">{Array.isArray(clients) ? clients.filter(c => c.status === 'responded').length : 0}</p>
+                    <p className="text-3xl font-bold text-green-600">{clientStats.responded}</p>
                   </div>
                   <div className="bg-green-100 p-3 rounded-lg">
                     <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -381,7 +394,7 @@ export const ClientManagement: React.FC = () => {
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-slate-600 text-sm font-medium mb-1">New Leads</p>
-                    <p className="text-3xl font-bold text-blue-600">{Array.isArray(clients) ? clients.filter(c => c.status === 'new').length : 0}</p>
+                    <p className="text-3xl font-bold text-blue-600">{clientStats.newLeads}</p>
                   </div>
                   <div className="bg-blue-100 p-3 rounded-lg">
                     <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

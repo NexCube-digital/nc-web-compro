@@ -16,54 +16,6 @@ export const About: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Default static data (fallback)
-  const defaultTeamMembers = [
-    {
-      name: 'Aslam Mushtafa Karim',
-      position: 'CEO & Founder',
-      image: '/images/team/team-1.jpg',
-      bio: 'Visioner dengan 5+ tahun pengalaman dalam transformasi digital dan strategi bisnis untuk startup dan enterprise.',
-      portfolioUrl: 'https://aslam2025.netlify.app/',
-      expertise: ['Digital Strategy', 'Business Development', 'Tech Leadership'],
-      experience: '5+ Years'
-    },
-    {
-      name: 'Bela Amelia Nuralfiani',
-      position: 'Lead UI/UX Designer',
-      image: '/images/team/team-2.jpg',
-      bio: 'Desainer kreatif yang menghadirkan pengalaman pengguna yang intuitif dan estetika visual yang memukau.',
-      portfolioUrl: 'https://example.com/bela',
-      expertise: ['User Experience', 'Interface Design', 'Design Systems'],
-      experience: '4+ Years'
-    },
-    {
-      name: 'Muhammad Regi Taryana',
-      position: 'Senior Backend Developer',
-      image: '/images/team/team-3.jpg',
-      bio: 'Arsitek sistem backend yang handal dalam membangun infrastruktur digital yang scalable dan secure.',
-      portfolioUrl: 'https://example.com/regi',
-      expertise: ['System Architecture', 'Database Design', 'API Development'],
-      experience: '4+ Years'
-    },
-    {
-      name: 'Alif Alfarizi',
-      position: 'Frontend Specialist',
-      image: '/images/team/team-4.jpg',
-      bio: 'Pengembang frontend yang mahir menciptakan antarmuka web modern, responsif, dan performa tinggi.',
-      portfolioUrl: 'https://alifalfariziportfolio.netlify.app/',
-      expertise: ['React/Next.js', 'Performance Optimization', 'Modern CSS'],
-      experience: '3+ Years'
-    },
-    {
-      name: 'Okta Ramdani',
-      position: 'Backend Developer',
-      image: '/images/team/team-5.png',
-      bio: 'Pengembang backend yang berdedikasi dalam membangun solusi server-side yang efisien dan andal.',
-      portfolioUrl: 'https://oktaramdani.netlify.app/',
-      expertise: ['Full Stack Development', 'DevOps', 'Cloud Solutions'],
-      experience: '3+ Years'
-    },
-  ];
 
   type TeamPublic = {
     id?: number
@@ -74,6 +26,7 @@ export const About: React.FC = () => {
     expertise?: string[] | string
     portfolioUrl?: string
     experience?: string
+    status?: 'active' | 'in-active'
   }
 
   const [teams, setTeams] = useState<TeamPublic[]>([])
@@ -85,7 +38,9 @@ export const About: React.FC = () => {
       try {
         const res = await apiClient.getTeams()
         if (res.success && res.data && !Array.isArray(res.data) && Array.isArray((res.data as any).teams)) {
-          const items = (res.data as any).teams.map((t: any) => ({
+          const items = (res.data as any).teams
+            .filter((t: any) => t.status === 'active')
+            .map((t: any) => ({
             id: t.id,
             name: t.name,
             position: t.position,
@@ -93,7 +48,8 @@ export const About: React.FC = () => {
             bio: t.bio,
             portfolioUrl: t.portfolioUrl,
             experience: t.experience,
-            expertise: t.expertise ? (Array.isArray(t.expertise) ? t.expertise : (t.expertise as string).split(',').map((s: string) => s.trim())) : []
+            expertise: t.expertise ? (Array.isArray(t.expertise) ? t.expertise : (t.expertise as string).split(',').map((s: string) => s.trim())) : [],
+            status: t.status
           }))
           if (mounted) setTeams(items)
           return
@@ -101,7 +57,7 @@ export const About: React.FC = () => {
       } catch (e) {
         // ignore, fallback to defaults
       }
-      if (mounted) setTeams(defaultTeamMembers)
+      if (mounted) setTeams([])
     }
     load()
     return () => { mounted = false }
@@ -276,65 +232,77 @@ export const About: React.FC = () => {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {teams.map((member, index) => (
-                <a 
-                  key={index} 
-                  href={member.portfolioUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ animationDelay: `${900 + (index * 150)}ms` }}
-                  className={`group relative bg-white/80 backdrop-blur-sm rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-white/50 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}
-                >
-                  {/* Experience Badge */}
-                  <div className="absolute top-4 right-4 z-10 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
-                    {member.experience}
-                  </div>
-                  
-                  <div className="relative overflow-hidden">
-                    <img 
-                      src={member.image} 
-                      alt={`${member.name} - ${member.position}`} 
-                      className="w-full h-64 object-cover object-center transition-all duration-700 group-hover:scale-110" 
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-6">
-                      <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {member.expertise && Array.isArray(member.expertise) && member.expertise.slice(0, 2).map((skill, idx) => (
-                            <span key={idx} className="text-xs bg-white/20 backdrop-blur-sm text-white px-2 py-1 rounded-full">
-                              {skill}
-                            </span>
-                          ))}
-                        </div>
-                        <div className="inline-flex items-center gap-2 text-white font-medium px-4 py-2 rounded-xl bg-blue-600/90 text-sm shadow-lg backdrop-blur-sm hover:bg-blue-700/90 transition-colors">
-                          <span>Lihat Portofolio</span>
-                          <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                          </svg>
+            {teams.length === 0 ? (
+              <div className="text-center bg-white/80 backdrop-blur-sm rounded-3xl p-10 border border-white/50 shadow-lg">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 mb-4">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197" />
+                  </svg>
+                </div>
+                <p className="text-slate-700 font-semibold">Belum ada anggota tim aktif</p>
+                <p className="text-slate-500 text-sm mt-2">Silakan cek kembali dalam beberapa waktu.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {teams.map((member, index) => (
+                  <a 
+                    key={index} 
+                    href={member.portfolioUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ animationDelay: `${900 + (index * 150)}ms` }}
+                    className={`group relative bg-white/80 backdrop-blur-sm rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 border border-white/50 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}
+                  >
+                    {/* Experience Badge */}
+                    <div className="absolute top-4 right-4 z-10 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                      {member.experience}
+                    </div>
+                    
+                    <div className="relative overflow-hidden">
+                      <img 
+                        src={member.image} 
+                        alt={`${member.name} - ${member.position}`} 
+                        className="w-full h-64 object-cover object-center transition-all duration-700 group-hover:scale-110" 
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-6">
+                        <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {member.expertise && Array.isArray(member.expertise) && member.expertise.slice(0, 2).map((skill, idx) => (
+                              <span key={idx} className="text-xs bg-white/20 backdrop-blur-sm text-white px-2 py-1 rounded-full">
+                                {skill}
+                              </span>
+                            ))}
+                          </div>
+                          <div className="inline-flex items-center gap-2 text-white font-medium px-4 py-2 rounded-xl bg-blue-600/90 text-sm shadow-lg backdrop-blur-sm hover:bg-blue-700/90 transition-colors">
+                            <span>Lihat Portofolio</span>
+                            <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="p-8">
-                    <h3 className="font-bold text-lg text-slate-800 group-hover:text-blue-700 transition-colors mb-1">
-                      {member.name}
-                    </h3>
-                    <p className="text-blue-600 font-semibold text-sm mb-4">{member.position}</p>
-                    <p className="text-slate-600 text-sm leading-relaxed mb-4">{member.bio}</p>
                     
-                    {/* Expertise Tags */}
-                    <div className="flex flex-wrap gap-2">
-                      {member.expertise && Array.isArray(member.expertise) && member.expertise.map((skill, idx) => (
-                        <span key={idx} className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded-lg font-medium">
-                          {skill}
-                        </span>
-                      ))}
+                    <div className="p-8">
+                      <h3 className="font-bold text-lg text-slate-800 group-hover:text-blue-700 transition-colors mb-1">
+                        {member.name}
+                      </h3>
+                      <p className="text-blue-600 font-semibold text-sm mb-4">{member.position}</p>
+                      <p className="text-slate-600 text-sm leading-relaxed mb-4">{member.bio}</p>
+                      
+                      {/* Expertise Tags */}
+                      <div className="flex flex-wrap gap-2">
+                        {member.expertise && Array.isArray(member.expertise) && member.expertise.map((skill, idx) => (
+                          <span key={idx} className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded-lg font-medium">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                </a>
-              ))}
-            </div>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
           
           {/* Enhanced CTA */}

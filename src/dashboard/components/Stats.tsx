@@ -192,20 +192,48 @@ export const DashboardStats: React.FC = () => {
     const cardPadding = theme === 'compact' ? 'p-4' : 'p-6'
 
     return (
-      <div className={`bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm border border-slate-100 h-full max-h-[400px] flex flex-col`}>
-        <div className="flex items-center justify-between mb-2 sm:mb-3">
-          <h2 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
-            <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-            </svg>
-            Data Penjualan
-          </h2>
-          <div className="text-xs sm:text-sm text-slate-500">Total: {formatRupiah(data.reduce((s, d) => s + d.value, 0))}</div>
+      <div className="bg-white/80 rounded-xl p-4 sm:p-5 shadow-[0_12px_40px_-28px_rgba(15,23,42,0.5)] border border-slate-100/80 h-full max-h-[400px] flex flex-col backdrop-blur">
+        <div className="flex items-start justify-between gap-3 mb-3 sm:mb-4">
+          <div>
+            <h2 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                </svg>
+              </span>
+              Data Penjualan
+            </h2>
+            <p className="text-xs text-slate-500 mt-1">Total: {formatRupiah(data.reduce((s, d) => s + d.value, 0))}</p>
+          </div>
+          <div className={`text-[11px] sm:text-xs font-semibold px-2.5 py-1 rounded-full border ${monthChangePercent >= 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+            {monthChangePercent >= 0 ? '+' : ''}{monthChangePercent}% bulan ini
+          </div>
         </div>
 
         <div className="relative overflow-x-auto">
           <div className="min-w-[320px]">
             <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.35" />
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.04" />
+              </linearGradient>
+              <linearGradient id="lineStroke" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#2563eb" />
+                <stop offset="60%" stopColor="#3b82f6" />
+                <stop offset="100%" stopColor="#60a5fa" />
+              </linearGradient>
+              <filter id="lineGlow" x="-10%" y="-10%" width="120%" height="120%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            <rect x={padding.left} y={padding.top} width={width - padding.left - padding.right} height={height - padding.top - padding.bottom} rx="8" fill="#f8fafc" />
+
             {/* Grid lines */}
             {tickValues.map((tick, i) => {
               const y = padding.top + (i / ticks) * (height - padding.top - padding.bottom)
@@ -218,6 +246,7 @@ export const DashboardStats: React.FC = () => {
                     y2={y}
                     stroke="#e2e8f0"
                     strokeWidth="1"
+                    strokeDasharray="4 6"
                   />
                   <text x={padding.left - 10} y={y + 5} textAnchor="end" fontSize="11" fill="#94a3b8">
                     {(tick / 1000000).toFixed(1)}M
@@ -240,14 +269,6 @@ export const DashboardStats: React.FC = () => {
               </text>
             ))}
             
-            {/* Area gradient */}
-            <defs>
-              <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
-                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.05" />
-              </linearGradient>
-            </defs>
-            
             {/* Area fill */}
             <path
               d={`${createPath()} L ${points[points.length - 1].x} ${height - padding.bottom} L ${points[0].x} ${height - padding.bottom} Z`}
@@ -259,10 +280,11 @@ export const DashboardStats: React.FC = () => {
               ref={lineRef}
               d={createPath()}
               fill="none"
-              stroke="#3b82f6"
+              stroke="url(#lineStroke)"
               strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
+              filter="url(#lineGlow)"
             />
             
             {/* Data points */}
@@ -286,9 +308,9 @@ export const DashboardStats: React.FC = () => {
                       y={point.y - 45}
                       width="120"
                       height="35"
-                      rx="6"
-                      fill="#1e293b"
-                      opacity="0.95"
+                      rx="8"
+                      fill="#0f172a"
+                      opacity="0.96"
                     />
                     <text
                       x={point.x}

@@ -16,6 +16,7 @@ interface TeamItem {
   bank?: string
   accountNumber?: string
   portfolioUrl?: string
+  status?: 'active' | 'in-active'
 }
 
 const TeamManagement: React.FC = () => {
@@ -68,7 +69,8 @@ const TeamManagement: React.FC = () => {
     portfolioUrl: '',
     bank: '',
     accountNumber: '',
-    email: ''
+    email: '',
+    status: 'active'
   }), [])
   const [form, setForm] = useState<TeamItem>({ ...emptyForm })
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -121,7 +123,7 @@ const TeamManagement: React.FC = () => {
       ? t.expertise
       : (t.expertise ? (t.expertise as any).toString().split(',').map((s: string) => s.trim()) : [])
     setEditing(t)
-    setForm({ ...t, expertise: normalizedExpertise })
+    setForm({ ...t, expertise: normalizedExpertise, status: t.status || 'active' })
     setShowForm(true)
   }, [])
 
@@ -225,6 +227,13 @@ const TeamManagement: React.FC = () => {
                       e.trim() ? <span key={i} className="text-[10px] bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200/50 font-medium transition-transform hover:scale-105">{e.trim()}</span> : null
                     ))
                 }
+              </div>
+
+              <div className="mt-2 flex items-center gap-2">
+                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${t.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+                  {t.status === 'active' ? 'Active' : 'In-active'}
+                </span>
+                <span className="text-[10px] text-slate-400">Tampil publik: {t.status === 'active' ? 'Ya' : 'Tidak'}</span>
               </div>
 
               <div className="mt-3 pt-3 border-t border-slate-200/50 flex items-center justify-between">
@@ -358,6 +367,17 @@ const TeamManagement: React.FC = () => {
                           onChange={(e) => setForm({...form, position: e.target.value})} 
                           placeholder="Contoh: Senior Developer"
                         />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Status Tim</label>
+                        <select
+                          className="w-full border border-slate-300 px-3 py-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm bg-white"
+                          value={form.status || 'active'}
+                          onChange={(e) => setForm({ ...form, status: e.target.value as 'active' | 'in-active' })}
+                        >
+                          <option value="active">Active (tampil di publik)</option>
+                          <option value="in-active">In-active (disembunyikan)</option>
+                        </select>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
