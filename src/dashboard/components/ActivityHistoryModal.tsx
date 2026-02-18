@@ -246,17 +246,30 @@ export const ActivityHistoryModal = ({ isOpen, onClose, onOpen }: ActivityHistor
           </div>
 
           {/* Footer */}
-          {notifications.length > 0 && (
-            <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-              <span className="text-[11px] text-gray-400">{notifications.length} notifikasi</span>
-              <button
-                onClick={fetchNotifications}
-                className="text-[11px] text-blue-500 hover:text-blue-700 font-medium transition-colors"
-              >
-                Refresh
-              </button>
-            </div>
-          )}
+          <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+            <button
+              onClick={() => {
+                localStorage.setItem('lastSeenActivity', new Date().toISOString());
+                onClose();
+                window.dispatchEvent(new CustomEvent('activityRead'));
+              }}
+              className="text-[11px] text-gray-600 hover:text-gray-900 font-medium transition-colors flex items-center gap-1.5"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Tandai semua dibaca
+            </button>
+            <button
+              onClick={fetchNotifications}
+              className="text-[11px] text-blue-500 hover:text-blue-700 font-medium transition-colors flex items-center gap-1.5"
+            >
+              <svg className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Refresh
+            </button>
+          </div>
         </div>
       </div>
     </>

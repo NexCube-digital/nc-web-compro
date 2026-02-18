@@ -38,9 +38,17 @@ export const DashboardHeader: React.FC<HeaderProps> = ({
     }
 
     checkUnreadActivities()
+
+    // Listen for manual "Mark as Read" from modal
+    const handleManualRead = () => setHasUnreadActivity(false);
+    window.addEventListener('activityRead', handleManualRead);
+
     // Poll every 2 minutes
     const interval = setInterval(checkUnreadActivities, 2 * 60 * 1000)
-    return () => clearInterval(interval)
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('activityRead', handleManualRead);
+    }
   }, [])
 
   const handleOpenActivities = () => {
