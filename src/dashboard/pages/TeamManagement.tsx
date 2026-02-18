@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { Helmet } from 'react-helmet-async'
 import apiClient from '../../services/api'
 import Toast from '../../components/Toast'
@@ -29,7 +30,7 @@ const TeamManagement: React.FC = () => {
 
   const API_MEDIA_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '')
 
-  const loadTeams = async () => {
+  const loadTeams = useCallback(async () => {
     try {
       setLoading(true)
       const res = await apiClient.getTeams()
@@ -41,9 +42,9 @@ const TeamManagement: React.FC = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  useEffect(() => { loadTeams() }, [])
+  useEffect(() => { loadTeams() }, [loadTeams])
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -57,24 +58,19 @@ const TeamManagement: React.FC = () => {
     }
   }, [showForm])
 
-  const filteredTeams = teams
-    .filter(t => {
-      if (!query) return true
-      const q = query.toLowerCase()
-      return (t.name || '').toLowerCase().includes(q) || (t.position || '').toLowerCase().includes(q) || (t.expertise || []).join(' ').toLowerCase().includes(q)
-    })
-    .sort((a, b) => {
-      if (sort === 'name') return (a.name || '').localeCompare(b.name || '')
-      if (sort === 'id_asc') return (a.id || 0) - (b.id || 0)
-      return (b.id || 0) - (a.id || 0)
-    })
-
-  const emptyForm: TeamItem = { name: '', position: '', image: '', bio: '', experience: '', expertise: [], portfolioUrl: '' }
-  // include bank/account defaults
-  emptyForm.bank = ''
-  emptyForm.accountNumber = ''
-  emptyForm.email = ''
-  const [form, setForm] = useState<TeamItem>(emptyForm)
+  const emptyForm = useMemo<TeamItem>(() => ({
+    name: '',
+    position: '',
+    image: '',
+    bio: '',
+    experience: '',
+    expertise: [],
+    portfolioUrl: '',
+    bank: '',
+    accountNumber: '',
+    email: ''
+  }), [])
+  const [form, setForm] = useState<TeamItem>({ ...emptyForm })
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [dragActive, setDragActive] = useState(false)
 
@@ -115,15 +111,19 @@ const TeamManagement: React.FC = () => {
     }
   }
 
-  const openCreate = () => { setEditing(null); setForm(emptyForm); setShowForm(true) }
-  const openEdit = (t: TeamItem) => {
+  const openCreate = useCallback(() => {
+    setEditing(null)
+    setForm({ ...emptyForm })
+    setShowForm(true)
+  }, [emptyForm])
+  const openEdit = useCallback((t: TeamItem) => {
     const normalizedExpertise = Array.isArray(t.expertise)
       ? t.expertise
       : (t.expertise ? (t.expertise as any).toString().split(',').map((s: string) => s.trim()) : [])
-    setEditing(t);
-    setForm({ ...t, expertise: normalizedExpertise });
+    setEditing(t)
+    setForm({ ...t, expertise: normalizedExpertise })
     setShowForm(true)
-  }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -149,7 +149,7 @@ const TeamManagement: React.FC = () => {
     } finally { setLoading(false) }
   }
 
-  const handleDelete = async (id?: number) => {
+  const handleDelete = useCallback(async (id?: number) => {
     if (!id) return
     // keep original delete logic but extracted helper will call this
     try {
@@ -160,15 +160,86 @@ const TeamManagement: React.FC = () => {
     } catch (err: any) {
       setToast({ msg: err.message || 'Failed to delete', type: 'error' })
     } finally { setLoading(false) }
-  }
+  }, [loadTeams])
 
-  const handleDeleteWithConfirm = (id?: number) => {
+  const handleDeleteWithConfirm = useCallback((id?: number) => {
     if (!id) return
     if (!confirm('Yakin ingin menghapus anggota tim ini?')) return
     // optimistic UI removal for responsiveness
     setTeams(prev => prev.filter(x => x.id !== id))
     handleDelete(id)
-  }
+  }, [handleDelete])
+
+  const filteredTeams = useMemo(() => {
+    if (!Array.isArray(teams)) return [] as TeamItem[]
+    const q = query.trim().toLowerCase()
+    return teams
+      .filter(t => {
+        if (!q) return true
+        return (t.name || '').toLowerCase().includes(q) || (t.position || '').toLowerCase().includes(q) || (t.expertise || []).join(' ').toLowerCase().includes(q)
+      })
+      .sort((a, b) => {
+        if (sort === 'name') return (a.name || '').localeCompare(b.name || '')
+        if (sort === 'id_asc') return (a.id || 0) - (b.id || 0)
+        return (b.id || 0) - (a.id || 0)
+      })
+  }, [teams, query, sort])
+
+  const teamCards = useMemo(() => (
+    filteredTeams.map(t => {
+      const imageUrl = t.image
+        ? (typeof t.image === 'string' && t.image.startsWith('/uploads') ? `${API_MEDIA_BASE}${t.image}` : t.image)
+        : '/images/team/team-1.jpg'
+
+      return (
+        <div key={t.id} className="group relative p-3 sm:p-4 rounded-xl bg-gradient-to-br from-white to-slate-50/50 border border-slate-200/50 shadow-sm hover:shadow-xl hover:border-blue-200/50 transform hover:-translate-y-1 transition-all duration-300 backdrop-blur-sm">
+          <div className="flex gap-3 items-start">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 ring-2 ring-slate-200/50 group-hover:ring-blue-500/50 transition-all">
+              <img src={imageUrl} alt={t.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-sm sm:text-base text-slate-900 truncate">{t.name}</h3>
+                  <p className="text-xs text-slate-600 truncate">{t.position}</p>
+                  {t.email && <p className="text-xs text-slate-500 truncate mt-0.5">{t.email}</p>}
+                </div>
+                {t.portfolioUrl && (
+                  <a href={t.portfolioUrl} target="_blank" rel="noreferrer" className="flex-shrink-0 px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md text-[10px] font-medium transition-colors">
+                    Portfolio
+                  </a>
+                )}
+              </div>
+              <p className="mt-2 text-xs text-slate-600 line-clamp-2">{t.bio}</p>
+              {(t.bank || t.accountNumber) && (
+                <div className="mt-2 text-[10px] text-slate-500 bg-slate-50 rounded px-2 py-1">
+                  <strong className="text-slate-700">Rekening:</strong> {t.bank || '-'} {t.accountNumber ? `• ${t.accountNumber}` : ''}
+                </div>
+              )}
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {Array.isArray(t.expertise)
+                  ? t.expertise.map((e: string, i: number) => (
+                      e.trim() ? <span key={i} className="text-[10px] bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200/50 font-medium transition-transform hover:scale-105">{e.trim()}</span> : null
+                    ))
+                  : (t.expertise || '').toString().split(',').map((e: string, i: number) => (
+                      e.trim() ? <span key={i} className="text-[10px] bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200/50 font-medium transition-transform hover:scale-105">{e.trim()}</span> : null
+                    ))
+                }
+              </div>
+
+              <div className="mt-3 pt-3 border-t border-slate-200/50 flex items-center justify-between">
+                <div className="flex gap-1.5">
+                  <button onClick={() => openEdit(t)} className="px-2.5 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg hover:shadow-blue-500/30 transition-all text-xs font-medium">Edit</button>
+                  <button onClick={() => handleDeleteWithConfirm(t.id)} className="px-2.5 py-1.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:shadow-lg hover:shadow-red-500/30 transition-all text-xs font-medium">Hapus</button>
+                </div>
+                <div className="text-[10px] text-slate-400 font-medium">ID #{t.id}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )
+    })
+  ), [filteredTeams, API_MEDIA_BASE, openEdit, handleDeleteWithConfirm])
 
   return (
     <div>
@@ -215,66 +286,14 @@ const TeamManagement: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {filteredTeams.map(t => {
-            const imageUrl = t.image
-              ? (typeof t.image === 'string' && t.image.startsWith('/uploads') ? `${API_MEDIA_BASE}${t.image}` : t.image)
-              : '/images/team/team-1.jpg'
-
-            return (
-              <div key={t.id} className="group relative p-3 sm:p-4 rounded-xl bg-gradient-to-br from-white to-slate-50/50 border border-slate-200/50 shadow-sm hover:shadow-xl hover:border-blue-200/50 transform hover:-translate-y-1 transition-all duration-300 backdrop-blur-sm">
-                <div className="flex gap-3 items-start">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 ring-2 ring-slate-200/50 group-hover:ring-blue-500/50 transition-all">
-                    <img src={imageUrl} alt={t.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-sm sm:text-base text-slate-900 truncate">{t.name}</h3>
-                        <p className="text-xs text-slate-600 truncate">{t.position}</p>
-                        {t.email && <p className="text-xs text-slate-500 truncate mt-0.5">{t.email}</p>}
-                      </div>
-                      {t.portfolioUrl && (
-                        <a href={t.portfolioUrl} target="_blank" rel="noreferrer" className="flex-shrink-0 px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md text-[10px] font-medium transition-colors">
-                          Portfolio
-                        </a>
-                      )}
-                    </div>
-                    <p className="mt-2 text-xs text-slate-600 line-clamp-2">{t.bio}</p>
-                    {(t.bank || t.accountNumber) && (
-                      <div className="mt-2 text-[10px] text-slate-500 bg-slate-50 rounded px-2 py-1">
-                        <strong className="text-slate-700">Rekening:</strong> {t.bank || '-'} {t.accountNumber ? `• ${t.accountNumber}` : ''}
-                      </div>
-                    )}
-                    <div className="mt-2 flex flex-wrap gap-1.5">
-                      {Array.isArray(t.expertise)
-                        ? t.expertise.map((e: string, i: number) => (
-                            e.trim() ? <span key={i} className="text-[10px] bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200/50 font-medium transition-transform hover:scale-105">{e.trim()}</span> : null
-                          ))
-                        : (t.expertise || '').toString().split(',').map((e: string, i: number) => (
-                            e.trim() ? <span key={i} className="text-[10px] bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200/50 font-medium transition-transform hover:scale-105">{e.trim()}</span> : null
-                          ))
-                      }
-                    </div>
-
-                    <div className="mt-3 pt-3 border-t border-slate-200/50 flex items-center justify-between">
-                      <div className="flex gap-1.5">
-                        <button onClick={() => openEdit(t)} className="px-2.5 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg hover:shadow-blue-500/30 transition-all text-xs font-medium">Edit</button>
-                        <button onClick={() => handleDeleteWithConfirm(t.id)} className="px-2.5 py-1.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:shadow-lg hover:shadow-red-500/30 transition-all text-xs font-medium">Hapus</button>
-                      </div>
-                      <div className="text-[10px] text-slate-400 font-medium">ID #{t.id}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )
-            })}
+            {teamCards}
           </div>
         )}
       </div>
 
       {/* Form Modal - Fixed Position ICD */}
-      {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden">
+      {showForm && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowForm(false)} />
           {/** compute avatar URL to support uploads, full URLs, and data URIs */}
           {(() => {
@@ -452,7 +471,8 @@ const TeamManagement: React.FC = () => {
               </form>
             )
           })()}
-        </div>
+        </div>,
+        document.body
       )}
 
       {toast && <Toast message={toast.msg} type={toast.type === 'success' ? 'success' : 'error'} onClose={() => setToast(null)} />}
