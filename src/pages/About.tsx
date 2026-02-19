@@ -36,6 +36,7 @@ export const About: React.FC = () => {
       expertise: ['User Experience', 'Interface Design', 'Design Systems'],
       experience: '4+ Years'
     },
+    
     {
       name: 'Muhammad Regi Taryana',
       position: 'Senior Backend Developer',
@@ -45,6 +46,7 @@ export const About: React.FC = () => {
       expertise: ['System Architecture', 'Database Design', 'API Development'],
       experience: '4+ Years'
     },
+
     {
       name: 'Alif Alfarizi',
       position: 'Frontend Specialist',

@@ -107,6 +107,7 @@ export const routes = [
       { path: 'contact', element: <Contact /> },
       { path: 'about', element: <About /> },
       { path: 'paket', element: <Paket /> },
+      { path: 'paket/batur', element: <Paket /> },
       { path: 'paket/:tier', element: <PaketDetail /> },
       { path: 'paket/website', element: <Website /> },
       { path: 'paket/undangan-digital', element: <UndanganDigital /> },

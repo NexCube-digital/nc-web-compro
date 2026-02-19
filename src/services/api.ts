@@ -49,6 +49,17 @@ export interface AuthResponse {
   token: string;
 }
 
+
+export interface User {
+  id: number
+  name: string
+  email: string
+  password?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+
 export interface Contact {
   id: number;
   name: string;
@@ -368,6 +379,10 @@ class ApiClient {
   async deleteTeam(id: string): Promise<ApiResponse<void>> {
     return this.request<void>(`/teams/${id}`, 'DELETE');
   }
+
+
+
+  
 
   async createPortfolio(data: Omit<Portfolio, 'id' | 'createdAt' | 'updatedAt'>): Promise<ApiResponse<Portfolio>> {
     return this.request<Portfolio>('/portfolios', 'POST', data);

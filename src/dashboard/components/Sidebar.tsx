@@ -27,6 +27,7 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
         </svg>
       )
     },
+
     {
       id: 'team',
       label: 'Tim',
@@ -36,6 +37,18 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
         </svg>
       )
     },
+
+    {
+      id: 'users',
+      label: 'User',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11c1.657 0 3-1.343 3-3S17.657 5 16 5s-3 1.343-3 3 1.343 3 3 3zM8 11c1.657 0 3-1.343 3-3S9.657 5 8 5 5 6.343 5 8s1.343 3 3 3zM8 13c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.98.05 1.16.84 1.98 1.98 1.98 3.45V19h6v-2.5C23 14.17 18.33 13 16 13z" />
+        </svg>
+      )
+    },
+
+
     {
       id: 'clients',
       label: 'Klien',

@@ -18,12 +18,25 @@ export const Navbar: React.FC = () => {
   const logoRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
+  // dropdown
+  const [isPaketOpen, setIsPaketOpen] = useState(false);
+  const paketRef = useRef<HTMLDivElement>(null);
+
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
         setIsProfileOpen(false);
       }
+
+      if (
+        paketRef.current &&
+        !paketRef.current.contains(event.target as Node)
+      ) {
+        setIsPaketOpen(false);
+      }
+
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -145,9 +158,50 @@ export const Navbar: React.FC = () => {
     }
   ];
 
+
+  // paket dropdown
+  const paketItems = [
+    {
+      name: "Nexcube",
+      desc: "Cocok untuk UMKM baru",
+      href: "/paket",
+      color: "from-blue-500 to-cyan-500"
+    },
+    {
+      name: "Paket Digital",
+      desc: "Untuk bisnis berkembang",
+      href: "/paket/pro",
+      color: "from-purple-500 to-pink-500"
+    },
+    {
+      name: "Paket Solusi",
+      desc: "Solusi lengkap perusahaan",
+      href: "/paket/enterprise",
+      color: "from-orange-500 to-red-500"
+    }
+  ];
+
+
+  // dropdown paket active
   const isActive = (path: string) => {
     return location.pathname === path;
   };
+
+  const isPaketActive = () => {
+    return location.pathname.startsWith("/paket");
+  };
+
+  const isDropdownItemActive = (href: string) => {
+    return location.pathname === href;
+  };
+
+  const getPaketInitials = (paketName: string) => {
+    if (!paketName) return "P";
+
+    return paketName.charAt(0).toUpperCase();
+  };
+
+
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -178,25 +232,122 @@ export const Navbar: React.FC = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-2">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.href}
-                className={`relative px-4 py-2 text-sm font-semibold transition-all duration-200 rounded-lg flex items-center gap-2 ${
-                  isActive(link.href)
-                    ? 'text-blue-600 bg-blue-50'
-                    : 'text-slate-700 hover:text-slate-900 hover:bg-slate-50'
-                }`}
-              >
-                <span className="w-5 h-5">{link.icon}</span>
-                <span>{link.name}</span>
-                
-                {/* Active indicator */}
-                {isActive(link.href) && (
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600 rounded-full"></div>
-                )}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+
+              if (link.name === "Paket") {
+                return (
+                  <div
+                    key={link.name}
+                    className="relative"
+                    ref={paketRef}
+                  >
+                    <button
+                        onClick={() => setIsPaketOpen(!isPaketOpen)}
+                        className={`relative px-4 py-2 text-sm font-semibold transition-all duration-200 rounded-lg flex items-center gap-2 ${
+                          isPaketActive()
+                            ? "text-blue-600 bg-blue-50"
+                            : "text-slate-700 hover:text-slate-900 hover:bg-slate-50"
+                        }`}
+                      >
+
+                        <span className="w-5 h-5">{link.icon}</span>
+                        <span>Paket</span>
+
+                        <svg
+                          className={`w-4 h-4 transition-transform ${
+                            isPaketOpen ? "rotate-180" : ""
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </button>
+
+
+                    {/* DROPDOWN */}
+                    <div
+                      className={`absolute left-0 mt-3 w-72 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden transition-all duration-200 origin-top ${
+                        isPaketOpen
+                          ? "opacity-100 scale-100"
+                          : "opacity-0 scale-95 pointer-events-none"
+                      }`}
+                    >
+                      <div className="p-2">
+
+                        {paketItems.map((paket) => {
+
+                          const active = isDropdownItemActive(paket.href);
+
+                          return (
+                            <Link
+                              key={paket.name}
+                              to={paket.href}
+                              onClick={() => setIsPaketOpen(false)}
+                              className={`group flex items-start gap-3 p-3 rounded-lg transition-all duration-200 ${
+                                active
+                                  ? "bg-blue-50 border border-blue-200 shadow-sm"
+                                  : "hover:bg-slate-50"
+                              }`}
+                            >
+                              <div
+                                className={`w-10 h-10 rounded-lg bg-gradient-to-br ${paket.color} flex items-center justify-center text-white font-bold shadow`}
+                              >
+                                {getPaketInitials(paket.name)}
+                              </div>
+
+
+                              <div className="flex-1">
+                                <div
+                                  className={`font-semibold ${
+                                    active
+                                      ? "text-blue-600"
+                                      : "text-slate-800 group-hover:text-blue-600"
+                                  }`}
+                                >
+                                  {paket.name}
+                                </div>
+
+                                <div className="text-xs text-slate-500">
+                                  {paket.desc}
+                                </div>
+                              </div>
+
+                              {/* indicator bulat */}
+                              {active && (
+                                <div className="w-2 h-2 mt-2 bg-blue-600 rounded-full"></div>
+                              )}
+
+                            </Link>
+                          );
+                        })}
+
+
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <Link
+                  key={link.name}
+                  to={link.href}
+                  className={`relative px-4 py-2 text-sm font-semibold transition-all duration-200 rounded-lg flex items-center gap-2 ${
+                    isActive(link.href)
+                      ? "text-blue-600 bg-blue-50"
+                      : "text-slate-700 hover:text-slate-900 hover:bg-slate-50"
+                  }`}
+                >
+                  <span className="w-5 h-5">{link.icon}</span>
+                  <span>{link.name}</span>
+                </Link>
+              );
+            })}
+
           </div>
 
           {/* Login & CTA Buttons */}

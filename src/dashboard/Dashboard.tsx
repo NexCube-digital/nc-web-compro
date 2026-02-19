@@ -7,6 +7,7 @@ import DashboardHeader from './components/Header'
 import DashboardStats from './components/Stats'
 import { ThemeProvider } from './ThemeContext'
 import TopProgress from './components/TopProgress'
+import UserManagement from './pages/UserManagement'
 import ClientManagement from './pages/ClientManagement'
 import InvoiceManagement from './pages/InvoiceManagement'
 import FinanceManagement from './pages/FinanceManagement'
@@ -129,6 +130,11 @@ export const Dashboard: React.FC = () => {
       case 'clients':
       case 'clients/formclient':
         return <ClientManagement />
+
+      case 'users':
+      case 'users/formuser':
+        return <UserManagement />
+      
       case 'invoices':
       case 'invoices/forminvoice':
         return <InvoiceManagement />
