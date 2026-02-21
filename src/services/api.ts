@@ -133,6 +133,20 @@ export interface Report {
   updatedAt?: string;
 }
 
+export interface PackageSnapTokenPayload {
+  name: string;
+  email: string;
+  phone?: string;
+}
+
+export interface PackageSnapTokenResponse {
+  orderId: string;
+  packageId: number;
+  packageTitle: string;
+  token: string;
+  redirectUrl: string;
+}
+
 class ApiClient {
   private axiosInstance: AxiosInstance;
   private token: string | null = null;
@@ -573,6 +587,10 @@ class ApiClient {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
     return response.data
+  }
+
+  async generatePackageSnapToken(id: string, payload: PackageSnapTokenPayload): Promise<ApiResponse<PackageSnapTokenResponse>> {
+    return this.request<PackageSnapTokenResponse>(`/packages/${id}/snap-token`, 'POST', payload)
   }
 
   async getActivities(limit: number = 20): Promise<ApiResponse<any>> {
