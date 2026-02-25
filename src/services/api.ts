@@ -11,8 +11,11 @@ interface ImportMetaEnv {
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const BACKEND_URL = API_BASE_URL.replace(/\/api\/?$/, '');
 
+const SESSION_IDLE_TIMEOUT_MS = 24 * 60 * 60 * 1000;
+const LAST_ACTIVITY_KEY = 'lastActivityAt';
 
 // Log API configuration in development
 if (import.meta.env.DEV) {
@@ -189,6 +192,20 @@ const generateInvoiceNumber = (): string => {
   return `INV-${date}-${rand}`;
 };
 
+export interface PackageSnapTokenPayload {
+  name: string;
+  email: string;
+  phone?: string;
+}
+
+export interface PackageSnapTokenResponse {
+  orderId: string;
+  packageId: number;
+  packageTitle: string;
+  token: string;
+  redirectUrl: string;
+}
+
 class ApiClient {
   private axiosInstance: AxiosInstance;
   private token: string | null = null;
@@ -210,11 +227,57 @@ class ApiClient {
     this.setupInterceptors();
   }
 
+  private decodeJwtPayload(token: string): Record<string, any> | null {
+    if (typeof window === 'undefined') return null;
+    try {
+      const parts = token.split('.');
+      if (parts.length < 2) return null;
+      const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+      const decoded = window.atob(padded);
+      return JSON.parse(decoded);
+    } catch {
+      return null;
+    }
+  }
+
+  private isTokenExpired(token: string): boolean {
+    const payload = this.decodeJwtPayload(token);
+    if (!payload || typeof payload.exp !== 'number') return false;
+    return Date.now() >= payload.exp * 1000;
+  }
+
+  private markActivity(): void {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(LAST_ACTIVITY_KEY, Date.now().toString());
+  }
+
+  private isIdleExpired(): boolean {
+    if (typeof window === 'undefined') return false;
+    const raw = localStorage.getItem(LAST_ACTIVITY_KEY);
+    if (!raw) return false;
+    const lastActivity = Number(raw);
+    if (!Number.isFinite(lastActivity)) return false;
+    return Date.now() - lastActivity > SESSION_IDLE_TIMEOUT_MS;
+  }
+
+  private clearAuthStorage(): void {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('token');
+    localStorage.removeItem(LAST_ACTIVITY_KEY);
+  }
+
   private loadToken(): void {
     if (typeof window !== 'undefined') {
-      this.token = localStorage.getItem('authToken');
+      this.token = localStorage.getItem('authToken') || localStorage.getItem('token');
       if (this.token) {
+        if (this.isIdleExpired() || this.isTokenExpired(this.token)) {
+          this.setToken(null);
+          return;
+        }
         this.axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${this.token}`;
+        this.markActivity();
       }
     }
   }
@@ -223,7 +286,15 @@ class ApiClient {
     this.axiosInstance.interceptors.request.use(
       (config) => {
         if (this.token) {
+          if (this.isIdleExpired() || this.isTokenExpired(this.token)) {
+            this.setToken(null);
+            if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+              window.location.href = '/login';
+            }
+            return Promise.reject(new Error('Sesi login berakhir setelah 24 jam tidak aktif. Silakan login kembali.'));
+          }
           config.headers.Authorization = `Bearer ${this.token}`;
+          this.markActivity();
         }
         if (import.meta.env.DEV) {
           console.log('[API Request]', config.method?.toUpperCase(), config.url);
@@ -241,9 +312,18 @@ class ApiClient {
 
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => {
+
         this.activeRequests = Math.max(0, this.activeRequests - 1);
         if (this.activeRequests === 0) this.emitLoading(false);
         return response;
+
+        if (this.token) {
+          this.markActivity();
+        }
+        // decrement active requests and notify
+        this.activeRequests = Math.max(0, this.activeRequests - 1)
+        if (this.activeRequests === 0) this.emitLoading(false)
+        return response
       },
       (error) => {
         this.activeRequests = Math.max(0, this.activeRequests - 1);
@@ -280,9 +360,11 @@ class ApiClient {
     this.token = token;
     if (token) {
       localStorage.setItem('authToken', token);
+      localStorage.setItem('token', token);
       this.axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      this.markActivity();
     } else {
-      localStorage.removeItem('authToken');
+      this.clearAuthStorage();
       delete this.axiosInstance.defaults.headers.common['Authorization'];
     }
   }
@@ -658,6 +740,10 @@ class ApiClient {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
+  }
+
+  async generatePackageSnapToken(id: string, payload: PackageSnapTokenPayload): Promise<ApiResponse<PackageSnapTokenResponse>> {
+    return this.request<PackageSnapTokenResponse>(`/packages/${id}/snap-token`, 'POST', payload)
   }
 
   async getActivities(limit: number = 20): Promise<ApiResponse<any>> {
