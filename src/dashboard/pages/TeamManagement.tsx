@@ -240,6 +240,7 @@ const TeamManagement: React.FC = () => {
                 <div className="flex gap-1.5">
                   <button onClick={() => openEdit(t)} className="px-2.5 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg hover:shadow-blue-500/30 transition-all text-xs font-medium">Edit</button>
                   <button onClick={() => handleDeleteWithConfirm(t.id)} className="px-2.5 py-1.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:shadow-lg hover:shadow-red-500/30 transition-all text-xs font-medium">Hapus</button>
+                  
                 </div>
                 <div className="text-[10px] text-slate-400 font-medium">ID #{t.id}</div>
               </div>

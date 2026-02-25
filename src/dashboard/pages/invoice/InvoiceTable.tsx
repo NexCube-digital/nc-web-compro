@@ -166,7 +166,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
 
                 {/* Amount */}
                 <td className="px-6 py-4 text-right">
-                  <p className="font-bold text-slate-900">Rp {Math.round(invoice.amount).toLocaleString('id-ID')}</p>
+                  <p className="font-bold text-slate-900">Rp {Math.round(parseFloat(String(invoice.amount)) || 0).toLocaleString('id-ID')}</p>
                 </td>
 
                 {/* Status */}

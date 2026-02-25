@@ -64,10 +64,17 @@ export const DashboardStats: React.FC = () => {
         // Calculate stats
         const totalInvoices = invoices.length
         const overdueInvoices = invoices.filter(inv => inv.status === 'overdue').length
+
+        // totalRevenue = semua invoice (untuk referensi)
         const totalRevenue = invoices.reduce((sum, inv) => sum + Number(inv.amount || 0), 0)
+
+        // ✅ FIX: totalPemasukan hanya dari invoice yang statusnya 'paid'
+        const totalPemasukan = invoices
+          .filter(inv => inv.status === 'paid')
+          .reduce((sum, inv) => sum + Number(inv.amount || 0), 0)
+
         const pemasukanLainnya = finances.reduce((sum, f: any) => sum + (f.type === 'income' ? Number(f.amount || 0) : 0), 0)
         const totalPengeluaran = finances.reduce((sum, f: any) => sum + (f.type === 'expense' ? Number(f.amount || 0) : 0), 0)
-        const totalPemasukan = totalRevenue
         const saldo = totalPemasukan + pemasukanLainnya - totalPengeluaran
 
         const recentInvoices = invoices
@@ -87,7 +94,7 @@ export const DashboardStats: React.FC = () => {
           recentInvoices: recentInvoices || []
         })
 
-        // compute monthly data
+        // compute monthly data — hanya dari invoice 'paid'
         const now = new Date()
         const months: { label: string; value: number }[] = []
         for (let i = 5; i >= 0; i--) {
@@ -99,6 +106,8 @@ export const DashboardStats: React.FC = () => {
         const totals = months.map((m, idx) => {
           const target = new Date(now.getFullYear(), now.getMonth() - (5 - idx), 1)
           const total = invoices.reduce((sum: number, inv: any) => {
+            // ✅ FIX: chart juga hanya hitung invoice 'paid'
+            if (inv.status !== 'paid') return sum
             const issue = new Date(inv.issueDate)
             if (issue.getFullYear() === target.getFullYear() && issue.getMonth() === target.getMonth()) {
               return sum + Number(inv.amount || 0)
@@ -116,7 +125,6 @@ export const DashboardStats: React.FC = () => {
       }
     }
 
-    // fetch only on mount (no auto-refresh)
     fetchAll()
 
     return () => {
@@ -167,7 +175,7 @@ export const DashboardStats: React.FC = () => {
     
     // Create SVG path
     const createPath = () => {
-      if (points.length === 0) return ''
+      if (points.length < 2) return ''
       let path = `M ${points[0].x} ${points[0].y}`
       for (let i = 1; i < points.length; i++) {
         const xc = (points[i].x + points[i - 1].x) / 2
@@ -180,7 +188,7 @@ export const DashboardStats: React.FC = () => {
     
     // Animate line on mount
     useEffect(() => {
-      if (lineRef.current) {
+      if (lineRef.current && points.length >= 2) {
         const pathLength = lineRef.current.getTotalLength()
         gsap.fromTo(lineRef.current,
           { strokeDasharray: pathLength, strokeDashoffset: pathLength },
@@ -188,8 +196,6 @@ export const DashboardStats: React.FC = () => {
         )
       }
     }, [data])
-    
-    const cardPadding = theme === 'compact' ? 'p-4' : 'p-6'
 
     return (
       <div className="bg-white/80 rounded-xl p-4 sm:p-5 shadow-[0_12px_40px_-28px_rgba(15,23,42,0.5)] border border-slate-100/80 h-full max-h-[400px] flex flex-col backdrop-blur">
@@ -199,9 +205,16 @@ export const DashboardStats: React.FC = () => {
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
                 <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+
+                  {points.length < 2 && (
+                    <text x={width/2} y={height/2} textAnchor="middle" fontSize="13" fill="#94a3b8">
+                      Belum ada data penjualan
+                    </text>
+                  )}
+
                 </svg>
               </span>
-              Data Penjualan
+              Data Penjualan (Paid)
             </h2>
             <p className="text-xs text-slate-500 mt-1">Total: {formatRupiah(data.reduce((s, d) => s + d.value, 0))}</p>
           </div>
@@ -270,22 +283,26 @@ export const DashboardStats: React.FC = () => {
             ))}
             
             {/* Area fill */}
-            <path
-              d={`${createPath()} L ${points[points.length - 1].x} ${height - padding.bottom} L ${points[0].x} ${height - padding.bottom} Z`}
-              fill="url(#lineGradient)"
-            />
+            {points.length >= 2 && (
+              <path
+                d={`${createPath()} L ${points[points.length - 1].x} ${height - padding.bottom} L ${points[0].x} ${height - padding.bottom} Z`}
+                fill="url(#lineGradient)"
+              />
+            )}
             
             {/* Main line */}
-            <path
-              ref={lineRef}
-              d={createPath()}
-              fill="none"
-              stroke="url(#lineStroke)"
-              strokeWidth="3"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              filter="url(#lineGlow)"
-            />
+            {points.length >= 2 && (
+              <path
+                ref={lineRef}
+                d={createPath()}
+                fill="none"
+                stroke="url(#lineStroke)"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter="url(#lineGlow)"
+              />
+            )}
             
             {/* Data points */}
             {points.map((point, i) => (
@@ -342,11 +359,10 @@ export const DashboardStats: React.FC = () => {
     )
   }
 
-  const cardPaddingOuter = theme === 'compact' ? 'p-4' : 'p-6'
-
   if (loading) {
     return (
-      <div className="space-y-3 sm:space-y-4">
+      // ✅ FIX: overflow-hidden agar tidak bisa di-scroll
+      <div className="space-y-3 sm:space-y-4 overflow-hidden">
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-16 sm:h-20 rounded-lg bg-slate-100 animate-pulse" />
@@ -362,8 +378,8 @@ export const DashboardStats: React.FC = () => {
   }
 
   return (
-    <StaggerContainer className="space-y-3 sm:space-y-4" staggerDelay={0.15}>
-      {/* Ringkasan (replaces top stat cards) */}
+    <StaggerContainer className="space-y-3 sm:space-y-4 overflow-hidden" staggerDelay={0.15}>
+      {/* Ringkasan */}
       <div className={`bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm border border-slate-100 transition-smooth hover:shadow-lg`}>
         <h2 className="text-sm sm:text-base font-bold text-slate-900 mb-2 sm:mb-3">Ringkasan</h2>
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3">
@@ -382,10 +398,12 @@ export const DashboardStats: React.FC = () => {
               </div>
             </div>
           </div>
+
           <div className={`p-2 sm:p-3 ${theme === 'minimal' ? 'bg-green-50' : 'bg-gradient-to-br from-green-50 to-green-100'} rounded-lg border border-green-200`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-green-700 font-semibold">Total Pemasukan</p>
+                <p className="text-[10px] text-green-500 font-medium">Invoice Paid</p>
                 <p className="text-lg sm:text-xl font-bold text-green-900 mt-1">
                   Rp <CountUp end={stats.totalPemasukan || 0} duration={1.5} delay={0.3} />
                 </p>
@@ -398,6 +416,7 @@ export const DashboardStats: React.FC = () => {
               </div>
             </div>
           </div>
+
           <div className={`p-2 sm:p-3 ${theme === 'minimal' ? 'bg-yellow-50' : 'bg-gradient-to-br from-yellow-50 to-yellow-100'} rounded-lg border border-yellow-200`}>
             <div className="flex items-center justify-between">
               <div>
@@ -414,6 +433,7 @@ export const DashboardStats: React.FC = () => {
               </div>
             </div>
           </div>
+
           <div className={`p-2 sm:p-3 ${theme === 'minimal' ? 'bg-red-50' : 'bg-gradient-to-br from-red-50 to-red-100'} rounded-lg border border-red-200`}>
             <div className="flex items-center justify-between">
               <div>
@@ -430,6 +450,7 @@ export const DashboardStats: React.FC = () => {
               </div>
             </div>
           </div>
+
           <div className={`p-2 sm:p-3 ${theme === 'minimal' ? 'bg-purple-50' : 'bg-gradient-to-br from-purple-50 to-purple-100'} rounded-lg border border-purple-200 col-span-2 sm:col-span-2 lg:col-span-1`}>
             <div className="flex items-center justify-between">
               <div>
@@ -449,14 +470,14 @@ export const DashboardStats: React.FC = () => {
         </div>
       </div>
 
-      {/* Charts and Recent Invoices (swapped) */}
+      {/* Charts and Recent Invoices */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
-        {/* Line chart in the former invoice area (large) */}
+        {/* Line chart */}
         <div className="lg:col-span-2">
           <LineChart data={monthlyData} />
         </div>
 
-        {/* Recent Invoices (moved to right) */}
+        {/* Recent Invoices */}
         <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm border border-slate-100 max-h-[400px] flex flex-col">
           <div className="flex items-center justify-between mb-2 sm:mb-3">
             <h2 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">

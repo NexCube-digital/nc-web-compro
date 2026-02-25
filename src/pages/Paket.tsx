@@ -12,6 +12,9 @@ import { HiSparkles, HiCheckCircle } from 'react-icons/hi';
 import { FaRocket, FaArrowRight, FaWhatsapp } from 'react-icons/fa';
 import gsap from 'gsap';
 
+import { useCart } from '../context/CartContext';
+import { openCartDrawer } from '../components/cart/CartDrawer';
+
 export const Paket: React.FC = () => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [packages, setPackages] = useState<any[]>([])
@@ -28,6 +31,8 @@ export const Paket: React.FC = () => {
   const heroStatsRef = useRef<HTMLDivElement>(null);
   const heroCTARef = useRef<HTMLDivElement>(null);
   const heroLogoRef = useRef<HTMLDivElement>(null);
+
+  const { addItem } = useCart();
 
   // Apply GSAP animations
   useScrollFadeIn('.scroll-fade-in');
@@ -317,6 +322,7 @@ export const Paket: React.FC = () => {
   // Render pricing cards per category
   const renderPricingSection = (category: typeof paketCategories[0]) => {
     // use backend packages when available; otherwise fallback to pricingData
+    
     const categoryPricing = packages.length > 0
       ? packages.filter(p => (p._normalizedType || normalizeTypeForCategory(p.type)) === category.id)
       : pricingData.filter(item => category.tierIds.includes(item.id));
@@ -376,6 +382,19 @@ export const Paket: React.FC = () => {
                         badge={tier.badge}
                         popular={hot || tier.popular}
                         detailUrl={detailUrl}
+
+                        onOrder={() => {
+                        addItem({
+                          id: tier.id || `${category.id}-${index}`,
+                          name: title,
+                          price: typeof tier.rawPrice === 'number' 
+                            ? tier.rawPrice 
+                            : parseInt(String(tier.price || '0').replace(/\D/g, '')) || 0,
+                          quantity: 1,
+                          description: `${category.title} - ${tier.badge || ''}`,
+                        });
+                        openCartDrawer();
+                      }}
                       />
                     )}
                   </div>
@@ -409,7 +428,8 @@ export const Paket: React.FC = () => {
                           </div>
                           <div className="p-4 bg-white">
                             <div className="font-bold text-lg">{title}</div>
-                            <div className="text-sm text-slate-600">{price}</div>
+                            <div className="
+                            text-sm text-slate-600">{price}</div>
                           </div>
                         </a>
                       ) : (
@@ -422,6 +442,18 @@ export const Paket: React.FC = () => {
                           badge={tier.badge}
                           popular={hot || tier.popular}
                           detailUrl={detailUrl}
+                          onOrder={() => {
+                          addItem({
+                            id: tier.id || `${category.id}-${index + 3}`,
+                            name: title,
+                            price: typeof tier.rawPrice === 'number'
+                              ? tier.rawPrice
+                              : parseInt(String(tier.price || '0').replace(/\D/g, '')) || 0,
+                            quantity: 1,
+                            description: `${category.title} - ${tier.badge || ''}`,
+                          });
+                          openCartDrawer();
+                        }}
                         />
                       )}
                     </div>

@@ -277,9 +277,12 @@ export const InvoiceManagement: React.FC = () => {
   const invoiceStats = useMemo(() => {
     const invoiceArray = Array.isArray(invoices) ? invoices : []
     const totalInvoices = invoiceArray.length
+    
     const paidInvoices = invoiceArray.filter(inv => inv.status === 'paid').length
-    const totalAmount = invoiceArray.reduce((sum, inv) => sum + inv.amount, 0)
-    const paidAmount = invoiceArray.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + inv.amount, 0)
+
+    const totalAmount = invoiceArray.reduce((sum, inv) => sum + (parseFloat(String(inv.amount)) || 0), 0)
+    const paidAmount = invoiceArray.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + (parseFloat(String(inv.amount)) || 0), 0)
+
     return { totalInvoices, paidInvoices, totalAmount, paidAmount }
   }, [invoices])
 

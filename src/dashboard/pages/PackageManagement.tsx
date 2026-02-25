@@ -19,6 +19,8 @@ import {
 } from 'react-icons/md'
 import { IoMdFlame } from 'react-icons/io'
 
+import { getImageUrl } from '../../services/api'
+
 const PackageManagement: React.FC = () => {
   const [packages, setPackages] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
@@ -135,7 +137,7 @@ const PackageManagement: React.FC = () => {
                 <a href={p.link || '#'} target="_blank" rel="noreferrer" className="block">
                   <div className="h-52 bg-gray-100 flex items-center justify-center overflow-hidden">
                     {p.images && p.images.length > 0 ? (
-                      <img src={p.images[0]} alt={p.title} className="w-full h-full object-cover" />
+                      <img src={getImageUrl(p.images[0])}  alt={p.title} className="w-full h-full object-cover" />
                     ) : (
                       <div className="text-gray-400">Tidak ada gambar</div>
                     )}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { HiSparkles, HiCheckCircle, HiArrowRight } from 'react-icons/hi2'
+import { Link, useNavigate } from 'react-router-dom'
+import { HiSparkles, HiCheckCircle, HiArrowRight, HiShoppingCart, HiBolt } from 'react-icons/hi2'
+import { useCart } from '../context/CartContext'
 
 export const PricingCard: React.FC<{ 
   tier: string; 
@@ -11,6 +12,7 @@ export const PricingCard: React.FC<{
   popular?: boolean;
   badge?: string;
   detailUrl?: string;
+  onOrder?: () => void;
 }> = ({ 
   tier, 
   price, 
@@ -19,39 +21,68 @@ export const PricingCard: React.FC<{
   accent,
   popular = false,
   badge,
-  detailUrl
+  detailUrl,
+  onOrder
 }) => {
+  const navigate = useNavigate()
+  const { addItem } = useCart()
+
   // Extract price value safely - handle format "Rp 800.000"
   const cleanPrice = price.replace(/Rp\s?/gi, '').trim();
   const priceValue = cleanPrice.includes(' ') ? cleanPrice.split(' ')[0] : cleanPrice;
   const priceDesc = cleanPrice.includes(' ') ? cleanPrice.split(' ').slice(1).join(' ') : '';
+
+  // Parse numeric price for cart
+  const numericPrice = parseInt(priceValue.replace(/\./g, '').replace(/,/g, ''), 10) || 0;
   
   // Process includes to detect included/excluded items
   const processIncludeItem = (item: string) => {
     const trimmed = item.trim();
-    // Check for emoji markers or text patterns
     if (trimmed.startsWith('✔️') || trimmed.startsWith('✓')) {
       return { included: true, text: trimmed.replace(/^✔️|^✓/, '').trim() };
     }
     if (trimmed.startsWith('❌') || trimmed.startsWith('✗') || trimmed.startsWith('Tidak ')) {
       return { included: false, text: trimmed.replace(/^❌|^✗/, '').trim() };
     }
-    // Default to included if no marker
     return { included: true, text: trimmed };
   };
   
-  // Determine styling based on tier
   const isSpecialTier = accent?.includes('from-slate-800') || tier === 'Platinum';
   const isGoldTier = tier === 'Gold';
   const isSilverTier = tier === 'Silver';
   const isStudentTier = tier === 'Student';
   const isBronzeTier = tier === 'Bronze';
   
-  // Card hover effect
   const [isHovered, setIsHovered] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [justAdded, setJustAdded] = useState(false);
+
+  // Tambah ke keranjang lalu buka drawer
+  const handleAddToCart = () => {
+    if (onOrder) {
+      onOrder()
+    } else {
+      addItem({ id: tier, name: `Paket ${tier}`, price: numericPrice, quantity: 1 })
+    }
+    setJustAdded(true)
+    setTimeout(() => setJustAdded(false), 2000)
+  }
+
+  // Pesan langsung — TIDAK tambah ke cart, langsung ke checkout via navigate state
+  const handleOrderNow = () => {
+    navigate('/checkout', {
+      state: {
+        directOrder: {
+          id: tier,
+          name: `Paket ${tier}`,
+          price: numericPrice,
+          quantity: 1,
+          description: priceDesc || undefined
+        }
+      }
+    })
+  }
   
-  // Tier-specific styling - Modern & Professional
   const getTierStyles = () => {
     if (isSpecialTier) {
       return {
@@ -108,7 +139,6 @@ export const PricingCard: React.FC<{
         accentColor: 'text-emerald-600'
       };
     }
-    // Default
     return {
       bg: 'bg-white',
       border: 'border-2 border-slate-200',
@@ -133,17 +163,17 @@ export const PricingCard: React.FC<{
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Animated Shimmer Effect */}
-      <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transform rounded-2xl pointer-events-none`}></div>
+      {/* Shimmer */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transform rounded-2xl pointer-events-none" />
       
-      {/* Corner Glow Effect */}
+      {/* Corner Glow */}
       <div className={`absolute -top-16 -right-16 w-32 h-32 rounded-full blur-3xl opacity-20 group-hover:opacity-30 transition-all duration-700 pointer-events-none ${
         isSpecialTier ? 'bg-purple-500' :
         isGoldTier ? 'bg-amber-400' :
         isSilverTier ? 'bg-slate-400' :
         isBronzeTier ? 'bg-orange-400' :
         'bg-emerald-400'
-      }`}></div>
+      }`} />
       
       {/* Popular Badge */}
       {popular && (
@@ -196,7 +226,7 @@ export const PricingCard: React.FC<{
           </div>
         </div>
 
-        {/* Includes Section - Expandable */}
+        {/* Includes Section */}
         {includes && includes.length > 0 && (
           <div className="mb-4 flex-grow">
             <h4 className={`text-xs font-bold ${textColor} uppercase tracking-wider mb-2 opacity-70`}>
@@ -215,7 +245,7 @@ export const PricingCard: React.FC<{
                       {included ? (
                         <HiCheckCircle className={`w-3.5 h-3.5 ${styles.iconColor}`} />
                       ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className={`w-3.5 h-3.5 text-red-400`} viewBox="0 0 20 20" fill="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                         </svg>
                       )}
@@ -230,7 +260,7 @@ export const PricingCard: React.FC<{
           </div>
         )}
 
-        {/* Features List - Hidden when includes exist */}
+        {/* Features List */}
         {(!includes || includes.length === 0) && features && features.length > 0 && (
           <ul className="space-y-2 mb-5 flex-grow">
             {features.slice(0, 3).map((f, index) => (
@@ -250,56 +280,48 @@ export const PricingCard: React.FC<{
           </ul>
         )}
 
-        {/* CTA Button */}
-        <div className="mt-auto pt-4">
-          {includes && includes.length > 5 ? (
+        {/* CTA Buttons */}
+        <div className="mt-auto pt-4 space-y-2">
+          {/* Expand fitur */}
+          {includes && includes.length > 5 && (
             <button 
               onClick={() => setIsExpanded(!isExpanded)}
-              className={`group/btn relative block w-full py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg sm:rounded-xl font-bold transition-all duration-300 text-center overflow-hidden
-                bg-gradient-to-r ${styles.buttonGradient} text-white
-                hover:shadow-lg hover:scale-[1.02] active:scale-95
-                ${isHovered ? 'shadow-md' : ''} z-20`}
+              className={`w-full py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r ${styles.buttonGradient} text-white hover:scale-[1.02] transition-all`}
             >
-              <span className="relative z-10 flex items-center justify-center gap-1 sm:gap-1.5 text-xs sm:text-sm">
-                {isExpanded ? (
-                  <>
-                    Tutup
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-300" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clipRule="evenodd" />
-                    </svg>
-                  </>
-                ) : (
-                  <>
-                    Lihat Semua Fitur ({includes.length})
-                    <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-300" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                    </svg>
-                  </>
-                )}
-              </span>
-              
-              {/* Button Shine Effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 pointer-events-none"></div>
+              {isExpanded ? 'Tutup' : `Lihat Semua Fitur (${includes.length})`}
             </button>
-          ) : (
-            <a 
-              href={`https://wa.me/6285950313360?text=Halo%20NexCube,%20saya%20tertarik%20dengan%20paket%20${encodeURIComponent(tier)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`group/btn relative block w-full py-2 sm:py-2.5 px-3 sm:px-4 rounded-lg sm:rounded-xl font-bold transition-all duration-300 text-center overflow-hidden
-                bg-gradient-to-r ${styles.buttonGradient} text-white
-                hover:shadow-lg hover:scale-[1.02] active:scale-95
-                ${isHovered ? 'shadow-md' : ''} z-20`}
-            >
-              <span className="relative z-10 flex items-center justify-center gap-1 sm:gap-1.5 text-xs sm:text-sm">
-                Hubungi Kami
-                <HiArrowRight className={`w-3 h-3 sm:w-4 sm:h-4 transition-transform duration-300 ${isHovered ? 'translate-x-1' : ''}`} />
-              </span>
-              
-              {/* Button Shine Effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover/btn:translate-x-full transition-transform duration-700 pointer-events-none"></div>
-            </a>
           )}
+
+          {/* ✅ Tombol Pesan Langsung */}
+          <button
+            onClick={handleOrderNow}
+            className={`w-full py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2
+              bg-gradient-to-r ${styles.buttonGradient} text-white hover:scale-[1.02] shadow-md`}
+          >
+            <HiBolt className="w-4 h-4" />
+            Pesan Sekarang
+          </button>
+
+          {/* ✅ Tombol Tambah Keranjang */}
+          <button
+            onClick={handleAddToCart}
+            className={`w-full py-2.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2
+              ${justAdded
+                ? 'bg-green-100 text-green-700 border border-green-300'
+                : isSpecialTier
+                  ? 'bg-white/10 text-white border border-white/20 hover:bg-white/20'
+                  : 'bg-white border border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+              }`}
+          >
+            {justAdded ? (
+              <>✓ Ditambahkan ke Keranjang</>
+            ) : (
+              <>
+                <HiShoppingCart className="w-4 h-4" />
+                Tambah Keranjang
+              </>
+            )}
+          </button>
         </div>
       </div>
     </div>

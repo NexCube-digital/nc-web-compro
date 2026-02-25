@@ -7,15 +7,25 @@ import DashboardHeader from './components/Header'
 import DashboardStats from './components/Stats'
 import { ThemeProvider } from './ThemeContext'
 import TopProgress from './components/TopProgress'
+import UserManagement from './pages/UserManagement'
+import PortfolioManagement from './pages/PortfolioManagement'
 import ClientManagement from './pages/ClientManagement'
 import InvoiceManagement from './pages/InvoiceManagement'
 import FinanceManagement from './pages/FinanceManagement'
 import ReportManagement from './pages/ReportManagement'
 import ProfilePage from './pages/ProfilePage'
 import TeamManagement from './pages/TeamManagement'
+
 import PackageManagement from './pages/PackageManagement'
 import PackageForm from './pages/PackageForm'
+
+import AffiliateManagement from './pages/AffiliateManagement'
+import AffiliateForm from './pages/AffiliateForm'
+
 import apiClient, { User } from '../services/api'
+
+// Halaman yang TIDAK boleh di-scroll (fit to screen)
+const NO_SCROLL_TABS = ['overview']
 
 export const Dashboard: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -33,10 +43,10 @@ export const Dashboard: React.FC = () => {
   }
 
   const activeTab = getActiveTab()
+  const isNoScroll = NO_SCROLL_TABS.includes(activeTab)
 
   useEffect(() => {
     const checkAuth = async () => {
-      // Check for token (support both keys)
       const token = localStorage.getItem('authToken') || localStorage.getItem('token')
       
       if (!token) {
@@ -45,29 +55,22 @@ export const Dashboard: React.FC = () => {
       }
 
       try {
-        // Set token in apiClient
         apiClient.setToken(token)
         
-        // Try to get user from localStorage first
         const savedUser = localStorage.getItem('user')
         if (savedUser) {
           try {
             const parsedUser = JSON.parse(savedUser)
-            console.log('Loaded user from localStorage:', parsedUser)
             setUser(parsedUser)
           } catch (e) {
             console.error('Failed to parse saved user:', e)
           }
         }
         
-        // Fetch profile from backend to verify token and get fresh data
         const response = await apiClient.getProfile()
         if (response.success && response.data) {
-          // Extract user from data - backend returns User directly
           const userData = response.data
-          console.log('Profile from backend:', userData)
           setUser(userData)
-          // Update saved user data
           localStorage.setItem('user', JSON.stringify(userData))
         } else {
           localStorage.removeItem('authToken')
@@ -92,14 +95,12 @@ export const Dashboard: React.FC = () => {
   // Animate content when activeTab changes
   useEffect(() => {
     if (mainRef.current && !loading) {
-      // Fade out existing content
       gsap.to(mainRef.current, {
         opacity: 0,
         y: 10,
         duration: 0.2,
         ease: 'power2.inOut',
         onComplete: () => {
-          // Fade in new content
           gsap.to(mainRef.current, {
             opacity: 1,
             y: 0,
@@ -124,11 +125,21 @@ export const Dashboard: React.FC = () => {
       case 'paket/form':
       case 'paket/formpaket':
         return <PackageForm />
+      case 'paket/affiliate':
+        return <AffiliateManagement />
+      case 'paket/formaffiliate':
+        return <AffiliateForm />
       case 'team':
         return <TeamManagement />
       case 'clients':
       case 'clients/formclient':
         return <ClientManagement />
+      case 'users':
+      case 'users/formuser':
+        return <UserManagement />
+      case 'portfolios':
+      case 'portfolios/formportfolio':
+        return <PortfolioManagement />
       case 'invoices':
       case 'invoices/forminvoice':
         return <InvoiceManagement />
@@ -171,14 +182,21 @@ export const Dashboard: React.FC = () => {
         />
 
         {/* Main Content */}
-        <div className="flex-1 overflow-auto" ref={contentRef}>
+        <div
+          className={`flex-1 flex flex-col ${isNoScroll ? 'overflow-hidden' : 'overflow-auto'}`}
+          ref={contentRef}
+        >
           <DashboardHeader 
             sidebarOpen={sidebarOpen}
             setSidebarOpen={setSidebarOpen}
             user={user}
           />
           
-          <main className="p-3 sm:p-4 lg:p-6 min-h-screen" ref={mainRef}>
+          
+          <main
+            className={`p-3 sm:p-4 lg:p-6 flex-1 ${isNoScroll ? 'overflow-hidden' : ''}`}
+            ref={mainRef}
+          >
             {renderContent()}
           </main>
         </div>

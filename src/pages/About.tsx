@@ -16,6 +16,54 @@ export const About: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  // Default static data (fallback)
+  const defaultTeamMembers = [
+    {
+      name: 'Aslam Mushtafa Karim',
+      position: 'CEO & Founder',
+      image: '/images/team/team-1.jpg',
+      bio: 'Visioner dengan 5+ tahun pengalaman dalam transformasi digital dan strategi bisnis untuk startup dan enterprise.',
+      portfolioUrl: 'https://aslam2025.netlify.app/',
+      expertise: ['Digital Strategy', 'Business Development', 'Tech Leadership'],
+      experience: '5+ Years'
+    },
+    {
+      name: 'Bela Amelia Nuralfiani',
+      position: 'Lead UI/UX Designer',
+      image: '/images/team/team-2.jpg',
+      bio: 'Desainer kreatif yang menghadirkan pengalaman pengguna yang intuitif dan estetika visual yang memukau.',
+      portfolioUrl: 'https://example.com/bela',
+      expertise: ['User Experience', 'Interface Design', 'Design Systems'],
+      experience: '4+ Years'
+    },
+    {
+      name: 'Muhammad Regi Taryana',
+      position: 'Senior Backend Developer',
+      image: '/images/team/team-3.jpg',
+      bio: 'Arsitek sistem backend yang handal dalam membangun infrastruktur digital yang scalable dan secure.',
+      portfolioUrl: 'https://example.com/regi',
+      expertise: ['System Architecture', 'Database Design', 'API Development'],
+      experience: '4+ Years'
+    },
+    {
+      name: 'Alif Alfarizi',
+      position: 'Frontend Specialist',
+      image: '/images/team/team-4.jpg',
+      bio: 'Pengembang frontend yang mahir menciptakan antarmuka web modern, responsif, dan performa tinggi.',
+      portfolioUrl: 'https://alifalfariziportfolio.netlify.app/',
+      expertise: ['React/Next.js', 'Performance Optimization', 'Modern CSS'],
+      experience: '3+ Years'
+    },
+    {
+      name: 'Okta Ramdani',
+      position: 'Backend Developer',
+      image: '/images/team/team-5.png',
+      bio: 'Pengembang backend yang berdedikasi dalam membangun solusi server-side yang efisien dan andal.',
+      portfolioUrl: 'https://oktaramdani.netlify.app/',
+      expertise: ['Full Stack Development', 'DevOps', 'Cloud Solutions'],
+      experience: '3+ Years'
+    },
+  ];
 
   type TeamPublic = {
     id?: number

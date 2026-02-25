@@ -27,6 +27,7 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
         </svg>
       )
     },
+
     {
       id: 'team',
       label: 'Tim',
@@ -36,6 +37,8 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
         </svg>
       )
     },
+
+
     {
       id: 'clients',
       label: 'Klien',
@@ -54,6 +57,27 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
         </svg>
       )
     },
+
+    {
+      id: 'portfolios',
+      label: 'Portfolio',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      )
+    },
+
+    {
+      id: 'users',
+      label: 'User',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11c1.657 0 3-1.343 3-3S17.657 5 16 5s-3 1.343-3 3 1.343 3 3 3zM8 11c1.657 0 3-1.343 3-3S9.657 5 8 5 5 6.343 5 8s1.343 3 3 3zM8 13c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.98.05 1.16.84 1.98 1.98 1.98 3.45V19h6v-2.5C23 14.17 18.33 13 16 13z" />
+        </svg>
+      )
+    },
+
     {
       id: 'finances',
       label: 'Keuangan',
@@ -96,6 +120,7 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
         </svg>
       )
     },
+
     {
       id: 'paket/desain',
       label: 'Desain Grafis',
@@ -126,7 +151,28 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
     }
   ]
 
+  const affiliateItems = [
+  {
+    id: 'paket/affiliate',
+    label: 'Paket Affiliate',
+    icon: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+          d="M12 2l3 6 6 .5-4.5 4 1 6L12 16l-5.5 3.5 1-6L3 8.5 9 8 12 2z" />
+      </svg>
+    )
+  }
+]
+
+  // ✅ PERBAIKAN: State terpisah untuk masing-masing dropdown
   const [pkgOpen, setPkgOpen] = useState(true)
+  const [affiliateOpen, setAffiliateOpen] = useState(true)
+
+  // ✅ PERBAIKAN: Kondisi aktif terpisah
+  const isPaketActive = activeTab === 'paket' ||
+    (activeTab?.startsWith('paket/') && activeTab !== 'paket/affiliate' && !activeTab?.startsWith('paket/formaffiliate'))
+
+  const isAffiliateActive = activeTab === 'paket/affiliate' || activeTab === 'paket/formaffiliate'
 
   const handleLogout = () => {
     // Clear all authentication data
@@ -262,7 +308,7 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
                 <button
                   onClick={() => setPkgOpen(!pkgOpen)}
                   className={`group w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
-                    activeTab === 'paket' || activeTab?.startsWith('paket/')
+                    isPaketActive
                       ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
                       : 'text-slate-400 hover:text-white hover:bg-white/5 hover:scale-[1.01]'
                   }`}
@@ -283,6 +329,62 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
                 {pkgOpen && (
                   <div className="pl-4 space-y-1 mt-1 border-l-2 border-slate-800/50 ml-3">
                     {packageItems.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => {
+                          const path = item.id === 'overview' ? '/dashboard' : `/dashboard/${item.id}`
+                          navigate(path)
+                          setOpen(false)
+                        }}
+                        className={`group w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-300 ${
+                          activeTab === item.id
+                            ? 'bg-gradient-to-r from-blue-600/90 via-blue-500/90 to-indigo-600/90 text-white shadow-md shadow-blue-500/20 scale-[1.01]'
+                            : 'text-slate-500 hover:text-white hover:bg-white/5 hover:scale-[1.01] hover:translate-x-1'
+                        }`}
+                      >
+                        <div className="transition-transform duration-300 group-hover:scale-110 w-4 h-4 flex items-center justify-center">
+                          {item.icon}
+                        </div>
+                        <span className="font-medium text-xs">{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Affiliate Paket */}
+            <div>
+              <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider px-3 mb-2 mt-1 flex items-center gap-2">
+                <div className="h-px flex-1 bg-gradient-to-r from-slate-700 to-transparent"></div>
+                <span>Paket Affiliate</span>
+              </div>
+              <div className="space-y-1">
+                {/* ✅ PERBAIKAN: Pakai affiliateOpen & isAffiliateActive, bukan pkgOpen & isPaketActive */}
+                <button
+                  onClick={() => setAffiliateOpen(!affiliateOpen)}
+                  className={`group w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
+                    isAffiliateActive
+                      ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
+                      : 'text-slate-400 hover:text-white hover:bg-white/5 hover:scale-[1.01]'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="transition-transform duration-300 group-hover:scale-110">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                    </div>
+                    <span className="font-medium text-sm">Paket 1</span>
+                  </div>
+                  <svg className={`w-4 h-4 transition-transform duration-300 ${affiliateOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+
+                {affiliateOpen && (
+                  <div className="pl-4 space-y-1 mt-1 border-l-2 border-slate-800/50 ml-3">
+                    {affiliateItems.map((item) => (
                       <button
                         key={item.id}
                         onClick={() => {
