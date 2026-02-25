@@ -12,6 +12,8 @@ import {
 } from 'lucide-react'
 import { PortfolioForm } from '../PortfolioManagement'
 
+import { getImageUrl } from '../../../services/api'
+
 interface FormPortfolioProps {
   formData: PortfolioForm
   loading: boolean
@@ -240,7 +242,11 @@ export const FormPortfolio: React.FC<FormPortfolioProps> = ({
                 {/* Image preview */}
                 <div className="aspect-video">
                   <img
-                    src={formData.imagePreview}
+                    src={
+                      formData.imageFile
+                        ? formData.imagePreview          
+                        : getImageUrl(formData.imagePreview) 
+                    }
                     alt="Preview"
                     className="w-full h-full object-cover"
                     onError={(e) => {
