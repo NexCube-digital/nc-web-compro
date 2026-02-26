@@ -752,7 +752,7 @@ export const PaketDigital: React.FC = () => {
                   </div>
                   <div className="font-semibold text-slate-800">{cat.title}</div>
                   <div className="flex justify-center gap-2 mt-2">
-                    {cat.techStack.map((Tech, j) => (
+                    {cat.techStack.map((Tech: React.ElementType, j: number) => (
                       <Tech key={j} className={`w-4 h-4 text-${cat.color}-500`} />
                     ))}
                   </div>

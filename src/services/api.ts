@@ -54,10 +54,8 @@ export interface IUser {
   updatedAt?: string;
 }
 
-export type User = IUser;
-
 export interface AuthResponse {
-  user: User;
+  user: IUser;
   token: string;
 }
 
