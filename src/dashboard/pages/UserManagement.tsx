@@ -110,6 +110,17 @@ export const UserManagement: React.FC = () => {
         const res = await apiClient.updateUser(editingId.toString(), { ...updatePayload, photoFile })
         if (res.success) {
           toast.success('User berhasil diupdate')
+          // Update local users state immediately from returned data
+          if (res.data) {
+            setUsers(prev => prev.map(u => u.id === editingId ? { ...u, ...res.data } : u))
+          }
+          // If admin edited their own account, refresh header
+          try {
+            const storedUser = JSON.parse(localStorage.getItem('user') || '{}')
+            if (storedUser.id === editingId) {
+              window.dispatchEvent(new CustomEvent('profileUpdated'))
+            }
+          } catch { }
         } else {
           throw new Error(res.message || 'Gagal mengupdate user')
         }

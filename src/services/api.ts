@@ -537,8 +537,10 @@ class ApiClient {
       formData.append('email', data.email);
       formData.append('role', data.role);
       formData.append('photo', data.photoFile);
+      // Set Content-Type to undefined so Axios removes the default 'application/json',
+      // letting the browser set the correct 'multipart/form-data; boundary=...' automatically
       const response = await this.axiosInstance.put(`/users/${id}`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: { 'Content-Type': undefined },
       });
       return response.data;
     }
@@ -552,8 +554,10 @@ class ApiClient {
     if (data.bio !== undefined) formData.append('bio', data.bio);
     if (data.phone !== undefined) formData.append('phone', data.phone);
     if (data.photoFile) formData.append('photo', data.photoFile);
+    // Set Content-Type to undefined so Axios removes the default 'application/json',
+    // letting the browser set the correct 'multipart/form-data; boundary=...' automatically
     const response = await this.axiosInstance.put('/users/me', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { 'Content-Type': undefined },
     });
     return response.data;
   }
