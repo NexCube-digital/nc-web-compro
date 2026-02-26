@@ -91,6 +91,7 @@ export const ProfilePage: React.FC = () => {
       const res = await apiClient.removeProfilePhoto()
       if (res.success) {
         setUser(prev => prev ? { ...prev, photo: undefined } : prev)
+        window.dispatchEvent(new CustomEvent('profileUpdated'))
         toast.success('Foto profil berhasil dihapus')
       } else {
         toast.error(res.message || 'Gagal menghapus foto')
@@ -134,6 +135,7 @@ export const ProfilePage: React.FC = () => {
         setPhotoFile(null)
         setPhotoPreview(null)
         setIsEditing(false)
+        window.dispatchEvent(new CustomEvent('profileUpdated'))
         toast.success('Profil berhasil diperbarui')
       } else {
         throw new Error(res.message || 'Gagal memperbarui profil')

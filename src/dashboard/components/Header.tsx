@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import apiClient, { User } from '../../services/api'
+import apiClient, { User, getImageUrl } from '../../services/api'
 import { useTheme } from '../ThemeContext'
 import { ActivityHistoryModal } from './ActivityHistoryModal'
 
@@ -171,8 +171,12 @@ export const DashboardHeader: React.FC<HeaderProps> = ({
               </p>
               <p className="text-[10px] text-slate-500">{formatRole(user?.role)}</p>
             </div>
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/30 group-hover:shadow-xl group-hover:shadow-blue-500/40 transition-all duration-300 group-hover:scale-110 text-xs">
-              {getInitials(user?.name)}
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg overflow-hidden bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-lg shadow-blue-500/30 group-hover:shadow-xl group-hover:shadow-blue-500/40 transition-all duration-300 group-hover:scale-110 text-xs flex-shrink-0">
+              {user?.photo ? (
+                <img src={getImageUrl(user.photo)} alt={user.name} className="w-full h-full object-cover" />
+              ) : (
+                getInitials(user?.name)
+              )}
             </div>
             <svg className={`hidden sm:block w-3.5 h-3.5 text-slate-600 group-hover:text-blue-600 transition-all duration-300 flex-shrink-0 ${showProfileMenu ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
@@ -194,8 +198,12 @@ export const DashboardHeader: React.FC<HeaderProps> = ({
                 {/* User Info Section */}
                 <div className="p-3 bg-gradient-to-br from-blue-50/80 via-indigo-50/80 to-purple-50/80 backdrop-blur-sm border-b border-slate-200/50">
                   <div className="flex items-center gap-2.5 mb-3">
-                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/30 flex-shrink-0">
-                      {getInitials(user?.name)}
+                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/30 flex-shrink-0">
+                      {user?.photo ? (
+                        <img src={getImageUrl(user.photo)} alt={user?.name} className="w-full h-full object-cover" />
+                      ) : (
+                        getInitials(user?.name)
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-slate-900 truncate text-xs">{user?.name || 'User'}</p>

@@ -93,6 +93,20 @@ export const Dashboard: React.FC = () => {
     }
 
     checkAuth()
+
+    // Re-fetch user whenever profile is updated (e.g. from ProfilePage)
+    const handleProfileUpdated = () => {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('token')
+      if (!token) return
+      apiClient.getProfile().then(res => {
+        if (res.success && res.data) {
+          setUser(res.data)
+          localStorage.setItem('user', JSON.stringify(res.data))
+        }
+      }).catch(() => {})
+    }
+    window.addEventListener('profileUpdated', handleProfileUpdated)
+    return () => window.removeEventListener('profileUpdated', handleProfileUpdated)
   }, [navigate])
 
   // Redirect user biasa jika mencoba akses halaman admin
