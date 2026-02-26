@@ -65,6 +65,7 @@ export interface User {
   email: string
   role: 'admin' | 'user'
   password?: string
+  isActive?: boolean
   createdAt?: string
   updatedAt?: string
 }
