@@ -1,5 +1,5 @@
 import React from 'react'
-import { User } from '../../../services/api'
+import { User, getImageUrl } from '../../../services/api'
 import { Edit2, Trash2, Loader, Shield, ShieldCheck } from 'lucide-react'
 
 interface UserTableProps {
@@ -82,14 +82,22 @@ export const UserTable: React.FC<UserTableProps> = ({
             >
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center">
-                  <div className={`flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${
+                  <div className={`flex-shrink-0 h-10 w-10 rounded-full overflow-hidden flex items-center justify-center ${
                     user.role === 'admin' ? 'bg-purple-100' : 'bg-blue-100'
                   }`}>
-                    <span className={`font-medium text-sm ${
-                      user.role === 'admin' ? 'text-purple-600' : 'text-blue-600'
-                    }`}>
-                      {user.name.charAt(0).toUpperCase()}
-                    </span>
+                    {user.photo ? (
+                      <img
+                        src={getImageUrl(user.photo)}
+                        alt={user.name}
+                        className="h-10 w-10 object-cover rounded-full"
+                      />
+                    ) : (
+                      <span className={`font-medium text-sm ${
+                        user.role === 'admin' ? 'text-purple-600' : 'text-blue-600'
+                      }`}>
+                        {user.name.charAt(0).toUpperCase()}
+                      </span>
+                    )}
                   </div>
                   <div className="ml-4">
                     <div className="text-sm font-medium text-gray-900">

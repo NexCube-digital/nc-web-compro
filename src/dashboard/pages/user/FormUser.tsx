@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
-import { User, Mail, Lock, Save, X, Shield, Eye, EyeOff } from 'lucide-react'
+import React, { useState, useRef } from 'react'
+import { User, Mail, Lock, Save, X, Shield, Eye, EyeOff, Camera } from 'lucide-react'
+import { getImageUrl } from '../../../services/api'
 
 interface FormUserProps {
   formData: {
@@ -10,7 +11,10 @@ interface FormUserProps {
   }
   loading: boolean
   editingId: number | null
+  currentPhoto?: string
+  photoPreview: string | null
   onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void
+  onPhotoChange: (file: File | null) => void
   onSubmit: (e: React.FormEvent) => void
   onCancel: () => void
 }
@@ -19,11 +23,37 @@ export const FormUser: React.FC<FormUserProps> = ({
   formData,
   loading,
   editingId,
+  currentPhoto,
+  photoPreview,
   onChange,
+  onPhotoChange,
   onSubmit,
   onCancel
 }) => {
   const [showPassword, setShowPassword] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null
+    if (file) {
+      const allowed = ['image/jpeg', 'image/png', 'image/webp']
+      if (!allowed.includes(file.type)) {
+        alert('Format foto tidak didukung. Gunakan JPG, PNG, atau WebP.')
+        e.target.value = ''
+        return
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Ukuran foto maksimal 5 MB.')
+        e.target.value = ''
+        return
+      }
+    }
+    onPhotoChange(file)
+    e.target.value = ''
+  }
+
+  const displayPhoto = photoPreview || (currentPhoto ? getImageUrl(currentPhoto) : null)
+  const initials = (formData.name || '?').charAt(0).toUpperCase()
 
   const roles = [
     { value: 'user', label: 'User', icon: '', description: 'Hanya dapat melihat portfolio' },
@@ -32,6 +62,63 @@ export const FormUser: React.FC<FormUserProps> = ({
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
+
+      {/* Photo Upload (hanya saat edit user) */}
+      {editingId && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Foto Profil
+          </label>
+          <div className="flex items-center gap-4">
+            {/* Avatar preview */}
+            <div className="relative group w-16 h-16 rounded-full overflow-hidden bg-blue-100 flex items-center justify-center border-2 border-gray-200 flex-shrink-0">
+              {displayPhoto ? (
+                <img src={displayPhoto} alt="Preview" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-2xl font-bold text-blue-600">{initials}</span>
+              )}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full"
+              >
+                <Camera className="w-5 h-5 text-white" />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={loading}
+                className="px-4 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors disabled:opacity-50"
+              >
+                <Camera className="w-4 h-4" />
+                {displayPhoto ? 'Ganti Foto' : 'Upload Foto'}
+              </button>
+              {photoPreview && (
+                <button
+                  type="button"
+                  onClick={() => onPhotoChange(null)}
+                  className="text-xs text-red-500 hover:underline text-left"
+                >
+                  Batalkan pilihan
+                </button>
+              )}
+              <p className="text-xs text-gray-400">JPG, PNG, WebP · Maks 5 MB</p>
+            </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Name Field */}
       <div>
         <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">

@@ -66,6 +66,9 @@ export interface User {
   role: 'admin' | 'user'
   password?: string
   isActive?: boolean
+  photo?: string
+  bio?: string
+  phone?: string
   createdAt?: string
   updatedAt?: string
 }
@@ -527,8 +530,36 @@ class ApiClient {
     return this.request<User>('/users', 'POST', data);
   }
 
-  async updateUser(id: string, data: { name: string; email: string; password?: string; role: string }): Promise<ApiResponse<User>> {
-    return this.request<User>(`/users/${id}`, 'PUT', data);
+  async updateUser(id: string, data: { name: string; email: string; password?: string; role: string; photoFile?: File | null }): Promise<ApiResponse<User>> {
+    if (data.photoFile) {
+      const formData = new FormData();
+      formData.append('name', data.name);
+      formData.append('email', data.email);
+      formData.append('role', data.role);
+      formData.append('photo', data.photoFile);
+      const response = await this.axiosInstance.put(`/users/${id}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return response.data;
+    }
+    const { photoFile, ...rest } = data;
+    return this.request<User>(`/users/${id}`, 'PUT', rest);
+  }
+
+  async updateProfile(data: { name?: string; bio?: string; phone?: string; photoFile?: File | null }): Promise<ApiResponse<{ user: User }>> {
+    const formData = new FormData();
+    if (data.name !== undefined) formData.append('name', data.name);
+    if (data.bio !== undefined) formData.append('bio', data.bio);
+    if (data.phone !== undefined) formData.append('phone', data.phone);
+    if (data.photoFile) formData.append('photo', data.photoFile);
+    const response = await this.axiosInstance.put('/users/me', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  }
+
+  async removeProfilePhoto(): Promise<ApiResponse<{ user: User }>> {
+    return this.request<{ user: User }>('/users/me/photo', 'DELETE');
   }
 
   async deleteUser(id: string): Promise<ApiResponse<null>> {

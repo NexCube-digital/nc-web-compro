@@ -19,6 +19,11 @@ export const UserManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [deleteLoading, setDeleteLoading] = useState<number | null>(null)
 
+  // Photo state for admin editing
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const [currentEditingPhoto, setCurrentEditingPhoto] = useState<string | undefined>(undefined)
+
   const showForm = location.pathname.includes('/formuser')
 
   const [formData, setFormData] = useState({
@@ -102,7 +107,7 @@ export const UserManagement: React.FC = () => {
       if (editingId) {
         // Tidak kirim password saat update — backend updateUser tidak menerimanya
         const { password, ...updatePayload } = formData
-        const res = await apiClient.updateUser(editingId.toString(), updatePayload)
+        const res = await apiClient.updateUser(editingId.toString(), { ...updatePayload, photoFile })
         if (res.success) {
           toast.success('User berhasil diupdate')
         } else {
@@ -123,6 +128,11 @@ export const UserManagement: React.FC = () => {
       // Reset form
       setEditingId(null)
       setFormData({ name: '', email: '', password: '', role: '' })
+      // Reset photo
+      setPhotoFile(null)
+      if (photoPreview && photoPreview.startsWith('blob:')) URL.revokeObjectURL(photoPreview)
+      setPhotoPreview(null)
+      setCurrentEditingPhoto(undefined)
     } catch (err: any) {
       const errorMessage = err.message || 'Terjadi kesalahan'
       setError(errorMessage)
@@ -140,6 +150,9 @@ export const UserManagement: React.FC = () => {
       password: '',          // tidak digunakan saat edit
       role: user.role ?? ''
     })
+    setCurrentEditingPhoto(user.photo)
+    setPhotoFile(null)
+    setPhotoPreview(null)
     navigate('/dashboard/users/formuser')
   }
 
@@ -169,6 +182,10 @@ export const UserManagement: React.FC = () => {
     navigate('/dashboard/users')
     setEditingId(null)
     setFormData({ name: '', email: '', password: '', role: '' })
+    setPhotoFile(null)
+    if (photoPreview && photoPreview.startsWith('blob:')) URL.revokeObjectURL(photoPreview)
+    setPhotoPreview(null)
+    setCurrentEditingPhoto(undefined)
   }
 
   const handleRefresh = () => {
@@ -259,7 +276,14 @@ export const UserManagement: React.FC = () => {
             formData={formData}
             loading={loading}
             editingId={editingId}
+            currentPhoto={currentEditingPhoto}
+            photoPreview={photoPreview}
             onChange={handleInputChange}
+            onPhotoChange={(file) => {
+              setPhotoFile(file)
+              if (photoPreview && photoPreview.startsWith('blob:')) URL.revokeObjectURL(photoPreview)
+              setPhotoPreview(file ? URL.createObjectURL(file) : null)
+            }}
             onSubmit={handleSubmit}
             onCancel={handleCancel}
           />
