@@ -54,10 +54,8 @@ export interface IUser {
   updatedAt?: string;
 }
 
-export type User = IUser;
-
 export interface AuthResponse {
-  user: User;
+  user: IUser;
   token: string;
 }
 
@@ -67,6 +65,7 @@ export interface User {
   email: string
   role: 'admin' | 'user'
   password?: string
+  isActive?: boolean
   createdAt?: string
   updatedAt?: string
 }
