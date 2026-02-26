@@ -15,17 +15,29 @@ import FinanceManagement from './pages/FinanceManagement'
 import ReportManagement from './pages/ReportManagement'
 import ProfilePage from './pages/ProfilePage'
 import TeamManagement from './pages/TeamManagement'
-
 import PackageManagement from './pages/PackageManagement'
 import PackageForm from './pages/PackageForm'
-
 import AffiliateManagement from './pages/AffiliateManagement'
 import AffiliateForm from './pages/AffiliateForm'
+import TestimonialManagement from './pages/TestimonialManagement'
 
 import apiClient, { User } from '../services/api'
 
 // Halaman yang TIDAK boleh di-scroll (fit to screen)
 const NO_SCROLL_TABS = ['overview']
+
+// Tab yang hanya boleh diakses admin
+const ADMIN_ONLY_TABS = [
+  'team',
+  'users',
+  'reports',
+  'clients',
+  'clients/formclient',
+  'invoices',
+  'invoices/forminvoice',
+  'finances',
+  'finances/formfinance',
+]
 
 export const Dashboard: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -44,6 +56,7 @@ export const Dashboard: React.FC = () => {
 
   const activeTab = getActiveTab()
   const isNoScroll = NO_SCROLL_TABS.includes(activeTab)
+  const isAdmin = user?.role === 'admin'
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -56,16 +69,6 @@ export const Dashboard: React.FC = () => {
 
       try {
         apiClient.setToken(token)
-        
-        const savedUser = localStorage.getItem('user')
-        if (savedUser) {
-          try {
-            const parsedUser = JSON.parse(savedUser)
-            setUser(parsedUser)
-          } catch (e) {
-            console.error('Failed to parse saved user:', e)
-          }
-        }
         
         const response = await apiClient.getProfile()
         if (response.success && response.data) {
@@ -92,6 +95,18 @@ export const Dashboard: React.FC = () => {
     checkAuth()
   }, [navigate])
 
+  // Redirect user biasa jika mencoba akses halaman admin
+  useEffect(() => {
+    if (!loading && user && user.role !== 'admin') {
+      const isRestricted = ADMIN_ONLY_TABS.some(
+        t => activeTab === t || activeTab.startsWith(t + '/')
+      )
+      if (isRestricted) {
+        navigate('/dashboard', { replace: true })
+      }
+    }
+  }, [activeTab, user, loading, navigate])
+
   // Animate content when activeTab changes
   useEffect(() => {
     if (mainRef.current && !loading) {
@@ -112,10 +127,21 @@ export const Dashboard: React.FC = () => {
     }
   }, [activeTab, loading])
 
+  // Helper: nama tampilan user (sesuaikan field dengan tipe User kamu)
+  const displayName = (user as any)?.name || (user as any)?.fullName || (user as any)?.username || ''
+
   const renderContent = () => {
-    switch(activeTab) {
+    // Guard: user biasa tidak bisa render halaman admin
+    const isRestricted = ADMIN_ONLY_TABS.some(
+      t => activeTab === t || activeTab.startsWith(t + '/')
+    )
+    if (!isAdmin && isRestricted) {
+      return <DashboardStats userRole={user?.role} userName={displayName} />
+    }
+
+    switch (activeTab) {
       case 'overview':
-        return <DashboardStats />
+        return <DashboardStats userRole={user?.role} userName={displayName} />
       case 'paket':
       case 'paket/website':
       case 'paket/desain':
@@ -140,6 +166,9 @@ export const Dashboard: React.FC = () => {
       case 'portfolios':
       case 'portfolios/formportfolio':
         return <PortfolioManagement />
+      case 'testimonials':
+      case 'testimonials/formtestimonial':
+        return <TestimonialManagement />
       case 'invoices':
       case 'invoices/forminvoice':
         return <InvoiceManagement />
@@ -151,7 +180,7 @@ export const Dashboard: React.FC = () => {
       case 'profile':
         return <ProfilePage />
       default:
-        return <DashboardStats />
+        return <DashboardStats userRole={user?.role} userName={displayName} />
     }
   }
 
@@ -175,10 +204,11 @@ export const Dashboard: React.FC = () => {
 
       <div className="flex h-screen overflow-hidden">
         {/* Sidebar */}
-        <DashboardSidebar 
-          open={sidebarOpen} 
+        <DashboardSidebar
+          open={sidebarOpen}
           setOpen={setSidebarOpen}
           activeTab={activeTab}
+          userRole={user.role}
         />
 
         {/* Main Content */}
@@ -186,13 +216,12 @@ export const Dashboard: React.FC = () => {
           className={`flex-1 flex flex-col ${isNoScroll ? 'overflow-hidden' : 'overflow-auto'}`}
           ref={contentRef}
         >
-          <DashboardHeader 
+          <DashboardHeader
             sidebarOpen={sidebarOpen}
             setSidebarOpen={setSidebarOpen}
             user={user}
           />
-          
-          
+
           <main
             className={`p-3 sm:p-4 lg:p-6 flex-1 ${isNoScroll ? 'overflow-hidden' : ''}`}
             ref={mainRef}

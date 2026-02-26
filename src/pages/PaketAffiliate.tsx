@@ -43,8 +43,7 @@ const basePaketCategories = [
     tierIds: ['student', 'bronze', 'silver', 'gold', 'platinum'],
     routePath: '/paket/website',
   },
-
-    {
+  {
     id: 'affiliate',
     title: 'Program Affiliate',
     description: 'Hasilkan komisi dengan merekomendasikan layanan NexCube Digital',
@@ -57,7 +56,6 @@ const basePaketCategories = [
     tierIds: [],
     routePath: '/paket/affiliate',
   },
-
   {
     id: 'undangan',
     title: 'Undangan Digital',
@@ -163,7 +161,7 @@ const businessSolutions = [
   },
 ];
 
-// ─── INTEGRATIONS ──────────────────────────────────────────────────────────────
+// ─── INTEGRATIONS (ikon statis — tetap ditampilkan bersama logo klien dari API) ─
 const integrations = [
   { icon: SiStripe, name: 'Stripe', color: 'text-purple-600' },
   { icon: SiPaypal, name: 'PayPal', color: 'text-blue-800' },
@@ -178,7 +176,6 @@ const integrations = [
   { icon: SiAmazon, name: 'AWS', color: 'text-yellow-500' },
   { icon: SiDocker, name: 'Docker', color: 'text-blue-500' },
 ];
-
 
 // ─── STATS ────────────────────────────────────────────────────────────────────
 const stats = [
@@ -197,7 +194,6 @@ const normalizeTypeForCategory = (backendType: string) => {
   if (t === 'desain' || t === 'desain-grafis') return 'desain';
   if (t === 'katalog' || t === 'menu-katalog') return 'katalog';
   if (t === 'affiliate') return 'affiliate';
-
   return t;
 };
 
@@ -216,6 +212,10 @@ export const PaketAffiliate: React.FC = () => {
   const [affiliateLoading, setAffiliateLoading] = useState(false);
   const [affiliateError, setAffiliateError] = useState<string | null>(null);
   const [paketData, setPaketData] = useState<any[]>([]);
+
+  // ── Client / partner state (diambil dari API getContacts) ─────────────────
+  const [clientCount, setClientCount] = useState<number>(30);
+  const [clientImages, setClientImages] = useState<number[]>([1, 2, 3, 4, 5]);
 
   const { addItem } = useCart();
 
@@ -266,7 +266,6 @@ export const PaketAffiliate: React.FC = () => {
           }));
           setPackages(normalized);
 
-          // Also populate paketData for affiliate filters
           const affiliatePkgs = normalized.filter((pkg: any) => pkg._normalizedType === 'affiliate');
           setPaketData(affiliatePkgs);
 
@@ -298,6 +297,26 @@ export const PaketAffiliate: React.FC = () => {
       }
     };
     fetchPackagesAndCategories();
+  }, []);
+
+  // ── Fetch client data dari API getContacts ──────────────
+  useEffect(() => {
+    const fetchClientData = async () => {
+      try {
+        const res = await apiClient.getContacts();
+        if (res && res.data && Array.isArray(res.data)) {
+          // Hanya ambil jumlah untuk badge — logo tetap 5 statis
+          const total = res.data.length;
+          setClientCount(total > 0 ? total : 30);
+        }
+      } catch (e) {
+        // Fallback ke nilai default
+        setClientCount(30);
+      }
+    };
+    fetchClientData();
+    // Logo SELALU 5 statis, tidak bergantung API — sama seperti halaman Home
+    setClientImages([1, 2, 3, 4, 5]);
   }, []);
 
   // ── Derived filter values ─────────────────────────────────────────────────
@@ -374,7 +393,6 @@ export const PaketAffiliate: React.FC = () => {
       );
     }
 
-    // Scroll listener for sidebar
     const handleScroll = () => {
       const packagesSection = document.getElementById('packages-solusi');
       if (packagesSection) {
@@ -383,7 +401,6 @@ export const PaketAffiliate: React.FC = () => {
       }
     };
 
-    // Intersection Observer to update active tab
     const observerOptions = { root: null, rootMargin: '-20% 0px -70% 0px', threshold: 0 };
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
       if (paketCategories.length === 0) return;
@@ -431,7 +448,6 @@ export const PaketAffiliate: React.FC = () => {
     const categoryPricing = getCategoryPackages(category.id);
     if (categoryPricing.length === 0 && !affiliateLoading && !affiliateError) return null;
 
-    // For affiliate category, use filtered data; otherwise use raw categoryPricing
     const displayPricing = category.id === 'affiliate' ? filteredPaketData : categoryPricing;
 
     return (
@@ -440,7 +456,6 @@ export const PaketAffiliate: React.FC = () => {
         {/* ── Affiliate-specific section header & filters ── */}
         {category.id === 'affiliate' && (
           <>
-            {/* Section header */}
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-full px-4 py-1.5 text-sm font-semibold text-blue-600 mb-4">
                 <HiTag className="w-4 h-4" /><span>Paket Layanan Affiliate</span>
@@ -454,7 +469,6 @@ export const PaketAffiliate: React.FC = () => {
               </p>
             </div>
 
-            {/* Filters */}
             {!affiliateLoading && !affiliateError && paketData.length > 0 && (
               <div className="flex flex-wrap items-center justify-center gap-3 mb-10">
                 <div className="flex items-center gap-1.5 bg-white/80 backdrop-blur-xl border border-slate-200 rounded-2xl px-2 py-1.5 shadow-md flex-wrap">
@@ -479,7 +493,6 @@ export const PaketAffiliate: React.FC = () => {
               </div>
             )}
 
-            {/* Loading */}
             {affiliateLoading && (
               <div className="flex flex-col items-center justify-center py-24 gap-4">
                 <div className="w-14 h-14 rounded-full border-4 border-blue-200 border-t-blue-600 animate-spin" />
@@ -487,7 +500,6 @@ export const PaketAffiliate: React.FC = () => {
               </div>
             )}
 
-            {/* Error */}
             {!affiliateLoading && affiliateError && (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <HiExclamationCircle className="w-16 h-16 text-red-400" />
@@ -501,7 +513,7 @@ export const PaketAffiliate: React.FC = () => {
           </>
         )}
 
-        {/* ── Default Category Header (for non-affiliate categories) ── */}
+        {/* ── Default Category Header ── */}
         {category.id !== 'affiliate' && (
           <div className="mb-12 text-center">
             <div className="inline-flex flex-col items-center">
@@ -514,10 +526,9 @@ export const PaketAffiliate: React.FC = () => {
           </div>
         )}
 
-        {/* ── Pricing Cards (skip if loading or error for affiliate) ── */}
+        {/* ── Pricing Cards ── */}
         {!(category.id === 'affiliate' && (affiliateLoading || affiliateError)) && (
           <div className="max-w-7xl mx-auto">
-            {/* First row: first 3 */}
             <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-6 sm:mb-8">
               {displayPricing.slice(0, 3).map((tier, index) => {
                 const title = tier.title || `Package ${index + 1}`;
@@ -568,7 +579,6 @@ export const PaketAffiliate: React.FC = () => {
               })}
             </div>
 
-            {/* Second row: remaining */}
             {displayPricing.length > 3 && (
               <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 max-w-4xl mx-auto">
                 {displayPricing.slice(3).map((tier, index) => {
@@ -621,7 +631,6 @@ export const PaketAffiliate: React.FC = () => {
               </div>
             )}
 
-            {/* Empty filtered state for affiliate */}
             {category.id === 'affiliate' && !affiliateLoading && !affiliateError && filteredPaketData.length === 0 && paketData.length > 0 && (
               <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
@@ -640,7 +649,6 @@ export const PaketAffiliate: React.FC = () => {
           </div>
         )}
 
-        {/* Separator */}
         <div className="mt-24 mb-8">
           <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
         </div>
@@ -653,11 +661,9 @@ export const PaketAffiliate: React.FC = () => {
     <>
       <Navbar />
 
-      {/* Fixed background orbs */}
       <div className="fixed top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-500/20 to-orange-400/20 rounded-full blur-3xl -translate-x-48 -translate-y-48 animate-pulse parallax-element pointer-events-none z-0"></div>
       <div className="fixed bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-orange-400/20 to-blue-500/20 rounded-full blur-3xl translate-x-48 translate-y-48 animate-pulse parallax-element pointer-events-none z-0" style={{ animationDelay: '2s' }}></div>
 
-      {/* Floating cubes */}
       <div className="fixed top-20 right-10 opacity-20 pointer-events-none z-0">
         <div className="floating-element">
           <svg viewBox="0 0 100 100" className="w-32 h-32">
@@ -681,12 +687,10 @@ export const PaketAffiliate: React.FC = () => {
         </div>
       </div>
 
-      {/* NEXCUBE watermark */}
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.04] pointer-events-none z-0 select-none">
         <div className="parallax-element text-[10rem] md:text-[15rem] font-black bg-gradient-to-r from-blue-600/30 to-orange-500/30 bg-clip-text text-transparent">NEXCUBE</div>
       </div>
 
-      {/* Ambient floating blobs */}
       <div ref={floatingElementsRef} className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-20 h-20 bg-blue-500/10 rounded-full blur-2xl"></div>
         <div className="absolute top-3/4 right-1/4 w-28 h-28 bg-orange-500/10 rounded-full blur-2xl"></div>
@@ -708,7 +712,6 @@ export const PaketAffiliate: React.FC = () => {
             backgroundSize: '50px 50px',
           }}></div>
 
-          {/* Rotating logo */}
           <div className="absolute top-20 right-10 opacity-10" ref={heroLogoRef}>
             <div className="w-64 h-64 md:w-96 md:h-96">
               <svg viewBox="0 0 200 200" className="w-full h-full">
@@ -736,7 +739,6 @@ export const PaketAffiliate: React.FC = () => {
 
           <div className="container relative z-10 px-4">
             <div className="max-w-5xl mx-auto text-center space-y-4">
-              {/* Badge */}
               <div ref={heroBadgeRef} className="inline-flex items-center gap-3 backdrop-blur-xl bg-white/70 border border-white/30 shadow-lg px-5 py-2 rounded-2xl">
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-orange-500 rounded-full blur-md opacity-75 animate-pulse"></div>
@@ -747,7 +749,6 @@ export const PaketAffiliate: React.FC = () => {
                 </span>
               </div>
 
-              {/* Title */}
               <h1 ref={heroTitleRef} className="text-2xl sm:text-3xl md:text-5xl font-black leading-[1.05] tracking-tight overflow-hidden">
                 <span className="block hero-word bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 bg-clip-text text-transparent drop-shadow-lg">
                   Solusi Terbaik
@@ -762,12 +763,11 @@ export const PaketAffiliate: React.FC = () => {
                 <span className="font-bold text-blue-600">Website</span>,{' '}
                 <span className="font-bold text-emerald-600">Undangan Digital</span>,{' '}
                 <span className="font-bold text-rose-600">Desain Grafis</span>, hingga{' '}
-                <span className="font-bold text-orange-600">Katalog Digital {' '}
-                <span className="font-bold text-blue-600">Dan Affiliate</span>{' '}  
+                <span className="font-bold text-orange-600">Katalog Digital{' '}
+                  <span className="font-bold text-blue-600">Dan Affiliate</span>{' '}
                 </span> — semua tersedia.
               </p>
 
-              {/* Stats */}
               <div ref={heroStatsRef} className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto">
                 {stats.map((stat, i) => {
                   const Icon = stat.icon;
@@ -788,7 +788,6 @@ export const PaketAffiliate: React.FC = () => {
                 })}
               </div>
 
-              {/* CTAs */}
               <div ref={heroCTARef} className="flex flex-wrap gap-3 justify-center mt-4">
                 <button
                   onClick={() => {
@@ -818,7 +817,6 @@ export const PaketAffiliate: React.FC = () => {
 
         {/* ════════ PACKAGES + SIDEBAR ════════ */}
         <div className="w-full py-16 relative" id="packages-solusi">
-          {/* Dots pattern */}
           <div className="absolute inset-0 opacity-[0.02] pointer-events-none z-0">
             <div className="absolute inset-0" style={{
               backgroundImage: `radial-gradient(circle, #0066FF 2px, transparent 2px)`,
@@ -830,7 +828,6 @@ export const PaketAffiliate: React.FC = () => {
           <aside className={`hidden lg:block fixed left-8 top-24 w-80 z-30 transition-all duration-500 ${showSidebar ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'}`}>
             <div className="sticky top-24">
               <div className="backdrop-blur-xl bg-white/90 rounded-3xl shadow-2xl overflow-hidden border border-white/50">
-                {/* Header */}
                 <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-orange-500 to-blue-600 p-6">
                   <div className="absolute inset-0 bg-black/20"></div>
                   <div className="relative z-10 flex items-center gap-3">
@@ -846,7 +843,6 @@ export const PaketAffiliate: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Nav items */}
                 <nav className="px-4 py-6 space-y-1.5">
                   {paketCategories.map((paket) => {
                     const packageCount = paket.packageCount || paket.tierIds.length;
@@ -886,7 +882,6 @@ export const PaketAffiliate: React.FC = () => {
                   })}
                 </nav>
 
-                {/* Footer CTA */}
                 <div className="mx-4 mb-4 p-4 rounded-2xl bg-gradient-to-br from-blue-500/10 to-orange-500/10 border border-blue-500/20 backdrop-blur-sm">
                   <div className="flex items-center gap-3 mb-3">
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-orange-500 flex items-center justify-center shadow-lg">
@@ -917,7 +912,6 @@ export const PaketAffiliate: React.FC = () => {
           {/* ── MAIN CONTENT ── */}
           <div className="max-w-[1600px] mx-auto px-4 lg:pl-96 relative z-10">
             <main className="w-full">
-              {/* All pricing sections from API */}
               <div className={`space-y-0 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-300'}`}>
                 {paketCategories.length > 0
                   ? paketCategories.map((cat) => renderPricingSection(cat))
@@ -971,7 +965,6 @@ export const PaketAffiliate: React.FC = () => {
                           </div>
                         ))}
                       </div>
-                      {/* Relevant categories */}
                       <div className="relative flex flex-wrap gap-2 mb-4">
                         {sol.relevantCategories.map((catId) => {
                           const cat = paketCategories.find((c) => c.id === catId);
@@ -1004,29 +997,35 @@ export const PaketAffiliate: React.FC = () => {
                 </div>
               </section>
 
-              {/* ════════ INTEGRATIONS ════════ */}
+              {/* ════════ INTEGRATIONS — data klien dari API getContacts ════════ */}
               <section className="mb-16">
                 <div className="text-center mb-12">
                   <h2 className="text-3xl md:text-4xl font-black mb-4">
-                    <span className="bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Terintegrasi dengan </span>
-                    <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">50+ Platform</span>
+                    <span className="bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">Terintegrasi Dengan </span>
+                    <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Berbagai Platform</span>
                   </h2>
                   <p className="text-lg text-slate-600 max-w-2xl mx-auto">
                     Kami terintegrasi dengan berbagai platform terkemuka untuk memberikan solusi terbaik.
                   </p>
                 </div>
+
+                {/* Logo klien — gambar statis, jumlah dinamis dari API */}
                 <div ref={integrationsRef} className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                  {integrations.map((Int, i) => {
-                    const Icon = Int.icon;
-                    return (
-                      <div key={i} className="int-card group bg-white/60 backdrop-blur-sm rounded-xl p-4 hover:bg-white hover:shadow-xl transition-all duration-300 border border-slate-200/50 text-center hover:-translate-y-1">
-                        <div className="flex justify-center mb-2">
-                          <Icon className={`w-8 h-8 ${Int.color} group-hover:scale-125 transition-transform duration-300`} />
-                        </div>
-                        <span className="text-xs text-slate-600 font-medium">{Int.name}</span>
+                  {clientImages.map((item, i) => (
+                    <div
+                      key={i}
+                      className="int-card group bg-white/60 backdrop-blur-sm rounded-xl p-4 hover:bg-white hover:shadow-xl transition-all duration-300 border border-slate-200/50 text-center hover:-translate-y-1"
+                      style={{ animationDelay: `${i * 0.05}s` }}
+                    >
+                      <div className="flex items-center justify-center h-12">
+                        <img
+                          src={`/images/clients/client-${item}.png`}
+                          alt={`Client Logo ${item}`}
+                          className="h-8 md:h-10 w-auto object-contain opacity-60 group-hover:opacity-100 transition-opacity duration-300"
+                        />
                       </div>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </div>
               </section>
 

@@ -7,191 +7,154 @@ interface SidebarProps {
   open: boolean
   setOpen: (open: boolean) => void
   activeTab: string
+  userRole?: 'admin' | 'user'  // ← tambah prop role
 }
 
 export const DashboardSidebar: React.FC<SidebarProps> = ({ 
   open, 
   setOpen, 
-  activeTab
+  activeTab,
+  userRole = 'user'  // default user agar aman
 }) => {
   const navigate = useNavigate()
   const { theme } = useTheme()
 
-  const menuItems = [
-    {
-      id: 'overview',
-      label: 'Overview',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-3m0 0l7-4 7 4M5 9v10a1 1 0 001 1h12a1 1 0 001-1V9m-9 16l4-4m0 0l4 4m-4-4V5" />
-        </svg>
-      )
-    },
+  const isAdmin = userRole === 'admin'
 
-    {
-      id: 'team',
-      label: 'Tim',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11c1.657 0 3-1.343 3-3S17.657 5 16 5s-3 1.343-3 3 1.343 3 3 3zM8 11c1.657 0 3-1.343 3-3S9.657 5 8 5 5 6.343 5 8s1.343 3 3 3zM8 13c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.98.05 1.16.84 1.98 1.98 1.98 3.45V19h6v-2.5C23 14.17 18.33 13 16 13z" />
-        </svg>
-      )
-    },
+  // ===== ICONS =====
+  const icons = {
+    overview: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 22V12h6v10" />
+      </svg>
+    ),
+    team: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    ),
+    users: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+    ),
+    reports: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+    ),
+    clients: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+      </svg>
+    ),
+    invoices: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+    ),
+    portfolios: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+    testimonials: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+      </svg>
+    ),
+    finances: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    ),
+    paket: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+      </svg>
+    ),
+    website: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9" />
+      </svg>
+    ),
+    desain: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+      </svg>
+    ),
+    event: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+    katalog: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+      </svg>
+    ),
+    affiliate: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+      </svg>
+    ),
+  }
 
-
-    {
-      id: 'clients',
-      label: 'Klien',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3a6 6 0 0 1 6-6h6a6 6 0 0 1 6 6M21 21h-2a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1z" />
-        </svg>
-      )
-    },
-    {
-      id: 'invoices',
-      label: 'Invoice',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      )
-    },
-
-    {
-      id: 'portfolios',
-      label: 'Portfolio',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      )
-    },
-
-    {
-      id: 'users',
-      label: 'User',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11c1.657 0 3-1.343 3-3S17.657 5 16 5s-3 1.343-3 3 1.343 3 3 3zM8 11c1.657 0 3-1.343 3-3S9.657 5 8 5 5 6.343 5 8s1.343 3 3 3zM8 13c-2.33 0-7 1.17-7 3.5V19h14v-2.5C15 14.17 10.33 13 8 13zm8 0c-.29 0-.62.02-.98.05 1.16.84 1.98 1.98 1.98 3.45V19h6v-2.5C23 14.17 18.33 13 16 13z" />
-        </svg>
-      )
-    },
-
-    {
-      id: 'finances',
-      label: 'Keuangan',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      )
-    },
-    {
-      id: 'reports',
-      label: 'Laporan',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-      )
-    }
-  ]
-
-  // Split menu into Admin Management and Content Management
+  // ===== MENU GROUPS =====
+  // Admin only
   const adminItems = [
-    menuItems[1], // team
-    menuItems[5], // reports
+    { id: 'team',    label: 'Tim',     icon: icons.team    },
+    { id: 'users',   label: 'User',    icon: icons.users   },
+    { id: 'reports', label: 'Laporan', icon: icons.reports  },
   ]
 
-  const contentItems = [
-    menuItems[2], // clients
-    menuItems[3], // invoices
-    menuItems[4], // finances
+  // Admin only (konten sensitif)
+  const contentAdminItems = [
+    { id: 'clients',   label: 'Klien',   icon: icons.clients   },
+    { id: 'invoices',  label: 'Invoice', icon: icons.invoices  },
+    { id: 'finances',  label: 'Keuangan', icon: icons.finances },
   ]
 
+  // Tersedia untuk semua (termasuk user)
+  const contentSharedItems = [
+    { id: 'portfolios',   label: 'Portfolio',   icon: icons.portfolios   },
+    { id: 'testimonials', label: 'Testimonial', icon: icons.testimonials },
+  ]
+
+  // Sub-paket — tersedia semua role
   const packageItems = [
-    {
-      id: 'paket/website',
-      label: 'Website',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2l3 6 6 .5-4.5 4 1 6L12 16l-5.5 3.5 1-6L3 8.5 9 8 12 2z" />
-        </svg>
-      )
-    },
-
-    {
-      id: 'paket/desain',
-      label: 'Desain Grafis',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21l18-18M7 7l10 10" />
-        </svg>
-      )
-    },
-    {
-      id: 'paket/event',
-      label: 'Event',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h16v11a2 2 0 01-2 2H6a2 2 0 01-2-2V7z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11a3 3 0 100 6 3 3 0 000-6z" />
-        </svg>
-      )
-    },
-    {
-      id: 'paket/katalog',
-      label: 'Katalog Digital',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-      )
-    }
+    { id: 'paket/website', label: 'Website',         icon: icons.website  },
+    { id: 'paket/desain',  label: 'Desain Grafis',   icon: icons.desain   },
+    { id: 'paket/event',   label: 'Event',           icon: icons.event    },
+    { id: 'paket/katalog', label: 'Katalog Digital', icon: icons.katalog  },
   ]
 
   const affiliateItems = [
-  {
-    id: 'paket/affiliate',
-    label: 'Paket Affiliate',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-          d="M12 2l3 6 6 .5-4.5 4 1 6L12 16l-5.5 3.5 1-6L3 8.5 9 8 12 2z" />
-      </svg>
-    )
-  }
-]
+    { id: 'paket/affiliate', label: 'Paket Affiliate', icon: icons.affiliate },
+  ]
 
-  // ✅ PERBAIKAN: State terpisah untuk masing-masing dropdown
+  // ===== STATE =====
   const [pkgOpen, setPkgOpen] = useState(true)
   const [affiliateOpen, setAffiliateOpen] = useState(true)
 
-  // ✅ PERBAIKAN: Kondisi aktif terpisah
-  const isPaketActive = activeTab === 'paket' ||
-    (activeTab?.startsWith('paket/') && activeTab !== 'paket/affiliate' && !activeTab?.startsWith('paket/formaffiliate'))
+  const isPaketActive = activeTab?.startsWith('paket/') && activeTab !== 'paket/affiliate'
+  const isAffiliateActive = activeTab === 'paket/affiliate'
 
-  const isAffiliateActive = activeTab === 'paket/affiliate' || activeTab === 'paket/formaffiliate'
-
-  const handleLogout = () => {
-    // Clear all authentication data
-    localStorage.removeItem('authToken')
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    localStorage.removeItem('savedEmail')
-    localStorage.removeItem('savedPassword')
-    
-    // Clear apiClient token
-    apiClient.setToken(null)
-    
-    // Redirect to login
-    navigate('/login')
+  const handleNavigate = (id: string) => {
+    const path = id === 'overview' ? '/dashboard' : `/dashboard/${id}`
+    navigate(path)
+    setOpen(false)
   }
+
+  const btnActive = 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
+  const btnDefault = 'text-slate-400 hover:text-white hover:bg-white/5 hover:scale-[1.01] hover:translate-x-0.5'
+  const subBtnActive = 'bg-gradient-to-r from-blue-600/90 via-blue-500/90 to-indigo-600/90 text-white shadow-md shadow-blue-500/20 scale-[1.01]'
+  const subBtnDefault = 'text-slate-500 hover:text-white hover:bg-white/5 hover:scale-[1.01] hover:translate-x-1'
 
   return (
     <>
-      {/* Sidebar Overlay - Mobile */}
+      {/* Mobile Overlay */}
       {open && (
         <div
           className="fixed inset-0 bg-black/50 lg:hidden z-30"
@@ -200,125 +163,113 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
       )}
 
       {/* Sidebar */}
-      <div className={`fixed lg:static inset-y-0 left-0 z-40 ${theme === 'compact' ? 'w-52' : 'w-60'} ${theme === 'minimal' ? 'bg-slate-950' : 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950'} text-white transform transition-all duration-300 ease-out shadow-2xl ${
+      <div className={`fixed lg:static inset-y-0 left-0 z-40 ${theme === 'compact' ? 'w-52' : 'w-60'} ${
+        theme === 'minimal' ? 'bg-slate-950' : 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950'
+      } text-white transform transition-all duration-300 ease-out shadow-2xl ${
         open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
         <div className="h-full flex flex-col bg-gradient-to-br from-slate-950/50 to-transparent backdrop-blur-xl">
+
           {/* Logo */}
-          <div className="px-4 py-5 border-b border-white/5 flex-shrink-0 backdrop-blur-sm">
+          <div className="px-4 py-5 border-b border-white/5 flex-shrink-0">
             <Link to="/" className="flex items-center gap-2.5 group">
-              <img 
-                src="/images/NexCube-full.png" 
-                alt="NexCube" 
+              <img
+                src="/images/NexCube-full.png"
+                alt="NexCube"
                 className="h-8 w-auto transition-transform duration-300 group-hover:scale-105"
               />
-              <span className="font-bold text-base tracking-tight bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">NexCube</span>
+              <span className="font-bold text-base tracking-tight bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+                NexCube
+              </span>
             </Link>
           </div>
 
-          {/* Menu Items with Custom Scrollbar */}
+          {/* Role Badge */}
+          <div className="px-4 pt-3 pb-1 flex-shrink-0">
+            <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full ${
+              isAdmin
+                ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
+                : 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30'
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${isAdmin ? 'bg-blue-400' : 'bg-emerald-400'}`} />
+              {isAdmin ? 'Administrator' : 'User'}
+            </span>
+          </div>
+
+          {/* Nav */}
           <nav className="flex-1 px-3 py-4 space-y-3 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-700/50 scrollbar-track-transparent hover:scrollbar-thumb-slate-600 scroll-smooth">
-            {/* Overview */}
-            <div>
-              <button
-                onClick={() => {
-                  navigate('/dashboard')
-                  setOpen(false)
-                }}
-                className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
-                  (activeTab === '' || activeTab === 'overview')
-                    ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
-                    : 'text-slate-400 hover:text-white hover:bg-white/5 hover:scale-[1.01]'
-                }`}
-              >
-                <div className="transition-transform duration-300 group-hover:scale-110">
-                  {menuItems[0].icon}
+
+            {/* Overview — semua role */}
+            <button
+              onClick={() => handleNavigate('overview')}
+              className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
+                activeTab === '' || activeTab === 'overview' ? btnActive : btnDefault
+              }`}
+            >
+              <div className="transition-transform duration-300 group-hover:scale-110">{icons.overview}</div>
+              <span className="font-medium text-sm">Overview</span>
+            </button>
+
+            {/* ── ADMIN ONLY: Seksi Admin ── */}
+            {isAdmin && (
+              <div>
+                <SectionLabel label="Admin" />
+                <div className="space-y-1">
+                  {adminItems.map(item => (
+                    <NavButton
+                      key={item.id}
+                      item={item}
+                      active={activeTab === item.id}
+                      activeClass={btnActive}
+                      defaultClass={btnDefault}
+                      onClick={() => handleNavigate(item.id)}
+                    />
+                  ))}
                 </div>
-                <span className="font-medium text-sm">{menuItems[0].label}</span>
-              </button>
-            </div>
-
-            {/* Admin Management */}
-            <div>
-              <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider px-3 mb-2 mt-1 flex items-center gap-2">
-                <div className="h-px flex-1 bg-gradient-to-r from-slate-700 to-transparent"></div>
-                <span>Admin</span>
               </div>
+            )}
+
+            {/* ── KONTEN ── */}
+            <div>
+              <SectionLabel label="Konten" />
               <div className="space-y-1">
-                {adminItems.map((item) => (
-                  <button
+                {/* Admin-only content items */}
+                {isAdmin && contentAdminItems.map(item => (
+                  <NavButton
                     key={item.id}
-                    onClick={() => {
-                      const path = item.id === 'overview' ? '/dashboard' : `/dashboard/${item.id}`
-                      navigate(path)
-                      setOpen(false)
-                    }}
-                    className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
-                      activeTab === item.id
-                        ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
-                        : 'text-slate-400 hover:text-white hover:bg-white/5 hover:scale-[1.01] hover:translate-x-0.5'
-                    }`}
-                  >
-                    <div className="transition-transform duration-300 group-hover:scale-110">
-                      {item.icon}
-                    </div>
-                    <span className="font-medium text-sm">{item.label}</span>
-                  </button>
+                    item={item}
+                    active={activeTab === item.id}
+                    activeClass={btnActive}
+                    defaultClass={btnDefault}
+                    onClick={() => handleNavigate(item.id)}
+                  />
+                ))}
+                {/* Shared content items (semua role) */}
+                {contentSharedItems.map(item => (
+                  <NavButton
+                    key={item.id}
+                    item={item}
+                    active={activeTab === item.id}
+                    activeClass={btnActive}
+                    defaultClass={btnDefault}
+                    onClick={() => handleNavigate(item.id)}
+                  />
                 ))}
               </div>
             </div>
 
-            {/* Content Management */}
+            {/* ── PAKET — semua role ── */}
             <div>
-              <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider px-3 mb-2 mt-1 flex items-center gap-2">
-                <div className="h-px flex-1 bg-gradient-to-r from-slate-700 to-transparent"></div>
-                <span>Konten</span>
-              </div>
-              <div className="space-y-1">
-                {contentItems.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      const path = item.id === 'overview' ? '/dashboard' : `/dashboard/${item.id}`
-                      navigate(path)
-                      setOpen(false)
-                    }}
-                    className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
-                      activeTab === item.id
-                        ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
-                        : 'text-slate-400 hover:text-white hover:bg-white/5 hover:scale-[1.01] hover:translate-x-0.5'
-                    }`}
-                  >
-                    <div className="transition-transform duration-300 group-hover:scale-110">
-                      {item.icon}
-                    </div>
-                    <span className="font-medium text-sm">{item.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Package Management */}
-            <div>
-              <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider px-3 mb-2 mt-1 flex items-center gap-2">
-                <div className="h-px flex-1 bg-gradient-to-r from-slate-700 to-transparent"></div>
-                <span>Paket</span>
-              </div>
+              <SectionLabel label="Paket" />
               <div className="space-y-1">
                 <button
                   onClick={() => setPkgOpen(!pkgOpen)}
                   className={`group w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
-                    isPaketActive
-                      ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
-                      : 'text-slate-400 hover:text-white hover:bg-white/5 hover:scale-[1.01]'
+                    isPaketActive ? btnActive : btnDefault
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="transition-transform duration-300 group-hover:scale-110">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                      </svg>
-                    </div>
+                    <div className="transition-transform duration-300 group-hover:scale-110">{icons.paket}</div>
                     <span className="font-medium text-sm">Paket</span>
                   </div>
                   <svg className={`w-4 h-4 transition-transform duration-300 ${pkgOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -328,54 +279,35 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
 
                 {pkgOpen && (
                   <div className="pl-4 space-y-1 mt-1 border-l-2 border-slate-800/50 ml-3">
-                    {packageItems.map((item) => (
-                      <button
+                    {packageItems.map(item => (
+                      <NavButton
                         key={item.id}
-                        onClick={() => {
-                          const path = item.id === 'overview' ? '/dashboard' : `/dashboard/${item.id}`
-                          navigate(path)
-                          setOpen(false)
-                        }}
-                        className={`group w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-300 ${
-                          activeTab === item.id
-                            ? 'bg-gradient-to-r from-blue-600/90 via-blue-500/90 to-indigo-600/90 text-white shadow-md shadow-blue-500/20 scale-[1.01]'
-                            : 'text-slate-500 hover:text-white hover:bg-white/5 hover:scale-[1.01] hover:translate-x-1'
-                        }`}
-                      >
-                        <div className="transition-transform duration-300 group-hover:scale-110 w-4 h-4 flex items-center justify-center">
-                          {item.icon}
-                        </div>
-                        <span className="font-medium text-xs">{item.label}</span>
-                      </button>
+                        item={item}
+                        active={activeTab === item.id}
+                        activeClass={subBtnActive}
+                        defaultClass={subBtnDefault}
+                        onClick={() => handleNavigate(item.id)}
+                        small
+                      />
                     ))}
                   </div>
                 )}
               </div>
             </div>
-            
-            {/* Affiliate Paket */}
+
+            {/* ── AFFILIATE — semua role ── */}
             <div>
-              <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider px-3 mb-2 mt-1 flex items-center gap-2">
-                <div className="h-px flex-1 bg-gradient-to-r from-slate-700 to-transparent"></div>
-                <span>Paket Affiliate</span>
-              </div>
+              <SectionLabel label="Affiliate" />
               <div className="space-y-1">
-                {/* ✅ PERBAIKAN: Pakai affiliateOpen & isAffiliateActive, bukan pkgOpen & isPaketActive */}
                 <button
                   onClick={() => setAffiliateOpen(!affiliateOpen)}
                   className={`group w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
-                    isAffiliateActive
-                      ? 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
-                      : 'text-slate-400 hover:text-white hover:bg-white/5 hover:scale-[1.01]'
+                    isAffiliateActive ? btnActive : btnDefault
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="transition-transform duration-300 group-hover:scale-110">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                      </svg>
-                    </div>
-                    <span className="font-medium text-sm">Paket 1</span>
+                    <div className="transition-transform duration-300 group-hover:scale-110">{icons.affiliate}</div>
+                    <span className="font-medium text-sm">Affiliate</span>
                   </div>
                   <svg className={`w-4 h-4 transition-transform duration-300 ${affiliateOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -384,42 +316,63 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
 
                 {affiliateOpen && (
                   <div className="pl-4 space-y-1 mt-1 border-l-2 border-slate-800/50 ml-3">
-                    {affiliateItems.map((item) => (
-                      <button
+                    {affiliateItems.map(item => (
+                      <NavButton
                         key={item.id}
-                        onClick={() => {
-                          const path = item.id === 'overview' ? '/dashboard' : `/dashboard/${item.id}`
-                          navigate(path)
-                          setOpen(false)
-                        }}
-                        className={`group w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-300 ${
-                          activeTab === item.id
-                            ? 'bg-gradient-to-r from-blue-600/90 via-blue-500/90 to-indigo-600/90 text-white shadow-md shadow-blue-500/20 scale-[1.01]'
-                            : 'text-slate-500 hover:text-white hover:bg-white/5 hover:scale-[1.01] hover:translate-x-1'
-                        }`}
-                      >
-                        <div className="transition-transform duration-300 group-hover:scale-110 w-4 h-4 flex items-center justify-center">
-                          {item.icon}
-                        </div>
-                        <span className="font-medium text-xs">{item.label}</span>
-                      </button>
+                        item={item}
+                        active={activeTab === item.id}
+                        activeClass={subBtnActive}
+                        defaultClass={subBtnDefault}
+                        onClick={() => handleNavigate(item.id)}
+                        small
+                      />
                     ))}
                   </div>
                 )}
               </div>
             </div>
+
           </nav>
-          
-          {/* Footer - Fixed at bottom */}
-          <div className="px-4 py-3 border-t border-white/5 text-center flex-shrink-0 backdrop-blur-sm">
-            <p className="text-slate-500 text-[10px] font-medium tracking-wide">
-              © 2025 NexCube
-            </p>
+
+          {/* Footer */}
+          <div className="px-4 py-3 border-t border-white/5 text-center flex-shrink-0">
+            <p className="text-slate-500 text-[10px] font-medium tracking-wide">© 2025 NexCube</p>
           </div>
+
         </div>
       </div>
     </>
   )
 }
+
+// ===== SUB-COMPONENTS =====
+
+const SectionLabel: React.FC<{ label: string }> = ({ label }) => (
+  <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider px-3 mb-2 mt-1 flex items-center gap-2">
+    <div className="h-px flex-1 bg-gradient-to-r from-slate-700 to-transparent"></div>
+    <span>{label}</span>
+  </div>
+)
+
+interface NavButtonProps {
+  item: { id: string; label: string; icon: React.ReactNode }
+  active: boolean
+  activeClass: string
+  defaultClass: string
+  onClick: () => void
+  small?: boolean
+}
+
+const NavButton: React.FC<NavButtonProps> = ({ item, active, activeClass, defaultClass, onClick, small }) => (
+  <button
+    onClick={onClick}
+    className={`group w-full flex items-center gap-3 px-3 ${small ? 'py-2' : 'py-2.5'} rounded-lg transition-all duration-300 ${active ? activeClass : defaultClass}`}
+  >
+    <div className={`transition-transform duration-300 group-hover:scale-110 ${small ? 'w-4 h-4 flex items-center justify-center' : ''}`}>
+      {item.icon}
+    </div>
+    <span className={`font-medium ${small ? 'text-xs' : 'text-sm'}`}>{item.label}</span>
+  </button>
+)
 
 export default DashboardSidebar

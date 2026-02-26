@@ -1,9 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import gsap from 'gsap'
-import apiClient, { Invoice, Finance } from '../../services/api'
+import apiClient from '../../services/api'
 import { useTheme } from '../ThemeContext'
 import { StaggerContainer, CountUp } from '../../components/PageTransition'
+
+// Lucide React Icons
+import {
+  LayoutDashboard,
+  Images,
+  MessageSquareQuote,
+  Package,
+  Link2,
+  FileText,
+  TrendingUp,
+  ArrowRight,
+  Lightbulb,
+  Wallet,
+  Receipt,
+  ArrowDownLeft,
+  ArrowUpRight,
+  Clock,
+} from 'lucide-react'
+
+// React Icons
+import { RiMoneyDollarCircleLine } from 'react-icons/ri'
+import { HiOutlineDocumentReport } from 'react-icons/hi'
+import { MdOutlineAccountBalanceWallet } from 'react-icons/md'
 
 interface InvoiceData {
   id: number
@@ -16,9 +39,159 @@ interface InvoiceData {
   dueDate: string
 }
 
-export const DashboardStats: React.FC = () => {
+// ─── Welcome Page untuk role 'user' ───────────────────────────────────────────
+const UserWelcomePage: React.FC<{ userName?: string }> = ({ userName }) => {
+  const firstName = userName?.split(' ')[0] || 'Kamu'
+  const containerRef = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
+
+  const hour = new Date().getHours()
+  const greeting =
+    hour < 11 ? 'Selamat Pagi' :
+    hour < 15 ? 'Selamat Siang' :
+    hour < 18 ? 'Selamat Sore' : 'Selamat Malam'
+
+  const greetingEmoji =
+    hour < 11 ? '🌅' : hour < 15 ? '☀️' : hour < 18 ? '🌇' : '🌙'
+
+  const tips = [
+    {
+      icon: <Images className="w-5 h-5 text-blue-600" />,
+      bg: 'bg-blue-50 group-hover:bg-blue-100',
+      title: 'Kelola Portfolio',
+      desc: 'Tambahkan karya terbaik kamu ke halaman Portfolio untuk dipamerkan ke klien.',
+      tab: 'portfolios',
+      accent: 'group-hover:text-blue-700',
+      arrow: 'group-hover:text-blue-400',
+    },
+    {
+      icon: <MessageSquareQuote className="w-5 h-5 text-violet-600" />,
+      bg: 'bg-violet-50 group-hover:bg-violet-100',
+      title: 'Testimoni Klien',
+      desc: 'Minta klien memberikan ulasan positif dan tampilkan di halaman Testimonial.',
+      tab: 'testimonials',
+      accent: 'group-hover:text-violet-700',
+      arrow: 'group-hover:text-violet-400',
+    },
+    {
+      icon: <Package className="w-5 h-5 text-emerald-600" />,
+      bg: 'bg-emerald-50 group-hover:bg-emerald-100',
+      title: 'Lihat Paket',
+      desc: 'Eksplorasi paket layanan yang tersedia — website, desain, event, dan katalog.',
+      tab: 'paket/website',
+      accent: 'group-hover:text-emerald-700',
+      arrow: 'group-hover:text-emerald-400',
+    },
+    {
+      icon: <Link2 className="w-5 h-5 text-orange-600" />,
+      bg: 'bg-orange-50 group-hover:bg-orange-100',
+      title: 'Program Affiliate',
+      desc: 'Daftarkan diri ke program affiliate dan raih komisi dari setiap referral.',
+      tab: 'paket/affiliate',
+      accent: 'group-hover:text-orange-700',
+      arrow: 'group-hover:text-orange-400',
+    },
+  ]
+
+  useEffect(() => {
+    if (!containerRef.current) return
+    const items = containerRef.current.querySelectorAll('.animate-item')
+    gsap.fromTo(
+      items,
+      { opacity: 0, y: 24 },
+      { opacity: 1, y: 0, duration: 0.55, stagger: 0.1, ease: 'power3.out', delay: 0.1 }
+    )
+  }, [])
+
+  return (
+    <div ref={containerRef} className="min-h-[80vh] flex flex-col gap-6 sm:gap-8 px-2">
+
+      {/* Hero greeting */}
+      <div className="animate-item relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-900 p-6 sm:p-10 shadow-2xl">
+        <div className="pointer-events-none absolute -top-16 -right-16 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-10 -left-10 h-48 w-48 rounded-full bg-indigo-600/20 blur-3xl" />
+
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <p className="text-blue-300 text-sm font-semibold tracking-widest uppercase mb-2">
+              {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight">
+              {greeting}, <span className="text-blue-300">{firstName}!</span> {greetingEmoji}
+            </h1>
+            <p className="mt-3 text-slate-300 text-sm sm:text-base max-w-lg leading-relaxed">
+              Selamat datang di dashboard <span className="text-white font-semibold">NexCube Digital</span>.
+              Kamu bisa mengelola portfolio, testimoni, paket layanan, dan program affiliate dari sini.
+            </p>
+          </div>
+
+          <div className="flex-shrink-0 hidden sm:flex items-center justify-center h-24 w-24 rounded-2xl bg-white/10 border border-white/20 backdrop-blur shadow-xl">
+            <LayoutDashboard className="w-10 h-10 text-blue-300" />
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Access Cards */}
+      <div className="animate-item">
+        <h2 className="text-base sm:text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
+          <span className="inline-block h-1 w-5 rounded-full bg-blue-500" />
+          Akses Cepat
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+          {tips.map((item, i) => (
+            <button
+              key={i}
+              onClick={() => navigate(`/dashboard/${item.tab}`)}
+              className="group text-left flex items-start gap-4 p-4 sm:p-5 rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-lg hover:border-slate-200 hover:-translate-y-0.5 transition-all duration-200"
+            >
+              <div className={`flex-shrink-0 flex items-center justify-center h-11 w-11 rounded-xl ${item.bg} transition-colors`}>
+                {item.icon}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={`font-bold text-slate-800 text-sm ${item.accent} transition-colors`}>{item.title}</p>
+                <p className="text-slate-500 text-xs mt-1 leading-relaxed">{item.desc}</p>
+              </div>
+              <ArrowRight className={`w-4 h-4 text-slate-300 ${item.arrow} ml-auto mt-0.5 flex-shrink-0 transition-colors`} />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Info strip */}
+      <div className="animate-item flex flex-col sm:flex-row items-start sm:items-center gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200">
+        <div className="flex-shrink-0 flex items-center justify-center h-10 w-10 rounded-xl bg-amber-100">
+          <Lightbulb className="w-5 h-5 text-amber-600" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold text-amber-800">Tips untuk kamu</p>
+          <p className="text-xs text-amber-700 mt-0.5 leading-relaxed">
+            Lengkapi portfolio kamu dengan proyek terbaru agar klien dapat melihat karya-karya terbaik yang telah kamu buat.
+            Semakin lengkap portfolio, semakin besar peluang mendapatkan proyek baru!
+          </p>
+        </div>
+      </div>
+
+      <p className="animate-item text-center text-xs text-slate-400 pb-2">
+        Butuh akses lebih? Hubungi administrator NexCube Digital.
+      </p>
+    </div>
+  )
+}
+
+// ─── Main DashboardStats ───────────────────────────────────────────────────────
+interface DashboardStatsProps {
+  userRole?: 'admin' | 'user'
+  userName?: string
+}
+
+export const DashboardStats: React.FC<DashboardStatsProps> = ({ userRole = 'admin', userName }) => {
   const navigate = useNavigate()
   const { theme } = useTheme()
+
+  if (userRole !== 'admin') {
+    return <UserWelcomePage userName={userName} />
+  }
+
   const [stats, setStats] = useState({
     totalClients: 0,
     totalInvoices: 0,
@@ -43,32 +216,24 @@ export const DashboardStats: React.FC = () => {
       try {
         setLoading(true)
 
-        // contacts
         const contactsResponse = await apiClient.getContacts()
         const totalClients = (Array.isArray(contactsResponse.data) ? contactsResponse.data.length : 0) || 0
 
-        // invoices + finances in parallel
         const [invoicesResponse, financesResponse] = await Promise.allSettled([
           apiClient.getInvoices(),
           apiClient.getFinances()
         ])
 
         const invoices: InvoiceData[] = invoicesResponse.status === 'fulfilled' && Array.isArray(invoicesResponse.value.data)
-          ? invoicesResponse.value.data
-          : []
+          ? invoicesResponse.value.data : []
 
         const finances: any[] = financesResponse.status === 'fulfilled' && Array.isArray(financesResponse.value.data)
-          ? financesResponse.value.data
-          : []
+          ? financesResponse.value.data : []
 
-        // Calculate stats
         const totalInvoices = invoices.length
         const overdueInvoices = invoices.filter(inv => inv.status === 'overdue').length
-
-        // totalRevenue = semua invoice (untuk referensi)
         const totalRevenue = invoices.reduce((sum, inv) => sum + Number(inv.amount || 0), 0)
 
-        // ✅ FIX: totalPemasukan hanya dari invoice yang statusnya 'paid'
         const totalPemasukan = invoices
           .filter(inv => inv.status === 'paid')
           .reduce((sum, inv) => sum + Number(inv.amount || 0), 0)
@@ -82,31 +247,13 @@ export const DashboardStats: React.FC = () => {
           .slice(0, 3)
 
         if (!mounted) return
-        setStats({
-          totalClients: totalClients || 0,
-          totalInvoices: totalInvoices || 0,
-          totalRevenue: totalRevenue || 0,
-          overdueInvoices: overdueInvoices || 0,
-          totalPemasukan: totalPemasukan || 0,
-          pemasukanLainnya: pemasukanLainnya || 0,
-          totalPengeluaran: totalPengeluaran || 0,
-          saldo: saldo || 0,
-          recentInvoices: recentInvoices || []
-        })
+        setStats({ totalClients, totalInvoices, totalRevenue, overdueInvoices, totalPemasukan, pemasukanLainnya, totalPengeluaran, saldo, recentInvoices })
 
-        // compute monthly data — hanya dari invoice 'paid'
         const now = new Date()
-        const months: { label: string; value: number }[] = []
-        for (let i = 5; i >= 0; i--) {
-          const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-          const label = d.toLocaleString('id-ID', { month: 'short' })
-          months.push({ label, value: 0 })
-        }
-
-        const totals = months.map((m, idx) => {
-          const target = new Date(now.getFullYear(), now.getMonth() - (5 - idx), 1)
-          const total = invoices.reduce((sum: number, inv: any) => {
-            // ✅ FIX: chart juga hanya hitung invoice 'paid'
+        const totals = Array.from({ length: 6 }, (_, i) => {
+          const target = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1)
+          const label = target.toLocaleString('id-ID', { month: 'short' })
+          const value = invoices.reduce((sum: number, inv: any) => {
             if (inv.status !== 'paid') return sum
             const issue = new Date(inv.issueDate)
             if (issue.getFullYear() === target.getFullYear() && issue.getMonth() === target.getMonth()) {
@@ -114,7 +261,7 @@ export const DashboardStats: React.FC = () => {
             }
             return sum
           }, 0)
-          return { label: m.label, value: total }
+          return { label, value }
         })
 
         setMonthlyData(totals)
@@ -126,54 +273,41 @@ export const DashboardStats: React.FC = () => {
     }
 
     fetchAll()
-
-    return () => {
-      mounted = false
-    }
+    return () => { mounted = false }
   }, [])
 
-  // Compute simple month-over-month change for top card metrics
   const latest = monthlyData[monthlyData.length - 1]?.value || 0
   const prev = monthlyData[monthlyData.length - 2]?.value || 0
   const monthChangePercent = prev === 0 ? (latest === 0 ? 0 : 100) : Math.round(((latest - prev) / prev) * 100)
 
-  // Enhanced LineChart component with growth animation
   const LineChart: React.FC<{ data: { label: string; value: number }[] }> = ({ data }) => {
     const svgRef = useRef<SVGSVGElement | null>(null)
     const lineRef = useRef<SVGPathElement | null>(null)
     const [hover, setHover] = useState<number | null>(null)
-    
+
     const rawMax = Math.max(...data.map(d => d.value), 1)
     const niceNumber = (n: number) => {
       if (n <= 0) return 1
       const exp = Math.floor(Math.log10(n))
       const f = n / Math.pow(10, exp)
-      let nf = 1
-      if (f <= 1) nf = 1
-      else if (f <= 2) nf = 2
-      else if (f <= 5) nf = 5
-      else nf = 10
+      const nf = f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10
       return nf * Math.pow(10, exp)
     }
     const max = niceNumber(rawMax)
-    
     const ticks = 4
     const tickValues = Array.from({ length: ticks + 1 }, (_, i) => Math.round((max * (ticks - i)) / ticks))
-    const formatRupiah = (v: number) => `Rp ${v.toLocaleString('id-ID')}`
-    
-    // Chart dimensions
+
     const width = 600
     const height = 180
     const padding = { top: 15, right: 15, bottom: 30, left: 60 }
-    
-    // Calculate points for line
-    const points = data.map((d, i) => {
-      const x = padding.left + (i / (data.length - 1)) * (width - padding.left - padding.right)
-      const y = padding.top + (1 - d.value / max) * (height - padding.top - padding.bottom)
-      return { x, y, value: d.value, label: d.label }
-    })
-    
-    // Create SVG path
+
+    const points = data.map((d, i) => ({
+      x: padding.left + (i / (data.length - 1)) * (width - padding.left - padding.right),
+      y: padding.top + (1 - d.value / max) * (height - padding.top - padding.bottom),
+      value: d.value,
+      label: d.label,
+    }))
+
     const createPath = () => {
       if (points.length < 2) return ''
       let path = `M ${points[0].x} ${points[0].y}`
@@ -185,8 +319,7 @@ export const DashboardStats: React.FC = () => {
       path += ` T ${points[points.length - 1].x} ${points[points.length - 1].y}`
       return path
     }
-    
-    // Animate line on mount
+
     useEffect(() => {
       if (lineRef.current && points.length >= 2) {
         const pathLength = lineRef.current.getTotalLength()
@@ -203,22 +336,17 @@ export const DashboardStats: React.FC = () => {
           <div>
             <h2 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-
-                  {points.length < 2 && (
-                    <text x={width/2} y={height/2} textAnchor="middle" fontSize="13" fill="#94a3b8">
-                      Belum ada data penjualan
-                    </text>
-                  )}
-
-                </svg>
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
               </span>
               Data Penjualan (Paid)
             </h2>
             <p className="text-xs text-slate-500 mt-1">Total: {formatRupiah(data.reduce((s, d) => s + d.value, 0))}</p>
           </div>
-          <div className={`text-[11px] sm:text-xs font-semibold px-2.5 py-1 rounded-full border ${monthChangePercent >= 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+          <div className={`text-[11px] sm:text-xs font-semibold px-2.5 py-1 rounded-full border flex items-center gap-1 ${monthChangePercent >= 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+            {monthChangePercent >= 0
+              ? <ArrowUpRight className="w-3 h-3" />
+              : <ArrowDownLeft className="w-3 h-3" />
+            }
             {monthChangePercent >= 0 ? '+' : ''}{monthChangePercent}% bulan ini
           </div>
         </div>
@@ -226,133 +354,64 @@ export const DashboardStats: React.FC = () => {
         <div className="relative overflow-x-auto">
           <div className="min-w-[320px]">
             <svg ref={svgRef} viewBox={`0 0 ${width} ${height}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
-            <defs>
-              <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.35" />
-                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.04" />
-              </linearGradient>
-              <linearGradient id="lineStroke" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#2563eb" />
-                <stop offset="60%" stopColor="#3b82f6" />
-                <stop offset="100%" stopColor="#60a5fa" />
-              </linearGradient>
-              <filter id="lineGlow" x="-10%" y="-10%" width="120%" height="120%">
-                <feGaussianBlur stdDeviation="3" result="blur" />
-                <feMerge>
-                  <feMergeNode in="blur" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
+              <defs>
+                <linearGradient id="lineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.04" />
+                </linearGradient>
+                <linearGradient id="lineStroke" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#2563eb" />
+                  <stop offset="60%" stopColor="#3b82f6" />
+                  <stop offset="100%" stopColor="#60a5fa" />
+                </linearGradient>
+                <filter id="lineGlow" x="-10%" y="-10%" width="120%" height="120%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+              </defs>
 
-            <rect x={padding.left} y={padding.top} width={width - padding.left - padding.right} height={height - padding.top - padding.bottom} rx="8" fill="#f8fafc" />
+              <rect x={padding.left} y={padding.top} width={width - padding.left - padding.right} height={height - padding.top - padding.bottom} rx="8" fill="#f8fafc" />
 
-            {/* Grid lines */}
-            {tickValues.map((tick, i) => {
-              const y = padding.top + (i / ticks) * (height - padding.top - padding.bottom)
-              return (
-                <g key={i}>
-                  <line
-                    x1={padding.left}
-                    y1={y}
-                    x2={width - padding.right}
-                    y2={y}
-                    stroke="#e2e8f0"
-                    strokeWidth="1"
-                    strokeDasharray="4 6"
-                  />
-                  <text x={padding.left - 10} y={y + 5} textAnchor="end" fontSize="11" fill="#94a3b8">
-                    {(tick / 1000000).toFixed(1)}M
-                  </text>
-                </g>
-              )
-            })}
-            
-            {/* X-axis labels */}
-            {points.map((point, i) => (
-              <text
-                key={i}
-                x={point.x}
-                y={height - 10}
-                textAnchor="middle"
-                fontSize="11"
-                fill="#64748b"
-              >
-                {data[i].label}
-              </text>
-            ))}
-            
-            {/* Area fill */}
-            {points.length >= 2 && (
-              <path
-                d={`${createPath()} L ${points[points.length - 1].x} ${height - padding.bottom} L ${points[0].x} ${height - padding.bottom} Z`}
-                fill="url(#lineGradient)"
-              />
-            )}
-            
-            {/* Main line */}
-            {points.length >= 2 && (
-              <path
-                ref={lineRef}
-                d={createPath()}
-                fill="none"
-                stroke="url(#lineStroke)"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                filter="url(#lineGlow)"
-              />
-            )}
-            
-            {/* Data points */}
-            {points.map((point, i) => (
-              <g key={i}>
-                <circle
-                  cx={point.x}
-                  cy={point.y}
-                  r={hover === i ? 6 : 4}
-                  fill="white"
-                  stroke="#3b82f6"
-                  strokeWidth="2"
-                  className="cursor-pointer transition-all"
-                  onMouseEnter={() => setHover(i)}
-                  onMouseLeave={() => setHover(null)}
-                />
-                {hover === i && (
-                  <g>
-                    <rect
-                      x={point.x - 60}
-                      y={point.y - 45}
-                      width="120"
-                      height="35"
-                      rx="8"
-                      fill="#0f172a"
-                      opacity="0.96"
-                    />
-                    <text
-                      x={point.x}
-                      y={point.y - 28}
-                      textAnchor="middle"
-                      fontSize="12"
-                      fill="white"
-                      fontWeight="600"
-                    >
-                      {formatRupiah(point.value)}
-                    </text>
-                    <text
-                      x={point.x}
-                      y={point.y - 15}
-                      textAnchor="middle"
-                      fontSize="10"
-                      fill="#cbd5e1"
-                    >
-                      {point.label}
-                    </text>
+              {tickValues.map((tick, i) => {
+                const y = padding.top + (i / ticks) * (height - padding.top - padding.bottom)
+                return (
+                  <g key={i}>
+                    <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4 6" />
+                    <text x={padding.left - 10} y={y + 5} textAnchor="end" fontSize="11" fill="#94a3b8">{(tick / 1000000).toFixed(1)}M</text>
                   </g>
-                )}
-              </g>
-            ))}
-          </svg>
+                )
+              })}
+
+              {points.map((point, i) => (
+                <text key={i} x={point.x} y={height - 10} textAnchor="middle" fontSize="11" fill="#64748b">{data[i].label}</text>
+              ))}
+
+              {points.length >= 2 && (
+                <path d={`${createPath()} L ${points[points.length - 1].x} ${height - padding.bottom} L ${points[0].x} ${height - padding.bottom} Z`} fill="url(#lineGradient)" />
+              )}
+              {points.length >= 2 && (
+                <path ref={lineRef} d={createPath()} fill="none" stroke="url(#lineStroke)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" filter="url(#lineGlow)" />
+              )}
+              {points.length < 2 && (
+                <text x={width / 2} y={height / 2} textAnchor="middle" fontSize="13" fill="#94a3b8">Belum ada data penjualan</text>
+              )}
+
+              {points.map((point, i) => (
+                <g key={i}>
+                  <circle cx={point.x} cy={point.y} r={hover === i ? 6 : 4} fill="white" stroke="#3b82f6" strokeWidth="2"
+                    className="cursor-pointer transition-all"
+                    onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)}
+                  />
+                  {hover === i && (
+                    <g>
+                      <rect x={point.x - 60} y={point.y - 45} width="120" height="35" rx="8" fill="#0f172a" opacity="0.96" />
+                      <text x={point.x} y={point.y - 28} textAnchor="middle" fontSize="12" fill="white" fontWeight="600">{formatRupiah(point.value)}</text>
+                      <text x={point.x} y={point.y - 15} textAnchor="middle" fontSize="10" fill="#cbd5e1">{point.label}</text>
+                    </g>
+                  )}
+                </g>
+              ))}
+            </svg>
           </div>
         </div>
       </div>
@@ -361,14 +420,12 @@ export const DashboardStats: React.FC = () => {
 
   if (loading) {
     return (
-      // ✅ FIX: overflow-hidden agar tidak bisa di-scroll
       <div className="space-y-3 sm:space-y-4 overflow-hidden">
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-16 sm:h-20 rounded-lg bg-slate-100 animate-pulse" />
           ))}
         </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
           <div className="lg:col-span-2 h-64 sm:h-80 rounded-lg bg-slate-100 animate-pulse" />
           <div className="h-64 sm:h-80 rounded-lg bg-slate-100 animate-pulse" />
@@ -377,120 +434,112 @@ export const DashboardStats: React.FC = () => {
     )
   }
 
+  // Stat cards config
+  const statCards = [
+    {
+      label: 'Total Invoices',
+      sub: null,
+      value: <CountUp end={stats.totalInvoices} duration={1.5} delay={0.2} />,
+      prefix: null,
+      icon: <Receipt className="w-4 h-4 sm:w-5 sm:h-5" />,
+      color: {
+        bg: theme === 'minimal' ? 'bg-blue-50' : 'bg-gradient-to-br from-blue-50 to-blue-100',
+        border: 'border-blue-200', text: 'text-blue-700', val: 'text-blue-900', iconBg: 'bg-blue-100 text-blue-700'
+      },
+    },
+    {
+      label: 'Total Pemasukan',
+      sub: 'Invoice Paid',
+      value: <CountUp end={stats.totalPemasukan || 0} duration={1.5} delay={0.3} />,
+      prefix: 'Rp ',
+      icon: <RiMoneyDollarCircleLine className="w-4 h-4 sm:w-5 sm:h-5" />,
+      color: {
+        bg: theme === 'minimal' ? 'bg-green-50' : 'bg-gradient-to-br from-green-50 to-green-100',
+        border: 'border-green-200', text: 'text-green-700', val: 'text-green-900', iconBg: 'bg-green-100 text-green-700'
+      },
+    },
+    {
+      label: 'Pemasukan Lainnya',
+      sub: null,
+      value: <CountUp end={stats.pemasukanLainnya || 0} duration={1.5} delay={0.4} />,
+      prefix: 'Rp ',
+      icon: <ArrowDownLeft className="w-4 h-4 sm:w-5 sm:h-5" />,
+      color: {
+        bg: theme === 'minimal' ? 'bg-yellow-50' : 'bg-gradient-to-br from-yellow-50 to-yellow-100',
+        border: 'border-yellow-200', text: 'text-yellow-700', val: 'text-yellow-900', iconBg: 'bg-yellow-100 text-yellow-700'
+      },
+    },
+    {
+      label: 'Total Pengeluaran',
+      sub: null,
+      value: <CountUp end={stats.totalPengeluaran || 0} duration={1.5} delay={0.5} />,
+      prefix: 'Rp ',
+      icon: <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5" />,
+      color: {
+        bg: theme === 'minimal' ? 'bg-red-50' : 'bg-gradient-to-br from-red-50 to-red-100',
+        border: 'border-red-200', text: 'text-red-700', val: 'text-red-900', iconBg: 'bg-red-100 text-red-700'
+      },
+    },
+    {
+      label: 'Saldo',
+      sub: null,
+      value: <CountUp end={Math.abs(stats.saldo || 0)} duration={1.5} delay={0.6} />,
+      prefix: 'Rp ',
+      icon: <MdOutlineAccountBalanceWallet className="w-4 h-4 sm:w-5 sm:h-5" />,
+      color: {
+        bg: theme === 'minimal' ? 'bg-purple-50' : 'bg-gradient-to-br from-purple-50 to-purple-100',
+        border: 'border-purple-200', text: 'text-purple-700', val: 'text-purple-900', iconBg: 'bg-purple-100 text-purple-700'
+      },
+      span: true,
+    },
+  ]
+
   return (
     <StaggerContainer className="space-y-3 sm:space-y-4 overflow-hidden" staggerDelay={0.15}>
-      {/* Ringkasan */}
-      <div className={`bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm border border-slate-100 transition-smooth hover:shadow-lg`}>
-        <h2 className="text-sm sm:text-base font-bold text-slate-900 mb-2 sm:mb-3">Ringkasan</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3">
-          <div className={`p-2 sm:p-3 ${theme === 'minimal' ? 'bg-blue-50' : 'bg-gradient-to-br from-blue-50 to-blue-100'} rounded-lg border border-blue-200`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-blue-700 font-semibold">Total Invoices</p>
-                <p className="text-lg sm:text-xl font-bold text-blue-900 mt-1">
-                  <CountUp end={stats.totalInvoices} duration={1.5} delay={0.2} />
-                </p>
-              </div>
-              <div className="p-1 sm:p-1.5 rounded-md bg-blue-100 text-blue-700">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className={`p-2 sm:p-3 ${theme === 'minimal' ? 'bg-green-50' : 'bg-gradient-to-br from-green-50 to-green-100'} rounded-lg border border-green-200`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-green-700 font-semibold">Total Pemasukan</p>
-                <p className="text-[10px] text-green-500 font-medium">Invoice Paid</p>
-                <p className="text-lg sm:text-xl font-bold text-green-900 mt-1">
-                  Rp <CountUp end={stats.totalPemasukan || 0} duration={1.5} delay={0.3} />
-                </p>
-              </div>
-              <div className="p-1 sm:p-1.5 rounded-md bg-green-100 text-green-700">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+      <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm border border-slate-100 hover:shadow-lg transition-shadow">
+        <h2 className="text-sm sm:text-base font-bold text-slate-900 mb-2 sm:mb-3 flex items-center gap-2">
+          <HiOutlineDocumentReport className="w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
+          Ringkasan
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3">
+          {statCards.map((card, i) => (
+            <div
+              key={i}
+              className={`p-2 sm:p-3 ${card.color.bg} rounded-lg border ${card.color.border} ${card.span ? 'col-span-2 sm:col-span-2 lg:col-span-1' : ''}`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className={`text-xs ${card.color.text} font-semibold`}>{card.label}</p>
+                  {card.sub && <p className={`text-[10px] ${card.color.text} opacity-70 font-medium`}>{card.sub}</p>}
+                  <p className={`text-lg sm:text-xl font-bold ${card.color.val} mt-1`}>
+                    {card.prefix}{card.value}
+                  </p>
+                </div>
+                <div className={`p-1 sm:p-1.5 rounded-md ${card.color.iconBg}`}>
+                  {card.icon}
+                </div>
               </div>
             </div>
-          </div>
-
-          <div className={`p-2 sm:p-3 ${theme === 'minimal' ? 'bg-yellow-50' : 'bg-gradient-to-br from-yellow-50 to-yellow-100'} rounded-lg border border-yellow-200`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-yellow-700 font-semibold">Pemasukan Lainnya</p>
-                <p className="text-lg sm:text-xl font-bold text-yellow-900 mt-1">
-                  Rp <CountUp end={stats.pemasukanLainnya || 0} duration={1.5} delay={0.4} />
-                </p>
-              </div>
-              <div className="p-1 sm:p-1.5 rounded-md bg-yellow-100 text-yellow-700">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className={`p-2 sm:p-3 ${theme === 'minimal' ? 'bg-red-50' : 'bg-gradient-to-br from-red-50 to-red-100'} rounded-lg border border-red-200`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-red-700 font-semibold">Total Pengeluaran</p>
-                <p className="text-lg sm:text-xl font-bold text-red-900 mt-1">
-                  Rp <CountUp end={stats.totalPengeluaran || 0} duration={1.5} delay={0.5} />
-                </p>
-              </div>
-              <div className="p-1 sm:p-1.5 rounded-md bg-red-100 text-red-700">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7h18" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className={`p-2 sm:p-3 ${theme === 'minimal' ? 'bg-purple-50' : 'bg-gradient-to-br from-purple-50 to-purple-100'} rounded-lg border border-purple-200 col-span-2 sm:col-span-2 lg:col-span-1`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-purple-700 font-semibold">Saldo</p>
-                <p className="text-lg sm:text-xl font-bold text-purple-900 mt-1">
-                  Rp <CountUp end={Math.abs(stats.saldo || 0)} duration={1.5} delay={0.6} />
-                </p>
-              </div>
-              <div className="p-1 sm:p-1.5 rounded-md bg-purple-100 text-purple-700">
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m8.66-9H21" />
-                </svg>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Charts and Recent Invoices */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4">
-        {/* Line chart */}
         <div className="lg:col-span-2">
           <LineChart data={monthlyData} />
         </div>
 
-        {/* Recent Invoices */}
         <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-sm border border-slate-100 max-h-[400px] flex flex-col">
           <div className="flex items-center justify-between mb-2 sm:mb-3">
             <h2 className="text-sm sm:text-base font-bold text-slate-900 flex items-center gap-2">
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6M7 7h10M7 21h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
+              <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" />
               Invoice Terbaru
             </h2>
             <button
               onClick={() => navigate('/dashboard/invoices')}
-              className="text-blue-600 font-semibold text-xs sm:text-sm hover:text-blue-700"
+              className="text-blue-600 font-semibold text-xs sm:text-sm hover:text-blue-700 flex items-center gap-1"
             >
-              Lihat Semua
+              Lihat Semua <ArrowRight className="w-3 h-3" />
             </button>
           </div>
 
@@ -499,13 +548,16 @@ export const DashboardStats: React.FC = () => {
               stats.recentInvoices.map((invoice) => (
                 <div
                   key={invoice.id}
-                  onClick={() => navigate(`/dashboard/invoices`)}
+                  onClick={() => navigate('/dashboard/invoices')}
                   className="flex items-center justify-between p-2 sm:p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
                 >
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm sm:text-base text-slate-900 truncate">{invoice.invoiceNumber}</p>
                     <p className="text-xs sm:text-sm text-slate-600 truncate">{invoice.clientName || 'Unknown Client'}</p>
-                    <p className="text-xs text-slate-400 mt-1">{new Date(invoice.issueDate).toLocaleDateString('id-ID')}</p>
+                    <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {new Date(invoice.issueDate).toLocaleDateString('id-ID')}
+                    </p>
                   </div>
                   <div className="text-right ml-2 flex-shrink-0">
                     <p className="font-semibold text-sm sm:text-base text-slate-900">Rp {Math.round(invoice.amount || 0).toLocaleString('id-ID')}</p>
@@ -522,8 +574,14 @@ export const DashboardStats: React.FC = () => {
               ))
             ) : (
               <div className="text-center py-8 text-slate-500">
-                <p>Tidak ada invoice terbaru</p>
-                <button onClick={() => navigate('/dashboard/invoices/forminvoice')} className="mt-3 inline-block px-4 py-2 bg-blue-600 text-white rounded-lg text-sm">Buat Invoice</button>
+                <Wallet className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                <p className="text-sm">Tidak ada invoice terbaru</p>
+                <button
+                  onClick={() => navigate('/dashboard/invoices/forminvoice')}
+                  className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors"
+                >
+                  <FileText className="w-4 h-4" /> Buat Invoice
+                </button>
               </div>
             )}
           </div>
