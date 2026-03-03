@@ -40,9 +40,12 @@ export const Navbar: React.FC = () => {
     if (!logoRef.current) return;
     gsap.to(logoRef.current, { scale: isScrolled ? 0.9 : 1, duration: 0.3, ease: 'power2.out' });
     if (isScrolled) {
-      gsap.to(logoRef.current.querySelector('.logo-glow'), {
-        opacity: 0.6, scale: 1.2, duration: 1.5, repeat: -1, yoyo: true, ease: 'sine.inOut'
-      });
+      const logoGlow = logoRef.current.querySelector('.logo-glow');
+      if (logoGlow) {
+        gsap.to(logoGlow, {
+          opacity: 0.6, scale: 1.2, duration: 1.5, repeat: -1, yoyo: true, ease: 'sine.inOut'
+        });
+      }
     }
   }, [isScrolled]);
 
@@ -113,9 +116,9 @@ export const Navbar: React.FC = () => {
   ];
 
   const paketItems = [
-    { name: "Nexcube", desc: "Cocok untuk UMKM baru", href: "/paket", color: "from-blue-500 to-cyan-500" },
+    { name: "Website", desc: "Cocok untuk UMKM baru", href: "/paket", color: "from-blue-500 to-cyan-500" },
     // { name: "Paket Digital", desc: "Untuk bisnis berkembang", href: "/paket/digital", color: "from-purple-500 to-pink-500" },
-    { name: "Paket Affiliate", desc: "Solusi lengkap perusahaan", href: "/paket/affiliate", color: "from-orange-500 to-red-500" }
+    { name: "Sertifikasi", desc: "Solusi lengkap perusahaan", href: "/paket/affiliate", color: "from-orange-500 to-red-500" }
   ];
 
   const isActive = (path: string) => location.pathname === path;

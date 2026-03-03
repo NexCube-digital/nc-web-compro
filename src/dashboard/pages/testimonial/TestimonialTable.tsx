@@ -48,6 +48,17 @@ export const TestimonialTable: React.FC<TestimonialTableProps> = ({
   onDelete,
   onToggleStatus,
 }) => {
+  const formatCreatedAt = (value?: string) => {
+    if (!value) return '-'
+    const parsedDate = new Date(value)
+    if (Number.isNaN(parsedDate.getTime())) return '-'
+    return parsedDate.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    })
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -149,11 +160,7 @@ export const TestimonialTable: React.FC<TestimonialTableProps> = ({
                 {/* Tanggal */}
                 <td className="px-6 py-4 text-center">
                   <span className="text-xs text-gray-500">
-                    {new Date(item.createdAt).toLocaleDateString('id-ID', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
+                    {formatCreatedAt(item.createdAt)}
                   </span>
                 </td>
 
