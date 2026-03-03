@@ -18,6 +18,7 @@ export const Testimonial: React.FC = () => {
   const [testimonialPage, setTestimonialPage] = useState(0)
   const [testimonialsData, setTestimonialsData] = useState<TestimonialItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [imageErrors, setImageErrors] = useState<Set<number>>(new Set())
 
   // Fetch published testimonials
   useEffect(() => {
@@ -27,6 +28,7 @@ export const Testimonial: React.FC = () => {
         const response = await apiClient.getPublishedTestimonials()
         if (response.success && response.data) {
           setTestimonialsData(response.data as TestimonialItem[])
+          console.log('Testimonials loaded:', response.data) // Debug log
         }
       } catch (error) {
         console.error('Failed to fetch testimonials:', error)
@@ -88,7 +90,11 @@ export const Testimonial: React.FC = () => {
           </div>
         ) : (
           <div className="grid md:grid-cols-3 gap-6 mb-8 min-h-[280px]">
-          {visibleTestimonials.map((t, index) => (
+          {visibleTestimonials.map((t, index) => {
+            const testimonialId = t.name + t.company; // Simple ID for tracking errors
+            const hasImageError = imageErrors.has(index);
+            
+            return (
             <div key={`${testimonialPage}-${index}`} className="scroll-fade-in group" style={{ animationDelay: `${index * 0.1}s` }}>
               <div className="h-full bg-white border border-slate-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                 <div className="space-y-4">
@@ -100,10 +106,19 @@ export const Testimonial: React.FC = () => {
                   <blockquote className="text-slate-700 leading-relaxed text-base">"{t.text}"</blockquote>
                   <div className="flex items-center gap-3 pt-4 border-t border-slate-200">
                     <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-orange-500 rounded-xl flex items-center justify-center shadow-md overflow-hidden">
-                      {t.avatar
-                        ? <img src={getImageUrl(t.avatar)} alt={t.name} className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                        : <span className="text-white font-bold text-lg">{t.name.charAt(0).toUpperCase()}</span>
-                      }
+                      {t.avatar && !hasImageError ? (
+                        <img 
+                          src={getImageUrl(t.avatar)} 
+                          alt={t.name} 
+                          className="w-full h-full object-cover"
+                          onError={() => {
+                            console.error('Failed to load image:', getImageUrl(t.avatar));
+                            setImageErrors(prev => new Set(prev).add(index));
+                          }}
+                        />
+                      ) : (
+                        <span className="text-white font-bold text-lg">{t.name.charAt(0).toUpperCase()}</span>
+                      )}
                     </div>
                     <div>
                       <div className="font-bold text-slate-800">{t.name}</div>
@@ -116,7 +131,8 @@ export const Testimonial: React.FC = () => {
                 </div>
               </div>
             </div>
-          ))}
+            )
+          })}
         </div>
         )}
 
