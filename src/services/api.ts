@@ -845,10 +845,10 @@ async createTestimonial(data: TestimonialFormData & { avatar?: string }): Promis
   return this.request<{ testimonial: Testimonial }>('/testimonials', 'POST', data);
 }
 
-// create testimonial public
-async createTestimonialPublic(data: TestimonialFormData & { avatar?: string }): Promise<ApiResponse<{ testimonial: Testimonial }>> {
+async createPublicTestimonial(data: TestimonialFormData & { avatar?: string }): Promise<ApiResponse<{ testimonial: Testimonial }>> {
   return this.request<{ testimonial: Testimonial }>('/testimonials/public/create', 'POST', data);
 }
+
 
 // update testimonial
 async updateTestimonial(id: number, data: Partial<TestimonialFormData & { avatar?: string }>): Promise<ApiResponse<{ testimonial: Testimonial }>> {

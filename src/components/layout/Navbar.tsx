@@ -4,7 +4,8 @@ import LoginButton from './LoginButton';
 import apiClient from '../../services/api'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { CartButton } from '../cart/CartButton'; // ✅ import CartButton
+import { CartButton } from '../cart/CartButton';
+import { getImageUrl } from '../../services/api'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -20,6 +21,7 @@ export const Navbar: React.FC = () => {
   const profileRef = useRef<HTMLDivElement>(null);
   const [isPaketOpen, setIsPaketOpen] = useState(false);
   const paketRef = useRef<HTMLDivElement>(null);
+  const [userPhoto, setUserPhoto] = useState<string | null>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -61,8 +63,15 @@ export const Navbar: React.FC = () => {
       try {
         const u = JSON.parse(userStr);
         setUserName(u?.name || u?.email || null);
-      } catch (e) { setUserName(null); }
-    } else { setUserName(null); }
+        setUserPhoto(u?.photo || null);
+      } catch (e) { 
+        setUserName(null); 
+         setUserPhoto(null);
+      }
+    } else { 
+      setUserName(null); 
+      setUserPhoto(null);
+    }
   }, [location.pathname]);
 
   const handleLogout = () => {
@@ -211,7 +220,11 @@ export const Navbar: React.FC = () => {
                 >
                   <div className="relative">
                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-orange-500 flex items-center justify-center text-white font-bold text-sm shadow-md group-hover:shadow-lg transition-shadow">
-                      {getUserInitials()}
+                      {userPhoto ? (
+                        <img src={getImageUrl(userPhoto)} alt={userName || ''} className="w-full h-full object-cover" />
+                      ) : (
+                        getUserInitials()
+                      )}
                     </div>
                     <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                   </div>
@@ -234,7 +247,11 @@ export const Navbar: React.FC = () => {
                   <div className="px-4 py-3 bg-gradient-to-br from-blue-50 to-orange-50 border-b border-slate-200">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-orange-500 flex items-center justify-center text-white font-bold text-base shadow-md">
-                        {getUserInitials()}
+                        {userPhoto ? (
+                          <img src={getImageUrl(userPhoto)} alt={userName || ''} className="w-full h-full object-cover" />
+                        ) : (
+                          getUserInitials()
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-bold text-slate-800 truncate">{userName || 'User'}</div>

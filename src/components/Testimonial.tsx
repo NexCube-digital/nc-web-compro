@@ -120,7 +120,7 @@ export const Testimonial: React.FC = () => {
       }
 
       // Send to API
-      const response = await apiClient.createTestimonialPublic(testimonialData)
+      const response = await apiClient.createPublicTestimonial(testimonialData)
       
       if (response.data?.testimonial) {
         // Refresh the list to show new testimonials (if published immediately)
