@@ -182,6 +182,37 @@ export interface PaymentLinkResponse {
   paymentUrl: string;
 }
 
+
+// testimonial
+export interface Testimonial {
+  id: number;
+  name: string;
+  company: string;
+  text: string;
+  rating: number;
+  avatar: string;
+  status: 'published' | 'pending' | 'hidden';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface TestimonialStats {
+  total: number;
+  published: number;
+  pending: number;
+  hidden: number;
+  avgRating: string;
+}
+
+export interface TestimonialFormData {
+  name: string;
+  company: string;
+  text: string;
+  rating: number;
+  avatar?: string;
+  status: 'published' | 'pending' | 'hidden';
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
@@ -783,6 +814,62 @@ class ApiClient {
   async getActivities(limit: number = 20): Promise<ApiResponse<any>> {
     return this.request<any>(`/activities?limit=${limit}`, 'GET');
   }
+
+
+
+  async getTestimonials(status: string = 'all', rating: string = 'all'): Promise<ApiResponse<{ testimonials: Testimonial[], total: number }>> {
+  const params = new URLSearchParams();
+  if (status && status !== 'all') params.append('status', status);
+  if (rating && rating !== 'all') params.append('rating', rating);
+  
+  const url = `/testimonials${params.toString() ? `?${params.toString()}` : ''}`;
+  return this.request<{ testimonials: Testimonial[], total: number }>(url, 'GET');
+}
+
+/**
+ * Get published testimonials for public display
+ */
+async getPublishedTestimonials(): Promise<ApiResponse<{ testimonials: Testimonial[], total: number }>> {
+  return this.request<{ testimonials: Testimonial[], total: number }>('/testimonials/public', 'GET');
+}
+
+/**
+ * Get single testimonial by ID
+ */
+async getTestimonial(id: number): Promise<ApiResponse<{ testimonial: Testimonial }>> {
+  return this.request<{ testimonial: Testimonial }>(`/testimonials/${id}`, 'GET');
+}
+
+// create testimonial
+async createTestimonial(data: TestimonialFormData & { avatar?: string }): Promise<ApiResponse<{ testimonial: Testimonial }>> {
+  return this.request<{ testimonial: Testimonial }>('/testimonials', 'POST', data);
+}
+
+// create testimonial public
+async createTestimonialPublic(data: TestimonialFormData & { avatar?: string }): Promise<ApiResponse<{ testimonial: Testimonial }>> {
+  return this.request<{ testimonial: Testimonial }>('/testimonials/public/create', 'POST', data);
+}
+
+// update testimonial
+async updateTestimonial(id: number, data: Partial<TestimonialFormData & { avatar?: string }>): Promise<ApiResponse<{ testimonial: Testimonial }>> {
+  return this.request<{ testimonial: Testimonial }>(`/testimonials/${id}`, 'PUT', data);
+}
+
+// Delete testimonial
+async deleteTestimonial(id: number): Promise<ApiResponse<void>> {
+  return this.request<void>(`/testimonials/${id}`, 'DELETE');
+}
+
+// Toggle testimonial status (published/hidden)
+async toggleTestimonialStatus(id: number): Promise<ApiResponse<{ testimonial: Testimonial }>> {
+  return this.request<{ testimonial: Testimonial }>(`/testimonials/${id}/toggle-status`, 'PATCH');
+}
+
+// Get testimonial statistics
+async getTestimonialStats(): Promise<ApiResponse<{ stats: TestimonialStats }>> {
+  return this.request<{ stats: TestimonialStats }>('/testimonials/stats', 'GET');
+}
+
 }
 
 export const apiClient = new ApiClient();

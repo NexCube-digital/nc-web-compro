@@ -1,52 +1,17 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { FaStar, FaCheckCircle, FaChevronLeft, FaChevronRight, FaTimes } from 'react-icons/fa'
 import { HiSparkles } from 'react-icons/hi'
+import apiClient, { getImageUrl } from '../services/api'
 
 interface TestimonialItem {
+  id?: number
   name: string
   company: string
   text: string
   rating: number
   avatar: string
+  createdAt?: string
 }
-
-const initialTestimonials: TestimonialItem[] = [
-  {
-    name: 'Budi Santoso',
-    company: 'PT Maju Bersama',
-    text: 'Website kami mendapatkan peningkatan trafik signifikan setelah didesain ulang oleh tim NexCube. Tampilan premium dan responsif memberikan kesan profesional yang luar biasa!',
-    rating: 5,
-    avatar: ''
-  },
-  {
-    name: 'Dewi Anggraini',
-    company: 'Harmony Events',
-    text: 'Undangan digital untuk acara perusahaan kami mendapat banyak pujian dari para tamu. Fitur RSVP sangat membantu dalam persiapan acara dan memberikan pengalaman yang memorable.',
-    rating: 5,
-    avatar: ''
-  },
-  {
-    name: 'Ahmad Fauzi',
-    company: 'Warung Nusantara',
-    text: 'Menu digital untuk restoran kami memudahkan pelanggan melihat pilihan makanan. Update menu jadi sangat cepat tanpa perlu cetak ulang, meningkatkan efisiensi operasional.',
-    rating: 5,
-    avatar: ''
-  },
-  {
-    name: 'Siti Rahayu',
-    company: 'Butik Cantik',
-    text: 'Katalog digital yang dibuat NexCube sangat membantu penjualan online kami. Desainnya elegan dan mudah digunakan oleh pelanggan. Highly recommended!',
-    rating: 5,
-    avatar: ''
-  },
-  {
-    name: 'Rizky Pratama',
-    company: 'Tech Startup ID',
-    text: 'Tim NexCube sangat profesional dan responsif. Mereka memahami kebutuhan bisnis kami dengan baik dan mengeksekusi dengan sempurna sesuai timeline.',
-    rating: 5,
-    avatar: ''
-  }
-]
 
 const ITEMS_PER_PAGE = 3
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -57,7 +22,9 @@ export const Testimonial: React.FC = () => {
 
   const [testimonialPage, setTestimonialPage] = useState(0)
   const [showAddModal, setShowAddModal] = useState(false)
-  const [testimonialsData, setTestimonialsData] = useState<TestimonialItem[]>(initialTestimonials)
+  const [testimonialsData, setTestimonialsData] = useState<TestimonialItem[]>([])
+  const [loading, setLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [newReview, setNewReview] = useState<TestimonialItem>({
     name: '', company: '', text: '', rating: 5, avatar: ''
   })
@@ -69,6 +36,35 @@ export const Testimonial: React.FC = () => {
     testimonialPage * ITEMS_PER_PAGE,
     (testimonialPage + 1) * ITEMS_PER_PAGE
   )
+
+  // ── Fetch published testimonials ─────────────────────────────────────────
+  useEffect(() => {
+    fetchPublishedTestimonials()
+  }, [])
+
+  const fetchPublishedTestimonials = async () => {
+    try {
+      setLoading(true)
+      const response = await apiClient.getPublishedTestimonials()
+      if (response.data?.testimonials) {
+        setTestimonialsData(response.data.testimonials)
+      }
+    } catch (error) {
+      console.error('Gagal memuat testimonial:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ── Convert file to base64 ──────────────────────────────────────────────
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = error => reject(error)
+    })
+  }
 
   // ── Avatar handlers ──────────────────────────────────────────────────────
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,23 +95,53 @@ export const Testimonial: React.FC = () => {
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
-  // ── Submit / Close ───────────────────────────────────────────────────────
-  const handleSubmit = () => {
+  // ── Submit to API ───────────────────────────────────────────────────────
+  const handleSubmit = async () => {
     const errs: { name?: string; text?: string } = {}
     if (!newReview.name.trim()) errs.name = 'Nama wajib diisi'
     if (!newReview.text.trim()) errs.text = 'Ulasan wajib diisi'
     if (Object.keys(errs).length) { setErrors(errs); return }
 
-    setTestimonialsData(prev => [...prev, { ...newReview }])
-    const newTotal = Math.ceil((testimonialsData.length + 1) / ITEMS_PER_PAGE)
-    setTestimonialPage(newTotal - 1)
+    try {
+      setSubmitting(true)
 
-    // Don't revoke: avatar lives in card now
-    setAvatarFile(null)
-    setNewReview({ name: '', company: '', text: '', rating: 5, avatar: '' })
-    setErrors({})
-    setShowAddModal(false)
-    if (fileInputRef.current) fileInputRef.current.value = ''
+      // Prepare data for API
+      const testimonialData: any = {
+        name: newReview.name,
+        company: newReview.company,
+        text: newReview.text,
+        rating: newReview.rating,
+        status: 'pending' // Set as pending for admin review
+      }
+
+      // Convert avatar to base64 if exists
+      if (avatarFile) {
+        testimonialData.avatar = await fileToBase64(avatarFile)
+      }
+
+      // Send to API
+      const response = await apiClient.createTestimonialPublic(testimonialData)
+      
+      if (response.data?.testimonial) {
+        // Refresh the list to show new testimonials (if published immediately)
+        // or just show success message
+        await fetchPublishedTestimonials()
+        
+        // Reset form
+        if (newReview.avatar.startsWith('blob:')) URL.revokeObjectURL(newReview.avatar)
+        setAvatarFile(null)
+        setNewReview({ name: '', company: '', text: '', rating: 5, avatar: '' })
+        setErrors({})
+        setShowAddModal(false)
+        if (fileInputRef.current) fileInputRef.current.value = ''
+
+        alert('Terima kasih! Ulasan Anda akan ditampilkan setelah diverifikasi oleh admin.')
+      }
+    } catch (error: any) {
+      alert(error.message || 'Gagal mengirim ulasan. Silakan coba lagi.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const handleCloseModal = () => {
@@ -128,6 +154,27 @@ export const Testimonial: React.FC = () => {
   }
 
   const ratingLabel = ['', 'Sangat Buruk', 'Buruk', 'Cukup', 'Baik', 'Sangat Baik']
+
+  // Update page when testimonials change
+  useEffect(() => {
+    const newTotalPages = Math.ceil(testimonialsData.length / ITEMS_PER_PAGE)
+    if (testimonialPage >= newTotalPages && newTotalPages > 0) {
+      setTestimonialPage(newTotalPages - 1)
+    }
+  }, [testimonialsData, testimonialPage])
+
+  if (loading && testimonialsData.length === 0) {
+    return (
+      <section className="relative overflow-hidden py-16 md:py-20">
+        <div className="container relative z-10">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent"></div>
+            <p className="mt-4 text-slate-600">Memuat testimonial...</p>
+          </div>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section className="relative overflow-hidden py-16 md:py-20">
@@ -145,7 +192,7 @@ export const Testimonial: React.FC = () => {
         <div className="text-center max-w-3xl mx-auto mb-12">
           <div className="scroll-fade-in inline-flex items-center gap-2 bg-orange-50 px-4 py-2 rounded-lg text-sm font-semibold text-orange-600 mb-4">
             <FaStar className="w-4 h-4" />
-            <span>4.9/5 Rating dari 30+ Klien Puas</span>
+            <span>4.9/5 Rating dari {testimonialsData.length}+ Klien Puas</span>
           </div>
           <h2 className="scroll-fade-in text-3xl md:text-4xl font-black text-slate-800 mb-4">
             Cerita Sukses Klien Kami
@@ -156,62 +203,104 @@ export const Testimonial: React.FC = () => {
         </div>
 
         {/* ── Cards Grid ───────────────────────────────────────────────── */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8 min-h-[280px]">
-          {visibleTestimonials.map((t, index) => (
-            <div key={`${testimonialPage}-${index}`} className="scroll-fade-in group" style={{ animationDelay: `${index * 0.1}s` }}>
-              <div className="h-full bg-white border border-slate-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                <div className="space-y-4">
-                  <div className="flex gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <FaStar key={i} className={`w-5 h-5 drop-shadow-sm ${i < t.rating ? 'text-amber-400' : 'text-slate-200'}`} />
-                    ))}
-                  </div>
-                  <blockquote className="text-slate-700 leading-relaxed text-base">"{t.text}"</blockquote>
-                  <div className="flex items-center gap-3 pt-4 border-t border-slate-200">
-                    <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-orange-500 rounded-xl flex items-center justify-center shadow-md overflow-hidden">
-                      {t.avatar
-                        ? <img src={t.avatar} alt={t.name} className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                        : <span className="text-white font-bold text-lg">{t.name.charAt(0).toUpperCase()}</span>
-                      }
-                    </div>
-                    <div>
-                      <div className="font-bold text-slate-800">{t.name}</div>
-                      <div className="text-sm text-slate-500 flex items-center gap-1.5">
-                        <FaCheckCircle className="w-3 h-3 text-green-500" />
-                        {t.company || 'Verified Customer'}
+        {testimonialsData.length > 0 ? (
+          <>
+            <div className="grid md:grid-cols-3 gap-6 mb-8 min-h-[280px]">
+              {visibleTestimonials.map((t, index) => {
+                // Gunakan getImageUrl untuk avatar dari API
+                const avatarUrl = t.avatar ? getImageUrl(t.avatar) : ''
+                
+                return (
+                  <div key={t.id || `${testimonialPage}-${index}`} className="scroll-fade-in group" style={{ animationDelay: `${index * 0.1}s` }}>
+                    <div className="h-full bg-white border border-slate-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                      <div className="space-y-4">
+                        <div className="flex gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <FaStar key={i} className={`w-5 h-5 drop-shadow-sm ${i < t.rating ? 'text-amber-400' : 'text-slate-200'}`} />
+                          ))}
+                        </div>
+                        <blockquote className="text-slate-700 leading-relaxed text-base">"{t.text}"</blockquote>
+                        <div className="flex items-center gap-3 pt-4 border-t border-slate-200">
+                          <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-orange-500 rounded-xl flex items-center justify-center shadow-md overflow-hidden">
+                            {avatarUrl ? (
+                              <img 
+                                src={avatarUrl} 
+                                alt={t.name} 
+                                className="w-full h-full object-cover" 
+                                onError={e => { 
+                                  (e.target as HTMLImageElement).style.display = 'none'
+                                  // Show fallback initial
+                                  const parent = e.currentTarget.parentElement
+                                  if (parent) {
+                                    parent.innerHTML = `<span class="text-white font-bold text-lg">${t.name.charAt(0).toUpperCase()}</span>`
+                                  }
+                                }}
+                              />
+                            ) : (
+                              <span className="text-white font-bold text-lg">{t.name.charAt(0).toUpperCase()}</span>
+                            )}
+                          </div>
+                          <div>
+                            <div className="font-bold text-slate-800">{t.name}</div>
+                            <div className="text-sm text-slate-500 flex items-center gap-1.5">
+                              <FaCheckCircle className="w-3 h-3 text-green-500" />
+                              {t.company || 'Verified Customer'}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
+                )
+              })}
             </div>
-          ))}
-        </div>
 
-        {/* ── Pagination ───────────────────────────────────────────────── */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-4 mb-10">
-            <button onClick={() => setTestimonialPage(p => Math.max(0, p - 1))} disabled={testimonialPage === 0}
-              className="flex items-center justify-center w-11 h-11 rounded-xl border-2 border-slate-200 bg-white text-slate-600 hover:border-blue-500 hover:text-blue-600 hover:shadow-md disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200">
-              <FaChevronLeft className="w-4 h-4" />
-            </button>
-            <div className="flex gap-2 items-center">
-              {Array.from({ length: totalPages }).map((_, i) => (
-                <button key={i} onClick={() => setTestimonialPage(i)}
-                  className={`rounded-full transition-all duration-300 ${i === testimonialPage ? 'w-8 h-3 bg-gradient-to-r from-blue-600 to-orange-500' : 'w-3 h-3 bg-slate-300 hover:bg-slate-400'}`} />
-              ))}
-            </div>
-            <button onClick={() => setTestimonialPage(p => Math.min(totalPages - 1, p + 1))} disabled={testimonialPage === totalPages - 1}
-              className="flex items-center justify-center w-11 h-11 rounded-xl border-2 border-slate-200 bg-white text-slate-600 hover:border-blue-500 hover:text-blue-600 hover:shadow-md disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200">
-              <FaChevronRight className="w-4 h-4" />
-            </button>
+            {/* ── Pagination ───────────────────────────────────────────────── */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-4 mb-10">
+                <button 
+                  onClick={() => setTestimonialPage(p => Math.max(0, p - 1))} 
+                  disabled={testimonialPage === 0}
+                  className="flex items-center justify-center w-11 h-11 rounded-xl border-2 border-slate-200 bg-white text-slate-600 hover:border-blue-500 hover:text-blue-600 hover:shadow-md disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
+                >
+                  <FaChevronLeft className="w-4 h-4" />
+                </button>
+                <div className="flex gap-2 items-center">
+                  {Array.from({ length: totalPages }).map((_, i) => (
+                    <button 
+                      key={i} 
+                      onClick={() => setTestimonialPage(i)}
+                      className={`rounded-full transition-all duration-300 ${
+                        i === testimonialPage 
+                          ? 'w-8 h-3 bg-gradient-to-r from-blue-600 to-orange-500' 
+                          : 'w-3 h-3 bg-slate-300 hover:bg-slate-400'
+                      }`} 
+                    />
+                  ))}
+                </div>
+                <button 
+                  onClick={() => setTestimonialPage(p => Math.min(totalPages - 1, p + 1))} 
+                  disabled={testimonialPage === totalPages - 1}
+                  className="flex items-center justify-center w-11 h-11 rounded-xl border-2 border-slate-200 bg-white text-slate-600 hover:border-blue-500 hover:text-blue-600 hover:shadow-md disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
+                >
+                  <FaChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-slate-500">Belum ada testimonial. Jadilah yang pertama!</p>
           </div>
         )}
 
         {/* ── CTA ─────────────────────────────────────────────────────── */}
         <div className="text-center">
-          <button onClick={() => setShowAddModal(true)}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-orange-500 hover:from-blue-700 hover:to-orange-600 text-white px-6 py-3 rounded-xl font-bold text-sm md:text-base shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+          <button 
+            onClick={() => setShowAddModal(true)}
+            disabled={submitting}
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-orange-500 hover:from-blue-700 hover:to-orange-600 text-white px-6 py-3 rounded-xl font-bold text-sm md:text-base shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             <HiSparkles className="w-5 h-5" />
             Tambah Ulasan
           </button>
@@ -241,8 +330,8 @@ export const Testimonial: React.FC = () => {
                   <h3 className="text-[1.25rem] font-black text-slate-800 leading-snug">Tulis Ulasan</h3>
                   <p className="text-sm text-slate-500 mt-1">Bagikan pengalaman Anda bersama NexCube</p>
                 </div>
-                <button onClick={handleCloseModal}
-                  className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors ml-4 mt-0.5">
+                <button onClick={handleCloseModal} disabled={submitting}
+                  className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors ml-4 mt-0.5 disabled:opacity-50">
                   <FaTimes className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -257,8 +346,9 @@ export const Testimonial: React.FC = () => {
                   <div className="bg-slate-50 border border-slate-100 rounded-xl p-4">
                     <div className="flex items-center gap-1.5">
                       {[1, 2, 3, 4, 5].map(star => (
-                        <button key={star} type="button" onClick={() => setNewReview(r => ({ ...r, rating: star }))}
-                          className="transition-transform hover:scale-110 focus:outline-none">
+                        <button key={star} type="button" onClick={() => !submitting && setNewReview(r => ({ ...r, rating: star }))}
+                          disabled={submitting}
+                          className="transition-transform hover:scale-110 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50">
                           <FaStar className={`w-8 h-8 transition-colors duration-150 ${star <= newReview.rating ? 'text-amber-400' : 'text-slate-200'}`} />
                         </button>
                       ))}
@@ -279,8 +369,13 @@ export const Testimonial: React.FC = () => {
                     type="text"
                     placeholder="Nama lengkap Anda"
                     value={newReview.name}
+                    disabled={submitting}
                     onChange={e => { setNewReview(r => ({ ...r, name: e.target.value })); if (errors.name) setErrors(err => ({ ...err, name: undefined })) }}
-                    className={`w-full px-4 py-3 rounded-xl border outline-none text-sm transition-all ${errors.name ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-100' : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'}`}
+                    className={`w-full px-4 py-3 rounded-xl border outline-none text-sm transition-all disabled:bg-slate-50 disabled:cursor-not-allowed ${
+                      errors.name 
+                        ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-100' 
+                        : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                    }`}
                   />
                   {errors.name && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">⚠ {errors.name}</p>}
                 </div>
@@ -294,8 +389,9 @@ export const Testimonial: React.FC = () => {
                     type="text"
                     placeholder="Nama perusahaan / usaha Anda"
                     value={newReview.company}
+                    disabled={submitting}
                     onChange={e => setNewReview(r => ({ ...r, company: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm transition-all"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-sm transition-all disabled:bg-slate-50 disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -308,8 +404,13 @@ export const Testimonial: React.FC = () => {
                     placeholder="Ceritakan pengalaman Anda menggunakan layanan NexCube..."
                     rows={4}
                     value={newReview.text}
+                    disabled={submitting}
                     onChange={e => { setNewReview(r => ({ ...r, text: e.target.value })); if (errors.text) setErrors(err => ({ ...err, text: undefined })) }}
-                    className={`w-full px-4 py-3 rounded-xl border outline-none text-sm transition-all resize-none ${errors.text ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-100' : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'}`}
+                    className={`w-full px-4 py-3 rounded-xl border outline-none text-sm transition-all resize-none disabled:bg-slate-50 disabled:cursor-not-allowed ${
+                      errors.text 
+                        ? 'border-red-400 bg-red-50 focus:ring-2 focus:ring-red-100' 
+                        : 'border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100'
+                    }`}
                   />
                   {errors.text && <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">⚠ {errors.text}</p>}
                 </div>
@@ -321,7 +422,7 @@ export const Testimonial: React.FC = () => {
                   </label>
 
                   {/* Hidden input */}
-                  <input ref={fileInputRef} type="file" accept={ACCEPTED_TYPES.join(',')} onChange={handleAvatarChange} className="hidden" />
+                  <input ref={fileInputRef} type="file" accept={ACCEPTED_TYPES.join(',')} onChange={handleAvatarChange} className="hidden" disabled={submitting} />
 
                   {newReview.avatar ? (
                     /* Preview */
@@ -336,20 +437,20 @@ export const Testimonial: React.FC = () => {
                         </p>
                       </div>
                       <div className="flex gap-2 flex-shrink-0">
-                        <button type="button" onClick={() => fileInputRef.current?.click()}
-                          className="text-xs font-semibold text-blue-600 border border-blue-200 bg-white hover:bg-blue-50 rounded-lg px-3 py-1.5 transition-colors">
+                        <button type="button" onClick={() => fileInputRef.current?.click()} disabled={submitting}
+                          className="text-xs font-semibold text-blue-600 border border-blue-200 bg-white hover:bg-blue-50 rounded-lg px-3 py-1.5 transition-colors disabled:opacity-50">
                           Ganti
                         </button>
-                        <button type="button" onClick={handleRemoveAvatar}
-                          className="text-xs font-semibold text-red-500 border border-red-200 bg-white hover:bg-red-50 rounded-lg px-3 py-1.5 transition-colors">
+                        <button type="button" onClick={handleRemoveAvatar} disabled={submitting}
+                          className="text-xs font-semibold text-red-500 border border-red-200 bg-white hover:bg-red-50 rounded-lg px-3 py-1.5 transition-colors disabled:opacity-50">
                           Hapus
                         </button>
                       </div>
                     </div>
                   ) : (
                     /* Drop zone */
-                    <button type="button" onClick={() => fileInputRef.current?.click()}
-                      className="w-full border-2 border-dashed border-slate-200 rounded-xl py-5 px-4 flex items-center gap-4 hover:border-blue-400 hover:bg-blue-50/40 transition-colors group text-left">
+                    <button type="button" onClick={() => !submitting && fileInputRef.current?.click()} disabled={submitting}
+                      className="w-full border-2 border-dashed border-slate-200 rounded-xl py-5 px-4 flex items-center gap-4 hover:border-blue-400 hover:bg-blue-50/40 transition-colors group text-left disabled:opacity-50 disabled:cursor-not-allowed">
                       <div className="flex-shrink-0 w-12 h-12 rounded-full bg-slate-100 group-hover:bg-blue-100 flex items-center justify-center transition-colors">
                         <svg className="w-6 h-6 text-slate-400 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -368,14 +469,23 @@ export const Testimonial: React.FC = () => {
 
             {/* Footer — sticky */}
             <div className="flex-shrink-0 px-7 py-5 border-t border-slate-100 flex gap-3">
-              <button type="button" onClick={handleCloseModal}
-                className="flex-1 py-3 rounded-xl border-2 border-slate-200 text-slate-600 font-semibold text-sm hover:border-slate-300 hover:bg-slate-50 transition-all duration-200">
+              <button type="button" onClick={handleCloseModal} disabled={submitting}
+                className="flex-1 py-3 rounded-xl border-2 border-slate-200 text-slate-600 font-semibold text-sm hover:border-slate-300 hover:bg-slate-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 Batal
               </button>
-              <button type="button" onClick={handleSubmit}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-orange-500 hover:from-blue-700 hover:to-orange-600 text-white py-3 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2">
-                <HiSparkles className="w-4 h-4" />
-                Kirim Ulasan
+              <button type="button" onClick={handleSubmit} disabled={submitting}
+                className="flex-1 bg-gradient-to-r from-blue-600 to-orange-500 hover:from-blue-700 hover:to-orange-600 text-white py-3 rounded-xl font-bold text-sm shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                {submitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Mengirim...</span>
+                  </>
+                ) : (
+                  <>
+                    <HiSparkles className="w-4 h-4" />
+                    Kirim Ulasan
+                  </>
+                )}
               </button>
             </div>
           </div>
