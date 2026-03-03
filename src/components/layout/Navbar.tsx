@@ -107,9 +107,9 @@ export const Navbar: React.FC = () => {
   ];
 
   const paketItems = [
-    { name: "Nexcube", desc: "Cocok untuk UMKM baru", href: "/paket", color: "from-blue-500 to-cyan-500" },
+    { name: "Website", desc: "Cocok untuk UMKM baru", href: "/paket", color: "from-blue-500 to-cyan-500" },
     // { name: "Paket Digital", desc: "Untuk bisnis berkembang", href: "/paket/digital", color: "from-purple-500 to-pink-500" },
-    { name: "Paket Affiliate", desc: "Solusi lengkap perusahaan", href: "/paket/affiliate", color: "from-orange-500 to-red-500" }
+    { name: "Sertifikasi", desc: "Solusi lengkap perusahaan", href: "/paket/affiliate", color: "from-orange-500 to-red-500" }
   ];
 
   const isActive = (path: string) => location.pathname === path;
