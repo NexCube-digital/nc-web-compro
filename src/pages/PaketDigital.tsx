@@ -299,7 +299,7 @@ export const PaketDigital: React.FC = () => {
         }`}
       >
         {activeCategory === 'all' && (
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 animate-gradient-x"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 animate-gradient-x [background-size:200%_200%]"></div>
         )}
         <span className="relative flex items-center gap-2">
           <HiSparkles className="w-5 h-5" />
@@ -318,7 +318,7 @@ export const PaketDigital: React.FC = () => {
           }`}
         >
           {activeCategory === cat.id && (
-            <div className={`absolute inset-0 bg-gradient-to-r ${cat.gradient} animate-gradient-x`}></div>
+            <div className={`absolute inset-0 bg-gradient-to-r ${cat.gradient} animate-gradient-x [background-size:200%_200%]`}></div>
           )}
           <span className="relative flex items-center gap-2">
             {cat.icon}
@@ -834,8 +834,8 @@ export const PaketDigital: React.FC = () => {
               {/* Animated Background */}
               <div className="absolute inset-0 opacity-20">
                 <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-blob"></div>
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-blob animation-delay-2000"></div>
-                <div className="absolute bottom-0 left-1/2 w-64 h-64 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-blob animation-delay-4000"></div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-blob [animation-delay:2s]"></div>
+                <div className="absolute bottom-0 left-1/2 w-64 h-64 bg-white rounded-full mix-blend-overlay filter blur-3xl animate-blob [animation-delay:4s]"></div>
               </div>
 
               <div className="relative z-10">
@@ -866,39 +866,6 @@ export const PaketDigital: React.FC = () => {
           </div>
         </section>
       </div>
-
-      <style>{`
-        @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-          animation-delay: 4s;
-        }
-        @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-        }
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-        @keyframes gradient-x {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-        }
-        .animate-gradient-x {
-          background-size: 200% 200%;
-          animation: gradient-x 3s ease infinite;
-        }
-      `}</style>
     </>
   );
 };
