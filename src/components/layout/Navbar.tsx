@@ -38,9 +38,12 @@ export const Navbar: React.FC = () => {
     if (!logoRef.current) return;
     gsap.to(logoRef.current, { scale: isScrolled ? 0.9 : 1, duration: 0.3, ease: 'power2.out' });
     if (isScrolled) {
-      gsap.to(logoRef.current.querySelector('.logo-glow'), {
-        opacity: 0.6, scale: 1.2, duration: 1.5, repeat: -1, yoyo: true, ease: 'sine.inOut'
-      });
+      const logoGlow = logoRef.current.querySelector('.logo-glow');
+      if (logoGlow) {
+        gsap.to(logoGlow, {
+          opacity: 0.6, scale: 1.2, duration: 1.5, repeat: -1, yoyo: true, ease: 'sine.inOut'
+        });
+      }
     }
   }, [isScrolled]);
 

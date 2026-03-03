@@ -205,7 +205,7 @@ export const Testimonial: React.FC = () => {
         {/* ── Cards Grid ───────────────────────────────────────────────── */}
         {testimonialsData.length > 0 ? (
           <>
-            <div className="grid md:grid-cols-3 gap-6 mb-8 min-h-[280px]">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8 items-stretch">
               {visibleTestimonials.map((t, index) => {
                 // Gunakan getImageUrl untuk avatar dari API
                 const avatarUrl = t.avatar ? getImageUrl(t.avatar) : ''
@@ -213,14 +213,14 @@ export const Testimonial: React.FC = () => {
                 return (
                   <div key={t.id || `${testimonialPage}-${index}`} className="scroll-fade-in group" style={{ animationDelay: `${index * 0.1}s` }}>
                     <div className="h-full bg-white border border-slate-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                      <div className="space-y-4">
+                      <div className="h-full flex flex-col gap-4">
                         <div className="flex gap-1">
                           {[...Array(5)].map((_, i) => (
                             <FaStar key={i} className={`w-5 h-5 drop-shadow-sm ${i < t.rating ? 'text-amber-400' : 'text-slate-200'}`} />
                           ))}
                         </div>
-                        <blockquote className="text-slate-700 leading-relaxed text-base">"{t.text}"</blockquote>
-                        <div className="flex items-center gap-3 pt-4 border-t border-slate-200">
+                        <blockquote className="text-slate-700 leading-relaxed text-base min-h-[104px]">"{t.text}"</blockquote>
+                        <div className="mt-auto flex items-center gap-3 pt-4 border-t border-slate-200">
                           <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-orange-500 rounded-xl flex items-center justify-center shadow-md overflow-hidden">
                             {avatarUrl ? (
                               <img 

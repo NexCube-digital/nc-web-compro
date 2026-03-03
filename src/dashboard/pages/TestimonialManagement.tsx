@@ -4,11 +4,7 @@ import { Helmet } from 'react-helmet-async'
 import { toast } from 'react-hot-toast'
 import { TestimonialTable } from './testimonial/TestimonialTable'
 import { FormTestimonial } from './testimonial/FormTestimonial'
-<<<<<<< HEAD
 import apiClient, { Testimonial, TestimonialStats, TestimonialFormData } from '../../services/api'
-=======
-import { apiClient, Testimonial } from '../../services/api'
->>>>>>> ebaec0e5fe017a45b53378d020fcab150aaa9a78
 
 import {
   Search,
@@ -44,23 +40,14 @@ const defaultForm: TestimonialFormState = {
   status: 'published',
 }
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> ebaec0e5fe017a45b53378d020fcab150aaa9a78
 // ─── Component ────────────────────────────────────────────────────────────────
 const TestimonialManagement: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const [testimonials, setTestimonials] = useState<TestimonialItem[]>([])
-<<<<<<< HEAD
-  const [loading, setLoading] = useState(false)
-  const [initialLoading, setInitialLoading] = useState(true)
-=======
-  const [loading, setLoading] = useState(true)
->>>>>>> ebaec0e5fe017a45b53378d020fcab150aaa9a78
+const [testimonials, setTestimonials] = useState<TestimonialItem[]>([])
+const [loading, setLoading] = useState(false)
+const [initialLoading, setInitialLoading] = useState(true)
   const [error, setError] = useState('')
   const [editingId, setEditingId] = useState<number | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -76,72 +63,50 @@ const TestimonialManagement: React.FC = () => {
   })
   const [formData, setFormData] = useState<TestimonialFormState>(defaultForm)
 
-  const showForm = location.pathname.includes('/formtestimonial')
+const showForm = location.pathname.includes('/formtestimonial')
 
-<<<<<<< HEAD
-  // ─── Fetch Data ─────────────────────────────────────────────────────────────
-=======
-  // ─── Fetch Testimonials ─────────────────────────────────────────────────────
->>>>>>> ebaec0e5fe017a45b53378d020fcab150aaa9a78
-  const fetchTestimonials = useCallback(async () => {
-    try {
-      setLoading(true)
-      setError('')
-<<<<<<< HEAD
-      
-      const response = await apiClient.getTestimonials(filterStatus, filterRating)
-      if (response.data?.testimonials) {
-        setTestimonials(response.data.testimonials)
-      }
-    } catch (err: any) {
-      setError(err.message || 'Gagal memuat data testimonial')
-      toast.error('Gagal memuat data')
-    } finally {
-      setLoading(false)
-      setInitialLoading(false)
+// ─── Fetch Data ─────────────────────────────────────────────────────────────
+const fetchTestimonials = useCallback(async () => {
+  try {
+    setLoading(true)
+    setError('')
+    
+    const response = await apiClient.getTestimonials(filterStatus, filterRating)
+    if (response.data?.testimonials) {
+      setTestimonials(response.data.testimonials)
     }
-  }, [filterStatus, filterRating])
+  } catch (err: any) {
+    setError(err.message || 'Gagal memuat data testimonial')
+    toast.error('Gagal memuat data')
+  } finally {
+    setLoading(false)
+    setInitialLoading(false)
+  }
+}, [filterStatus, filterRating])
 
-  const fetchStats = useCallback(async () => {
-    try {
-      const response = await apiClient.getTestimonialStats()
-      if (response.data?.stats) {
-        setStats(response.data.stats)
-      }
-    } catch (err) {
-      console.error('Failed to fetch stats:', err)
+const fetchStats = useCallback(async () => {
+  try {
+    const response = await apiClient.getTestimonialStats()
+    if (response.data?.stats) {
+      setStats(response.data.stats)
     }
-  }, [])
+  } catch (err) {
+    console.error('Failed to fetch stats:', err)
+  }
+}, [])
 
-  // Initial load
-  useEffect(() => {
+// Initial load
+useEffect(() => {
+  fetchTestimonials()
+  fetchStats()
+}, [fetchTestimonials, fetchStats])
+
+// Refetch when filters change
+useEffect(() => {
+  if (!initialLoading) {
     fetchTestimonials()
-    fetchStats()
-  }, [fetchTestimonials, fetchStats])
-
-  // Refetch when filters change
-  useEffect(() => {
-    if (!initialLoading) {
-      fetchTestimonials()
-    }
-  }, [filterStatus, filterRating, fetchTestimonials, initialLoading])
-=======
-      const response = await apiClient.getTestimonials(filterStatus, filterRating)
-      if (response.success && response.data) {
-        setTestimonials(response.data as TestimonialItem[])
-      }
-    } catch (err: any) {
-      setError(err.message || 'Gagal memuat testimonial')
-      toast.error('Gagal memuat testimonial')
-    } finally {
-      setLoading(false)
-    }
-  }, [filterStatus, filterRating])
-
-  useEffect(() => {
-    fetchTestimonials()
-  }, [fetchTestimonials])
->>>>>>> ebaec0e5fe017a45b53378d020fcab150aaa9a78
+  }
+}, [filterStatus, filterRating, fetchTestimonials, initialLoading])
 
   // ─── Reset Form ─────────────────────────────────────────────────────────────
   const resetForm = useCallback(() => {
@@ -209,76 +174,54 @@ const TestimonialManagement: React.FC = () => {
       return
     }
 
-    try {
-      setLoading(true)
+try {
+  setLoading(true)
 
-<<<<<<< HEAD
-      // Prepare data for API
-      const testimonialData: any = {
-=======
-      const payload: any = {
->>>>>>> ebaec0e5fe017a45b53378d020fcab150aaa9a78
-        name: formData.name,
-        company: formData.company,
-        text: formData.text,
-        rating: formData.rating,
-        status: formData.status,
-<<<<<<< HEAD
-=======
-        avatar: formData.avatarPreview || '',
-      }
+  // Prepare data for API
+  const testimonialData: any = {
+    name: formData.name,
+    company: formData.company,
+    text: formData.text,
+    rating: formData.rating,
+    status: formData.status,
+  }
 
-      if (editingId) {
-        const response = await apiClient.updateTestimonial(editingId.toString(), payload)
-        if (response.success) {
-          toast.success('Testimonial berhasil diupdate')
-          await fetchTestimonials()
-        }
-      } else {
-        const response = await apiClient.createTestimonial(payload)
-        if (response.success) {
-          toast.success('Testimonial berhasil ditambahkan')
-          await fetchTestimonials()
-        }
->>>>>>> ebaec0e5fe017a45b53378d020fcab150aaa9a78
-      }
+  // Handle avatar
+  if (formData.avatarFile) {
+    // Convert to base64
+    testimonialData.avatar = await fileToBase64(formData.avatarFile)
+  } else if (formData.avatarPreview && !formData.avatarPreview.startsWith('blob:')) {
+    // Keep existing avatar URL
+    testimonialData.avatar = formData.avatarPreview
+  }
 
-      // Handle avatar
-      if (formData.avatarFile) {
-        // Convert to base64
-        testimonialData.avatar = await fileToBase64(formData.avatarFile)
-      } else if (formData.avatarPreview && !formData.avatarPreview.startsWith('blob:')) {
-        // Keep existing avatar URL
-        testimonialData.avatar = formData.avatarPreview
-      }
-
-      if (editingId) {
-        // Update existing testimonial
-        const response = await apiClient.updateTestimonial(editingId, testimonialData)
-        if (response.data?.testimonial) {
-          setTestimonials(prev =>
-            prev.map(t => t.id === editingId ? response.data!.testimonial : t)
-          )
-          toast.success('Testimonial berhasil diupdate')
-        }
-      } else {
-        // Create new testimonial
-        const response = await apiClient.createTestimonial(testimonialData)
-        if (response.data?.testimonial) {
-          setTestimonials(prev => [response.data!.testimonial, ...prev])
-          toast.success('Testimonial berhasil ditambahkan')
-        }
-      }
-
-      // Refresh stats
-      fetchStats()
-      resetForm()
-      navigate('/dashboard/testimonials')
-    } catch (err: any) {
-      toast.error(err.message || 'Terjadi kesalahan')
-    } finally {
-      setLoading(false)
+  if (editingId) {
+    // Update existing testimonial
+    const response = await apiClient.updateTestimonial(editingId, testimonialData)
+    if (response.data?.testimonial) {
+      setTestimonials(prev =>
+        prev.map(t => t.id === editingId ? response.data!.testimonial : t)
+      )
+      toast.success('Testimonial berhasil diupdate')
     }
+  } else {
+    // Create new testimonial
+    const response = await apiClient.createTestimonial(testimonialData)
+    if (response.data?.testimonial) {
+      setTestimonials(prev => [response.data!.testimonial, ...prev])
+      toast.success('Testimonial berhasil ditambahkan')
+    }
+  }
+
+  // Refresh stats
+  fetchStats()
+  resetForm()
+  navigate('/dashboard/testimonials')
+} catch (err: any) {
+  toast.error(err.message || 'Terjadi kesalahan')
+} finally {
+  setLoading(false)
+}
   }
 
   const handleEdit = async (item: TestimonialItem) => {
@@ -299,19 +242,11 @@ const TestimonialManagement: React.FC = () => {
     if (!window.confirm('Apakah Anda yakin ingin menghapus testimonial ini?')) return
     
     try {
-      setDeleteLoading(id)
-<<<<<<< HEAD
-      await apiClient.deleteTestimonial(id)
-      setTestimonials(prev => prev.filter(t => t.id !== id))
-      fetchStats() // Refresh stats
-      toast.success('Testimonial berhasil dihapus')
-=======
-      const response = await apiClient.deleteTestimonial(id.toString())
-      if (response.success) {
-        toast.success('Testimonial berhasil dihapus')
-        await fetchTestimonials()
-      }
->>>>>>> ebaec0e5fe017a45b53378d020fcab150aaa9a78
+setDeleteLoading(id)
+await apiClient.deleteTestimonial(id)
+setTestimonials(prev => prev.filter(t => t.id !== id))
+fetchStats() // Refresh stats
+toast.success('Testimonial berhasil dihapus')
     } catch (err: any) {
       toast.error(err.message || 'Gagal menghapus testimonial')
     } finally {
@@ -319,25 +254,17 @@ const TestimonialManagement: React.FC = () => {
     }
   }
 
-  const handleToggleStatus = async (id: number) => {
-    try {
-<<<<<<< HEAD
-      const response = await apiClient.toggleTestimonialStatus(id)
-      if (response.data?.testimonial) {
-        setTestimonials(prev =>
-          prev.map(t => t.id === id ? response.data!.testimonial : t)
-        )
-        fetchStats() // Refresh stats
-        const newStatus = response.data.testimonial.status
-        toast.success(`Testimonial ${newStatus === 'published' ? 'dipublikasikan' : 'disembunyikan'}`)
-=======
-      const response = await apiClient.toggleTestimonialStatus(id.toString())
-      if (response.success) {
-        const newStatus = response.data?.status
-        toast.success(`Testimonial ${newStatus === 'published' ? 'dipublikasikan' : 'disembunyikan'}`)
-        await fetchTestimonials()
->>>>>>> ebaec0e5fe017a45b53378d020fcab150aaa9a78
-      }
+const handleToggleStatus = async (id: number) => {
+  try {
+    const response = await apiClient.toggleTestimonialStatus(id)
+    if (response.data?.testimonial) {
+      setTestimonials(prev =>
+        prev.map(t => t.id === id ? response.data!.testimonial : t)
+      )
+      fetchStats() // Refresh stats
+      const newStatus = response.data.testimonial.status
+      toast.success(`Testimonial ${newStatus === 'published' ? 'dipublikasikan' : 'disembunyikan'}`)
+    }
     } catch (err: any) {
       toast.error(err.message || 'Gagal mengubah status')
     }
@@ -348,17 +275,13 @@ const TestimonialManagement: React.FC = () => {
     navigate('/dashboard/testimonials')
   }
 
-  const handleRefresh = async () => {
-<<<<<<< HEAD
-    await Promise.all([
-      fetchTestimonials(),
-      fetchStats()
-    ])
-=======
-    await fetchTestimonials()
->>>>>>> ebaec0e5fe017a45b53378d020fcab150aaa9a78
-    toast.success('Data berhasil dimuat ulang')
-  }
+const handleRefresh = async () => {
+  await Promise.all([
+    fetchTestimonials(),
+    fetchStats()
+  ])
+  toast.success('Data berhasil dimuat ulang')
+}
 
   // ─── Render ─────────────────────────────────────────────────────────────────
   return (
