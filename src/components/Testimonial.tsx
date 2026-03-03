@@ -1,6 +1,7 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { FaStar, FaCheckCircle, FaChevronLeft, FaChevronRight, FaTimes } from 'react-icons/fa'
 import { HiSparkles } from 'react-icons/hi'
+import { apiClient, getImageUrl } from '../services/api'
 
 interface TestimonialItem {
   name: string
@@ -10,43 +11,7 @@ interface TestimonialItem {
   avatar: string
 }
 
-const initialTestimonials: TestimonialItem[] = [
-  {
-    name: 'Budi Santoso',
-    company: 'PT Maju Bersama',
-    text: 'Website kami mendapatkan peningkatan trafik signifikan setelah didesain ulang oleh tim NexCube. Tampilan premium dan responsif memberikan kesan profesional yang luar biasa!',
-    rating: 5,
-    avatar: ''
-  },
-  {
-    name: 'Dewi Anggraini',
-    company: 'Harmony Events',
-    text: 'Undangan digital untuk acara perusahaan kami mendapat banyak pujian dari para tamu. Fitur RSVP sangat membantu dalam persiapan acara dan memberikan pengalaman yang memorable.',
-    rating: 5,
-    avatar: ''
-  },
-  {
-    name: 'Ahmad Fauzi',
-    company: 'Warung Nusantara',
-    text: 'Menu digital untuk restoran kami memudahkan pelanggan melihat pilihan makanan. Update menu jadi sangat cepat tanpa perlu cetak ulang, meningkatkan efisiensi operasional.',
-    rating: 5,
-    avatar: ''
-  },
-  {
-    name: 'Siti Rahayu',
-    company: 'Butik Cantik',
-    text: 'Katalog digital yang dibuat NexCube sangat membantu penjualan online kami. Desainnya elegan dan mudah digunakan oleh pelanggan. Highly recommended!',
-    rating: 5,
-    avatar: ''
-  },
-  {
-    name: 'Rizky Pratama',
-    company: 'Tech Startup ID',
-    text: 'Tim NexCube sangat profesional dan responsif. Mereka memahami kebutuhan bisnis kami dengan baik dan mengeksekusi dengan sempurna sesuai timeline.',
-    rating: 5,
-    avatar: ''
-  }
-]
+
 
 const ITEMS_PER_PAGE = 3
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
@@ -57,12 +22,31 @@ export const Testimonial: React.FC = () => {
 
   const [testimonialPage, setTestimonialPage] = useState(0)
   const [showAddModal, setShowAddModal] = useState(false)
-  const [testimonialsData, setTestimonialsData] = useState<TestimonialItem[]>(initialTestimonials)
+  const [testimonialsData, setTestimonialsData] = useState<TestimonialItem[]>([])
+  const [loading, setLoading] = useState(true)
   const [newReview, setNewReview] = useState<TestimonialItem>({
     name: '', company: '', text: '', rating: 5, avatar: ''
   })
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [errors, setErrors] = useState<{ name?: string; text?: string }>({})
+
+  // Fetch published testimonials
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        setLoading(true)
+        const response = await apiClient.getPublishedTestimonials()
+        if (response.success && response.data) {
+          setTestimonialsData(response.data as TestimonialItem[])
+        }
+      } catch (error) {
+        console.error('Failed to fetch testimonials:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchTestimonials()
+  }, [])
 
   const totalPages = Math.ceil(testimonialsData.length / ITEMS_PER_PAGE)
   const visibleTestimonials = testimonialsData.slice(
@@ -156,7 +140,16 @@ export const Testimonial: React.FC = () => {
         </div>
 
         {/* ── Cards Grid ───────────────────────────────────────────────── */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8 min-h-[280px]">
+        {loading ? (
+          <div className="flex items-center justify-center min-h-[280px]">
+            <div className="text-slate-500">Memuat testimoni...</div>
+          </div>
+        ) : testimonialsData.length === 0 ? (
+          <div className="flex items-center justify-center min-h-[280px]">
+            <div className="text-slate-500">Belum ada testimoni</div>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-6 mb-8 min-h-[280px]">
           {visibleTestimonials.map((t, index) => (
             <div key={`${testimonialPage}-${index}`} className="scroll-fade-in group" style={{ animationDelay: `${index * 0.1}s` }}>
               <div className="h-full bg-white border border-slate-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
@@ -170,7 +163,7 @@ export const Testimonial: React.FC = () => {
                   <div className="flex items-center gap-3 pt-4 border-t border-slate-200">
                     <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-orange-500 rounded-xl flex items-center justify-center shadow-md overflow-hidden">
                       {t.avatar
-                        ? <img src={t.avatar} alt={t.name} className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                        ? <img src={getImageUrl(t.avatar)} alt={t.name} className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
                         : <span className="text-white font-bold text-lg">{t.name.charAt(0).toUpperCase()}</span>
                       }
                     </div>
@@ -187,6 +180,7 @@ export const Testimonial: React.FC = () => {
             </div>
           ))}
         </div>
+        )}
 
         {/* ── Pagination ───────────────────────────────────────────────── */}
         {totalPages > 1 && (

@@ -1,9 +1,10 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { toast } from 'react-hot-toast'
 import { TestimonialTable } from './testimonial/TestimonialTable'
 import { FormTestimonial } from './testimonial/FormTestimonial'
+import { apiClient, Testimonial } from '../../services/api'
 
 import {
   Search,
@@ -48,67 +49,15 @@ const defaultForm: TestimonialFormState = {
   status: 'published',
 }
 
-// ─── Dummy Data ───────────────────────────────────────────────────────────────
-const dummyTestimonials: TestimonialItem[] = [
-  {
-    id: 1,
-    name: 'Budi Santoso',
-    company: 'PT Maju Bersama',
-    text: 'Website kami mendapatkan peningkatan trafik signifikan setelah didesain ulang oleh tim NexCube. Tampilan premium dan responsif memberikan kesan profesional yang luar biasa!',
-    rating: 5,
-    avatar: '',
-    status: 'published',
-    createdAt: '2025-01-10',
-  },
-  {
-    id: 2,
-    name: 'Dewi Anggraini',
-    company: 'Harmony Events',
-    text: 'Undangan digital untuk acara perusahaan kami mendapat banyak pujian dari para tamu. Fitur RSVP sangat membantu dalam persiapan acara dan memberikan pengalaman yang memorable.',
-    rating: 5,
-    avatar: '',
-    status: 'published',
-    createdAt: '2025-01-15',
-  },
-  {
-    id: 3,
-    name: 'Ahmad Fauzi',
-    company: 'Warung Nusantara',
-    text: 'Menu digital untuk restoran kami memudahkan pelanggan melihat pilihan makanan. Update menu jadi sangat cepat tanpa perlu cetak ulang.',
-    rating: 4,
-    avatar: '',
-    status: 'pending',
-    createdAt: '2025-01-20',
-  },
-  {
-    id: 4,
-    name: 'Siti Rahayu',
-    company: 'Butik Cantik',
-    text: 'Katalog digital yang dibuat NexCube sangat membantu penjualan online kami. Desainnya elegan dan mudah digunakan oleh pelanggan.',
-    rating: 5,
-    avatar: '',
-    status: 'published',
-    createdAt: '2025-02-01',
-  },
-  {
-    id: 5,
-    name: 'Rizky Pratama',
-    company: 'Tech Startup ID',
-    text: 'Tim NexCube sangat profesional dan responsif. Mereka memahami kebutuhan bisnis kami dengan baik dan mengeksekusi dengan sempurna sesuai timeline.',
-    rating: 5,
-    avatar: '',
-    status: 'hidden',
-    createdAt: '2025-02-05',
-  },
-]
+
 
 // ─── Component ────────────────────────────────────────────────────────────────
 const TestimonialManagement: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const [testimonials, setTestimonials] = useState<TestimonialItem[]>(dummyTestimonials)
-  const [loading, setLoading] = useState(false)
+  const [testimonials, setTestimonials] = useState<TestimonialItem[]>([])
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [editingId, setEditingId] = useState<number | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -118,6 +67,27 @@ const TestimonialManagement: React.FC = () => {
   const [formData, setFormData] = useState<TestimonialFormState>(defaultForm)
 
   const showForm = location.pathname.includes('/formtestimonial')
+
+  // ─── Fetch Testimonials ─────────────────────────────────────────────────────
+  const fetchTestimonials = useCallback(async () => {
+    try {
+      setLoading(true)
+      setError('')
+      const response = await apiClient.getTestimonials(filterStatus, filterRating)
+      if (response.success && response.data) {
+        setTestimonials(response.data as TestimonialItem[])
+      }
+    } catch (err: any) {
+      setError(err.message || 'Gagal memuat testimonial')
+      toast.error('Gagal memuat testimonial')
+    } finally {
+      setLoading(false)
+    }
+  }, [filterStatus, filterRating])
+
+  useEffect(() => {
+    fetchTestimonials()
+  }, [fetchTestimonials])
 
   // ─── Reset Form ─────────────────────────────────────────────────────────────
   const resetForm = useCallback(() => {
@@ -190,45 +160,33 @@ const TestimonialManagement: React.FC = () => {
     try {
       setLoading(true)
 
-      // Simulasi delay API
-      await new Promise(r => setTimeout(r, 600))
+      const payload: any = {
+        name: formData.name,
+        company: formData.company,
+        text: formData.text,
+        rating: formData.rating,
+        status: formData.status,
+        avatar: formData.avatarPreview || '',
+      }
 
       if (editingId) {
-        setTestimonials(prev =>
-          prev.map(t =>
-            t.id === editingId
-              ? {
-                  ...t,
-                  name: formData.name,
-                  company: formData.company,
-                  text: formData.text,
-                  rating: formData.rating,
-                  avatar: formData.avatarPreview || t.avatar,
-                  status: formData.status,
-                }
-              : t
-          )
-        )
-        toast.success('Testimonial berhasil diupdate')
-      } else {
-        const newItem: TestimonialItem = {
-          id: Date.now(),
-          name: formData.name,
-          company: formData.company,
-          text: formData.text,
-          rating: formData.rating,
-          avatar: formData.avatarPreview || '',
-          status: formData.status,
-          createdAt: new Date().toISOString().split('T')[0],
+        const response = await apiClient.updateTestimonial(editingId.toString(), payload)
+        if (response.success) {
+          toast.success('Testimonial berhasil diupdate')
+          await fetchTestimonials()
         }
-        setTestimonials(prev => [newItem, ...prev])
-        toast.success('Testimonial berhasil ditambahkan')
+      } else {
+        const response = await apiClient.createTestimonial(payload)
+        if (response.success) {
+          toast.success('Testimonial berhasil ditambahkan')
+          await fetchTestimonials()
+        }
       }
 
       resetForm()
       navigate('/dashboard/testimonials')
-    } catch {
-      toast.error('Terjadi kesalahan')
+    } catch (err: any) {
+      toast.error(err.message || 'Terjadi kesalahan')
     } finally {
       setLoading(false)
     }
@@ -252,25 +210,29 @@ const TestimonialManagement: React.FC = () => {
     if (!window.confirm('Apakah Anda yakin ingin menghapus testimonial ini?')) return
     try {
       setDeleteLoading(id)
-      await new Promise(r => setTimeout(r, 400))
-      setTestimonials(prev => prev.filter(t => t.id !== id))
-      toast.success('Testimonial berhasil dihapus')
-    } catch {
-      toast.error('Gagal menghapus testimonial')
+      const response = await apiClient.deleteTestimonial(id.toString())
+      if (response.success) {
+        toast.success('Testimonial berhasil dihapus')
+        await fetchTestimonials()
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal menghapus testimonial')
     } finally {
       setDeleteLoading(null)
     }
   }
 
   const handleToggleStatus = async (id: number) => {
-    setTestimonials(prev =>
-      prev.map(t => {
-        if (t.id !== id) return t
-        const next = t.status === 'published' ? 'hidden' : 'published'
-        toast.success(`Testimonial ${next === 'published' ? 'dipublikasikan' : 'disembunyikan'}`)
-        return { ...t, status: next }
-      })
-    )
+    try {
+      const response = await apiClient.toggleTestimonialStatus(id.toString())
+      if (response.success) {
+        const newStatus = response.data?.status
+        toast.success(`Testimonial ${newStatus === 'published' ? 'dipublikasikan' : 'disembunyikan'}`)
+        await fetchTestimonials()
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Gagal mengubah status')
+    }
   }
 
   const handleCancel = () => {
@@ -279,9 +241,7 @@ const TestimonialManagement: React.FC = () => {
   }
 
   const handleRefresh = async () => {
-    setLoading(true)
-    await new Promise(r => setTimeout(r, 500))
-    setLoading(false)
+    await fetchTestimonials()
     toast.success('Data berhasil dimuat ulang')
   }
 
