@@ -365,7 +365,10 @@ class ApiClient {
         if (error.response?.status === 401) {
           this.setToken(null);
           if (typeof window !== 'undefined') {
-            window.location.href = '/login';
+            // ← Hanya redirect ke login kalau sedang di halaman dashboard
+            if (window.location.pathname.startsWith('/dashboard')) {
+              window.location.href = '/login';
+            }
           }
         }
         return Promise.reject(error);

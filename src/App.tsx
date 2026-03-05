@@ -109,7 +109,6 @@ export const routes = [
       { path: 'paket',                    element: <Paket /> },
       // { path: 'paket/digital',            element: <PaketDigital /> },
       { path: 'paket/affiliate',             element: <PaketAffiliate /> },
-      { path: 'paket/:tier',              element: <PaketDetail /> },
       { path: 'paket/website',            element: <Website /> },
       { path: 'paket/undangan-digital',   element: <UndanganDigital /> },
       { path: 'paket/desain-grafis',      element: <DesainGrafis /> },
@@ -121,6 +120,7 @@ export const routes = [
       { path: 'order/success',            element: <OrderSuccess /> },
       { path: 'order/pending',            element: <OrderPending /> },
       { path: '*',                        element: <NotFound /> },
+      { path: 'paket/:tier',              element: <PaketDetail /> },
     ]
   }
 ]

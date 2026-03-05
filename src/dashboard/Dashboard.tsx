@@ -60,10 +60,15 @@ export const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
+      if (!location.pathname.startsWith('/dashboard')){
+        setLoading(false)
+        return
+      }
       const token = localStorage.getItem('authToken') || localStorage.getItem('token')
       
       if (!token) {
         navigate('/login')
+        setLoading(false)
         return
       }
 
@@ -107,7 +112,7 @@ export const Dashboard: React.FC = () => {
     }
     window.addEventListener('profileUpdated', handleProfileUpdated)
     return () => window.removeEventListener('profileUpdated', handleProfileUpdated)
-  }, [navigate])
+  }, [navigate, location.pathname])
 
   // Redirect user biasa jika mencoba akses halaman admin
   useEffect(() => {
