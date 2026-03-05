@@ -10,6 +10,7 @@ import { useSmoothScroll } from '../hooks/useSmoothAnimation';
 import { useCountUp } from '../hooks/useCountUp';
 import { HiSparkles, HiCheckCircle, HiChip, HiDeviceMobile, HiCloud, HiShieldCheck } from 'react-icons/hi';
 import { FaRocket, FaArrowRight, FaWhatsapp, FaGithub, FaFigma, FaGoogle } from 'react-icons/fa';
+// @ts-ignore - react-icons type definition issue
 import { SiAdobephotoshop, SiAdobexd, SiFramer, SiTailwindcss, SiReact, SiTypescript } from 'react-icons/si';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';

@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 
 // React Icons
+// @ts-ignore - react-icons type definition issue
 import { RiMoneyDollarCircleLine } from 'react-icons/ri'
 import { HiOutlineDocumentReport } from 'react-icons/hi'
 import { MdOutlineAccountBalanceWallet } from 'react-icons/md'

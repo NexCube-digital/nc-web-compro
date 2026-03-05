@@ -20,6 +20,7 @@ import {
   SiStripe, SiPaypal, SiGoogleanalytics, SiMailchimp, SiHubspot,
   SiSalesforce, SiShopify, SiWordpress, SiWoo, SiMagento,
   SiAmazon, SiDocker,
+// @ts-ignore - react-icons type definition issue
 } from 'react-icons/si';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';

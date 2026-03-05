@@ -1,6 +1,6 @@
 import React, { useRef, useMemo } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
-import { Float, MeshDistortMaterial, Sphere } from '@react-three/drei'
+import { Float } from '@react-three/drei'
 import * as THREE from 'three'
 
 // Animated 3D Cube Component
@@ -35,16 +35,14 @@ function AnimatedCube({ position, color, speed = 1 }: { position: [number, numbe
 function AnimatedSphere({ position, color }: { position: [number, number, number], color: string }) {
   return (
     <Float speed={2} rotationIntensity={0.3} floatIntensity={0.4}>
-      <Sphere args={[0.6, 64, 64]} position={position}>
-        <MeshDistortMaterial 
+      <mesh position={position}>
+        <sphereGeometry args={[0.6, 64, 64]} />
+        <meshStandardMaterial 
           color={color}
-          attach="material"
-          distort={0.3}
-          speed={1.5}
           roughness={0.2}
           metalness={0.8}
         />
-      </Sphere>
+      </mesh>
     </Float>
   )
 }
