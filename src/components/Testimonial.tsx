@@ -24,6 +24,10 @@ export const Testimonial: React.FC = () => {
   const [showAddModal, setShowAddModal] = useState(false)
   const [testimonialsData, setTestimonialsData] = useState<TestimonialItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [newReview, setNewReview] = useState<TestimonialItem>({ name: '', company: '', text: '', rating: 5, avatar: '' })
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [errors, setErrors] = useState<{ name?: string; text?: string }>({})
+  const [submitting, setSubmitting] = useState(false)
 
   // Fetch published testimonials
   useEffect(() => {
@@ -103,7 +107,7 @@ export const Testimonial: React.FC = () => {
   const handleRemoveAvatar = () => {
     if (newReview.avatar.startsWith('blob:')) URL.revokeObjectURL(newReview.avatar)
     setAvatarFile(null)
-    setNewReview(r => ({ ...r, avatar: '' }))
+    setNewReview((r: TestimonialItem) => ({ ...r, avatar: '' }))
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
@@ -224,38 +228,38 @@ export const Testimonial: React.FC = () => {
             <div className="text-slate-500">Belum ada testimoni</div>
           </div>
         ) : (
-          <div className="grid md:grid-cols-3 gap-6 mb-8 min-h-[280px]">
-          {visibleTestimonials.map((t, index) => (
-            <div key={`${testimonialPage}-${index}`} className="scroll-fade-in group" style={{ animationDelay: `${index * 0.1}s` }}>
-              <div className="h-full bg-white border border-slate-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                <div className="space-y-4">
-                  <div className="flex gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <FaStar key={i} className={`w-5 h-5 drop-shadow-sm ${i < t.rating ? 'text-amber-400' : 'text-slate-200'}`} />
-                    ))}
-                  </div>
-                  <blockquote className="text-slate-700 leading-relaxed text-base">"{t.text}"</blockquote>
-                  <div className="flex items-center gap-3 pt-4 border-t border-slate-200">
-                    <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-orange-500 rounded-xl flex items-center justify-center shadow-md overflow-hidden">
-                      {t.avatar
-                        ? <img src={getImageUrl(t.avatar)} alt={t.name} className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                        : <span className="text-white font-bold text-lg">{t.name.charAt(0).toUpperCase()}</span>
-                      }
-                    </div>
-                    <div>
-                      <div className="font-bold text-slate-800">{t.name}</div>
-                      <div className="text-sm text-slate-500 flex items-center gap-1.5">
-                        <FaCheckCircle className="w-3 h-3 text-green-500" />
-                        {t.company || 'Verified Customer'}
+          <>
+            <div className="grid md:grid-cols-3 gap-6 mb-8 min-h-[280px]">
+              {visibleTestimonials.map((t, index) => (
+                <div key={`${testimonialPage}-${index}`} className="scroll-fade-in group" style={{ animationDelay: `${index * 0.1}s` }}>
+                  <div className="h-full bg-white border border-slate-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                    <div className="space-y-4">
+                      <div className="flex gap-1">
+                        {[...Array(5)].map((_, i) => (
+                          <FaStar key={i} className={`w-5 h-5 drop-shadow-sm ${i < t.rating ? 'text-amber-400' : 'text-slate-200'}`} />
+                        ))}
+                      </div>
+                      <blockquote className="text-slate-700 leading-relaxed text-base">"{t.text}"</blockquote>
+                      <div className="flex items-center gap-3 pt-4 border-t border-slate-200">
+                        <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-orange-500 rounded-xl flex items-center justify-center shadow-md overflow-hidden">
+                          {t.avatar
+                            ? <img src={getImageUrl(t.avatar)} alt={t.name} className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                            : <span className="text-white font-bold text-lg">{t.name.charAt(0).toUpperCase()}</span>
+                          }
+                        </div>
+                        <div>
+                          <div className="font-bold text-slate-800">{t.name}</div>
+                          <div className="text-sm text-slate-500 flex items-center gap-1.5">
+                            <FaCheckCircle className="w-3 h-3 text-green-500" />
+                            {t.company || 'Verified Customer'}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
-        )}
 
             {/* ── Pagination ───────────────────────────────────────────────── */}
             {totalPages > 1 && (
@@ -290,10 +294,6 @@ export const Testimonial: React.FC = () => {
               </div>
             )}
           </>
-        ) : (
-          <div className="text-center py-12">
-            <p className="text-slate-500">Belum ada testimonial. Jadilah yang pertama!</p>
-          </div>
         )}
 
         {/* ── CTA ─────────────────────────────────────────────────────── */}
