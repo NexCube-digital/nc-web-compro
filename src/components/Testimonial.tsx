@@ -229,18 +229,18 @@ export const Testimonial: React.FC = () => {
           </div>
         ) : (
           <>
-            <div className="grid md:grid-cols-3 gap-6 mb-8 min-h-[280px]">
+            <div className="grid gap-6 mb-8 min-h-[280px] md:grid-cols-3">
               {visibleTestimonials.map((t, index) => (
                 <div key={`${testimonialPage}-${index}`} className="scroll-fade-in group" style={{ animationDelay: `${index * 0.1}s` }}>
                   <div className="h-full bg-white border border-slate-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                    <div className="space-y-4">
-                      <div className="flex gap-1">
+                    <div className="h-full flex flex-col">
+                      <div className="flex gap-1 mb-4">
                         {[...Array(5)].map((_, i) => (
                           <FaStar key={i} className={`w-5 h-5 drop-shadow-sm ${i < t.rating ? 'text-amber-400' : 'text-slate-200'}`} />
                         ))}
                       </div>
-                      <blockquote className="text-slate-700 leading-relaxed text-base">"{t.text}"</blockquote>
-                      <div className="flex items-center gap-3 pt-4 border-t border-slate-200">
+                      <blockquote className="text-slate-700 leading-relaxed text-base mb-4">"{t.text}"</blockquote>
+                      <div className="mt-auto flex items-center gap-3 pt-4 border-t border-slate-200">
                         <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-orange-500 rounded-xl flex items-center justify-center shadow-md overflow-hidden">
                           {t.avatar
                             ? <img src={getImageUrl(t.avatar)} alt={t.name} className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
