@@ -76,13 +76,22 @@ const TestimonialManagement: React.FC = () => {
         setTestimonials(response.data.testimonials)
       }
     } catch (err: any) {
-      setError(err.message || 'Gagal memuat data testimonial')
-      toast.error('Gagal memuat data')
+      const errorMsg = err.message || 'Gagal memuat data testimonial'
+      
+      // Check if unauthorized
+      if (errorMsg.includes('401') || errorMsg.includes('Unauthorized') || errorMsg.includes('No token')) {
+        setError('Sesi login berakhir. Silakan login kembali.')
+        toast.error('Sesi login berakhir.')
+        setTimeout(() => navigate('/login'), 2000)
+      } else {
+        setError(errorMsg)
+        toast.error('Gagal memuat data')
+      }
     } finally {
       setLoading(false)
       setInitialLoading(false)
     }
-  }, [filterStatus, filterRating])
+  }, [filterStatus, filterRating, navigate])
 
   const fetchStats = useCallback(async () => {
     try {
@@ -218,7 +227,17 @@ const TestimonialManagement: React.FC = () => {
       resetForm()
       navigate('/dashboard/testimonials')
     } catch (err: any) {
-      toast.error(err.message || 'Terjadi kesalahan')
+      console.error('Error creating/updating testimonial:', err)
+      
+      // Better error handling
+      if (err.message?.includes('401') || err.message?.includes('Unauthorized') || err.message?.includes('No token')) {
+        toast.error('Sesi login Anda berakhir. Silakan login kembali.')
+        setTimeout(() => navigate('/login'), 1500)
+      } else if (err.message?.includes('Route not found')) {
+        toast.error('Backend belum siap. Pastikan server sudah berjalan.')
+      } else {
+        toast.error(err.message || 'Terjadi kesalahan')
+      }
     } finally {
       setLoading(false)
     }
