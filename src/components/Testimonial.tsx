@@ -13,7 +13,9 @@ interface TestimonialItem {
   createdAt?: string
 }
 
-const ITEMS_PER_PAGE = 3
+const DESKTOP_ITEMS_PER_PAGE = 3
+const MOBILE_BREAKPOINT = 640
+const MOBILE_AUTO_SLIDE_MS = 5000
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const MAX_SIZE_MB = 2
 
@@ -28,6 +30,22 @@ export const Testimonial: React.FC = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [errors, setErrors] = useState<{ name?: string; text?: string }>({})
   const [submitting, setSubmitting] = useState(false)
+  const [isMobileView, setIsMobileView] = useState(false)
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
+    const syncMobileView = () => setIsMobileView(mediaQuery.matches)
+
+    syncMobileView()
+
+    if (typeof mediaQuery.addEventListener === 'function') {
+      mediaQuery.addEventListener('change', syncMobileView)
+      return () => mediaQuery.removeEventListener('change', syncMobileView)
+    }
+
+    mediaQuery.addListener(syncMobileView)
+    return () => mediaQuery.removeListener(syncMobileView)
+  }, [])
 
   // Fetch published testimonials
   useEffect(() => {
@@ -47,10 +65,11 @@ export const Testimonial: React.FC = () => {
     fetchTestimonials()
   }, [])
 
-  const totalPages = Math.ceil(testimonialsData.length / ITEMS_PER_PAGE)
+  const itemsPerPage = isMobileView ? 1 : DESKTOP_ITEMS_PER_PAGE
+  const totalPages = Math.ceil(testimonialsData.length / itemsPerPage)
   const visibleTestimonials = testimonialsData.slice(
-    testimonialPage * ITEMS_PER_PAGE,
-    (testimonialPage + 1) * ITEMS_PER_PAGE
+    testimonialPage * itemsPerPage,
+    (testimonialPage + 1) * itemsPerPage
   )
 
   // ── Fetch published testimonials ─────────────────────────────────────────
@@ -173,11 +192,23 @@ export const Testimonial: React.FC = () => {
 
   // Update page when testimonials change
   useEffect(() => {
-    const newTotalPages = Math.ceil(testimonialsData.length / ITEMS_PER_PAGE)
-    if (testimonialPage >= newTotalPages && newTotalPages > 0) {
-      setTestimonialPage(newTotalPages - 1)
+    if (testimonialPage >= totalPages && totalPages > 0) {
+      setTestimonialPage(totalPages - 1)
     }
-  }, [testimonialsData, testimonialPage])
+    if (totalPages === 0 && testimonialPage !== 0) {
+      setTestimonialPage(0)
+    }
+  }, [totalPages, testimonialPage])
+
+  useEffect(() => {
+    if (!isMobileView || totalPages <= 1 || loading) return
+
+    const autoSlideTimer = window.setInterval(() => {
+      setTestimonialPage((prevPage) => (prevPage + 1) % totalPages)
+    }, MOBILE_AUTO_SLIDE_MS)
+
+    return () => window.clearInterval(autoSlideTimer)
+  }, [isMobileView, totalPages, loading])
 
   if (loading && testimonialsData.length === 0) {
     return (
@@ -229,27 +260,27 @@ export const Testimonial: React.FC = () => {
           </div>
         ) : (
           <>
-            <div className="grid gap-6 mb-8 min-h-[280px] md:grid-cols-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mb-8 min-h-[280px]">
               {visibleTestimonials.map((t, index) => (
                 <div key={`${testimonialPage}-${index}`} className="scroll-fade-in group" style={{ animationDelay: `${index * 0.1}s` }}>
-                  <div className="h-full bg-white border border-slate-200 rounded-2xl p-6 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                  <div className="h-full min-h-[260px] sm:min-h-[280px] lg:min-h-[300px] bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
                     <div className="h-full flex flex-col">
-                      <div className="flex gap-1 mb-4">
+                      <div className="flex gap-1 mb-3 sm:mb-4">
                         {[...Array(5)].map((_, i) => (
                           <FaStar key={i} className={`w-5 h-5 drop-shadow-sm ${i < t.rating ? 'text-amber-400' : 'text-slate-200'}`} />
                         ))}
                       </div>
-                      <blockquote className="text-slate-700 leading-relaxed text-base mb-4">"{t.text}"</blockquote>
-                      <div className="mt-auto flex items-center gap-3 pt-4 border-t border-slate-200">
+                      <blockquote className="text-slate-700 leading-relaxed text-[15px] sm:text-base mb-3 sm:mb-4">"{t.text}"</blockquote>
+                      <div className="mt-auto flex items-center gap-3 pt-3 sm:pt-4 border-t border-slate-200">
                         <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-orange-500 rounded-xl flex items-center justify-center shadow-md overflow-hidden">
                           {t.avatar
                             ? <img src={getImageUrl(t.avatar)} alt={t.name} className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
                             : <span className="text-white font-bold text-lg">{t.name.charAt(0).toUpperCase()}</span>
                           }
                         </div>
-                        <div>
-                          <div className="font-bold text-slate-800">{t.name}</div>
-                          <div className="text-sm text-slate-500 flex items-center gap-1.5">
+                        <div className="min-w-0">
+                          <div className="font-bold text-slate-800 truncate">{t.name}</div>
+                          <div className="text-sm text-slate-500 flex items-center gap-1.5 truncate">
                             <FaCheckCircle className="w-3 h-3 text-green-500" />
                             {t.company || 'Verified Customer'}
                           </div>
