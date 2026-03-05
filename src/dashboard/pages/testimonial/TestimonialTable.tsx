@@ -1,6 +1,7 @@
 import React from 'react'
 import { TestimonialItem } from '../TestimonialManagement'
 import { Edit2, Trash2, Loader, Eye, EyeOff, Star } from 'lucide-react'
+import { getImageUrl } from '../../../services/api'
 
 interface TestimonialTableProps {
   testimonials: TestimonialItem[]
@@ -47,6 +48,17 @@ export const TestimonialTable: React.FC<TestimonialTableProps> = ({
   onDelete,
   onToggleStatus,
 }) => {
+  const formatCreatedAt = (value?: string) => {
+    if (!value) return '-'
+    const parsedDate = new Date(value)
+    if (Number.isNaN(parsedDate.getTime())) return '-'
+    return parsedDate.toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    })
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -84,6 +96,9 @@ export const TestimonialTable: React.FC<TestimonialTableProps> = ({
         <tbody className="bg-white divide-y divide-gray-200">
           {testimonials.map((item, index) => {
             const cfg = statusConfig[item.status]
+            // Gunakan getImageUrl untuk memastikan path gambar benar
+            const avatarUrl = item.avatar ? getImageUrl(item.avatar) : ''
+            
             return (
               <tr
                 key={item.id}
@@ -96,9 +111,9 @@ export const TestimonialTable: React.FC<TestimonialTableProps> = ({
                   <div className="flex items-center gap-3">
                     {/* Avatar */}
                     <div className="flex-shrink-0 w-10 h-10 rounded-xl overflow-hidden bg-gradient-to-br from-blue-500 to-orange-400 flex items-center justify-center shadow-sm">
-                      {item.avatar ? (
+                      {avatarUrl ? (
                         <img
-                          src={item.avatar}
+                          src={avatarUrl}
                           alt={item.name}
                           className="w-full h-full object-cover"
                           onError={e => {
@@ -145,11 +160,7 @@ export const TestimonialTable: React.FC<TestimonialTableProps> = ({
                 {/* Tanggal */}
                 <td className="px-6 py-4 text-center">
                   <span className="text-xs text-gray-500">
-                    {new Date(item.createdAt).toLocaleDateString('id-ID', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}
+                    {formatCreatedAt(item.createdAt)}
                   </span>
                 </td>
 

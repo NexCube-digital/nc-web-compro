@@ -159,18 +159,6 @@ export interface Report {
   updatedAt?: string;
 }
 
-export interface Testimonial {
-  id?: number;
-  name: string;
-  company: string;
-  text: string;
-  rating: number;
-  avatar?: string;
-  status: 'published' | 'pending' | 'hidden';
-  createdAt?: string;
-  updatedAt?: string;
-}
-
 // ── Checkout types ────────────────────────────────────────────────────────────
 
 export interface CheckoutItem {
@@ -192,6 +180,37 @@ export interface CheckoutPayload {
 export interface PaymentLinkResponse {
   token: string;
   paymentUrl: string;
+}
+
+
+// testimonial
+export interface Testimonial {
+  id: number;
+  name: string;
+  company: string;
+  text: string;
+  rating: number;
+  avatar: string;
+  status: 'published' | 'pending' | 'hidden';
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface TestimonialStats {
+  total: number;
+  published: number;
+  pending: number;
+  hidden: number;
+  avgRating: string;
+}
+
+export interface TestimonialFormData {
+  name: string;
+  company: string;
+  text: string;
+  rating: number;
+  avatar?: string;
+  status: 'published' | 'pending' | 'hidden';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -796,59 +815,61 @@ class ApiClient {
     return this.request<any>(`/activities?limit=${limit}`, 'GET');
   }
 
-  // ── Testimonial endpoints ───────────────────────────────────────────────────
 
-  async getTestimonials(status?: string, rating?: string): Promise<ApiResponse<Testimonial[]>> {
-    let url = '/testimonials';
-    const params = new URLSearchParams();
-    if (status && status !== 'all') params.append('status', status);
-    if (rating && rating !== 'all') params.append('rating', rating);
-    if (params.toString()) url += `?${params.toString()}`;
-    
-    const response = await this.request<any>(url, 'GET');
-    if (response.data && response.data.testimonials) response.data = response.data.testimonials;
-    return response as ApiResponse<Testimonial[]>;
-  }
 
-  async getPublishedTestimonials(): Promise<ApiResponse<Testimonial[]>> {
-    const response = await this.request<any>('/testimonials/public', 'GET');
-    if (response.data && response.data.testimonials) response.data = response.data.testimonials;
-    return response as ApiResponse<Testimonial[]>;
-  }
+  async getTestimonials(status: string = 'all', rating: string = 'all'): Promise<ApiResponse<{ testimonials: Testimonial[], total: number }>> {
+  const params = new URLSearchParams();
+  if (status && status !== 'all') params.append('status', status);
+  if (rating && rating !== 'all') params.append('rating', rating);
+  
+  const url = `/testimonials${params.toString() ? `?${params.toString()}` : ''}`;
+  return this.request<{ testimonials: Testimonial[], total: number }>(url, 'GET');
+}
 
-  async getTestimonial(id: string): Promise<ApiResponse<Testimonial>> {
-    const response = await this.request<any>(`/testimonials/${id}`, 'GET');
-    if (response.data && response.data.testimonial) response.data = response.data.testimonial;
-    return response as ApiResponse<Testimonial>;
-  }
+/**
+ * Get published testimonials for public display
+ */
+async getPublishedTestimonials(): Promise<ApiResponse<{ testimonials: Testimonial[], total: number }>> {
+  return this.request<{ testimonials: Testimonial[], total: number }>('/testimonials/public', 'GET');
+}
 
-  async createTestimonial(data: Omit<Testimonial, 'id' | 'createdAt' | 'updatedAt'>): Promise<ApiResponse<Testimonial>> {
-    const response = await this.request<any>('/testimonials', 'POST', data);
-    if (response.data && response.data.testimonial) response.data = response.data.testimonial;
-    return response as ApiResponse<Testimonial>;
-  }
+/**
+ * Get single testimonial by ID
+ */
+async getTestimonial(id: number): Promise<ApiResponse<{ testimonial: Testimonial }>> {
+  return this.request<{ testimonial: Testimonial }>(`/testimonials/${id}`, 'GET');
+}
 
-  async updateTestimonial(id: string, data: Partial<Testimonial>): Promise<ApiResponse<Testimonial>> {
-    const response = await this.request<any>(`/testimonials/${id}`, 'PUT', data);
-    if (response.data && response.data.testimonial) response.data = response.data.testimonial;
-    return response as ApiResponse<Testimonial>;
-  }
+// create testimonial
+async createTestimonial(data: TestimonialFormData & { avatar?: string }): Promise<ApiResponse<{ testimonial: Testimonial }>> {
+  return this.request<{ testimonial: Testimonial }>('/testimonials', 'POST', data);
+}
 
-  async deleteTestimonial(id: string): Promise<ApiResponse<void>> {
-    return this.request<void>(`/testimonials/${id}`, 'DELETE');
-  }
+async createPublicTestimonial(data: TestimonialFormData & { avatar?: string }): Promise<ApiResponse<{ testimonial: Testimonial }>> {
+  return this.request<{ testimonial: Testimonial }>('/testimonials/public/create', 'POST', data);
+}
 
-  async toggleTestimonialStatus(id: string): Promise<ApiResponse<Testimonial>> {
-    const response = await this.request<any>(`/testimonials/${id}/toggle-status`, 'PATCH');
-    if (response.data && response.data.testimonial) response.data = response.data.testimonial;
-    return response as ApiResponse<Testimonial>;
-  }
 
-  async getTestimonialStats(): Promise<ApiResponse<any>> {
-    const response = await this.request<any>('/testimonials/stats', 'GET');
-    if (response.data && response.data.stats) response.data = response.data.stats;
-    return response;
-  }
+// update testimonial
+async updateTestimonial(id: number, data: Partial<TestimonialFormData & { avatar?: string }>): Promise<ApiResponse<{ testimonial: Testimonial }>> {
+  return this.request<{ testimonial: Testimonial }>(`/testimonials/${id}`, 'PUT', data);
+}
+
+// Delete testimonial
+async deleteTestimonial(id: number): Promise<ApiResponse<void>> {
+  return this.request<void>(`/testimonials/${id}`, 'DELETE');
+}
+
+// Toggle testimonial status (published/hidden)
+async toggleTestimonialStatus(id: number): Promise<ApiResponse<{ testimonial: Testimonial }>> {
+  return this.request<{ testimonial: Testimonial }>(`/testimonials/${id}/toggle-status`, 'PATCH');
+}
+
+// Get testimonial statistics
+async getTestimonialStats(): Promise<ApiResponse<{ stats: TestimonialStats }>> {
+  return this.request<{ stats: TestimonialStats }>('/testimonials/stats', 'GET');
+}
+
 }
 
 export const apiClient = new ApiClient();

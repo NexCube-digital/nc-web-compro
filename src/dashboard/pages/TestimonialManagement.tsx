@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async'
 import { toast } from 'react-hot-toast'
 import { TestimonialTable } from './testimonial/TestimonialTable'
 import { FormTestimonial } from './testimonial/FormTestimonial'
-import { apiClient, Testimonial } from '../../services/api'
+import apiClient, { Testimonial, TestimonialStats, TestimonialFormData } from '../../services/api'
 
 import {
   Search,
@@ -18,16 +18,7 @@ import {
 } from 'lucide-react'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
-export interface TestimonialItem {
-  id: number
-  name: string
-  company: string
-  text: string
-  rating: number
-  avatar: string
-  status: 'published' | 'pending' | 'hidden'
-  createdAt: string
-}
+export interface TestimonialItem extends Testimonial {}
 
 export interface TestimonialFormState {
   name: string
@@ -49,45 +40,73 @@ const defaultForm: TestimonialFormState = {
   status: 'published',
 }
 
-
-
 // ─── Component ────────────────────────────────────────────────────────────────
 const TestimonialManagement: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
   const [testimonials, setTestimonials] = useState<TestimonialItem[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
   const [error, setError] = useState('')
   const [editingId, setEditingId] = useState<number | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [deleteLoading, setDeleteLoading] = useState<number | null>(null)
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [filterRating, setFilterRating] = useState<string>('all')
+  const [stats, setStats] = useState<TestimonialStats>({
+    total: 0,
+    published: 0,
+    pending: 0,
+    hidden: 0,
+    avgRating: '0',
+  })
   const [formData, setFormData] = useState<TestimonialFormState>(defaultForm)
 
   const showForm = location.pathname.includes('/formtestimonial')
 
-  // ─── Fetch Testimonials ─────────────────────────────────────────────────────
+  // ─── Fetch Data ─────────────────────────────────────────────────────────────
   const fetchTestimonials = useCallback(async () => {
     try {
       setLoading(true)
       setError('')
+      
       const response = await apiClient.getTestimonials(filterStatus, filterRating)
-      if (response.success && response.data) {
-        setTestimonials(response.data as TestimonialItem[])
+      if (response.data?.testimonials) {
+        setTestimonials(response.data.testimonials)
       }
     } catch (err: any) {
-      setError(err.message || 'Gagal memuat testimonial')
-      toast.error('Gagal memuat testimonial')
+      setError(err.message || 'Gagal memuat data testimonial')
+      toast.error('Gagal memuat data')
     } finally {
       setLoading(false)
+      setInitialLoading(false)
     }
   }, [filterStatus, filterRating])
 
+  const fetchStats = useCallback(async () => {
+    try {
+      const response = await apiClient.getTestimonialStats()
+      if (response.data?.stats) {
+        setStats(response.data.stats)
+      }
+    } catch (err) {
+      console.error('Failed to fetch stats:', err)
+    }
+  }, [])
+
+  // Initial load
   useEffect(() => {
     fetchTestimonials()
-  }, [fetchTestimonials])
+    fetchStats()
+  }, [fetchTestimonials, fetchStats])
+
+  // Refetch when filters change
+  useEffect(() => {
+    if (!initialLoading) {
+      fetchTestimonials()
+    }
+  }, [filterStatus, filterRating, fetchTestimonials, initialLoading])
 
   // ─── Reset Form ─────────────────────────────────────────────────────────────
   const resetForm = useCallback(() => {
@@ -106,20 +125,8 @@ const TestimonialManagement: React.FC = () => {
       t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       t.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
       t.text.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchStatus = filterStatus === 'all' || t.status === filterStatus
-    const matchRating = filterRating === 'all' || t.rating === Number(filterRating)
-    return matchSearch && matchStatus && matchRating
+    return matchSearch
   })
-
-  const stats = {
-    total: testimonials.length,
-    published: testimonials.filter(t => t.status === 'published').length,
-    pending: testimonials.filter(t => t.status === 'pending').length,
-    avgRating:
-      testimonials.length > 0
-        ? (testimonials.reduce((sum, t) => sum + t.rating, 0) / testimonials.length).toFixed(1)
-        : '0',
-  }
 
   // ─── Handlers ───────────────────────────────────────────────────────────────
   const handleInputChange = (
@@ -145,6 +152,16 @@ const TestimonialManagement: React.FC = () => {
     setFormData(prev => ({ ...prev, rating }))
   }
 
+  // Convert image file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = error => reject(error)
+    })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -160,29 +177,44 @@ const TestimonialManagement: React.FC = () => {
     try {
       setLoading(true)
 
-      const payload: any = {
+      // Prepare data for API
+      const testimonialData: any = {
         name: formData.name,
         company: formData.company,
         text: formData.text,
         rating: formData.rating,
         status: formData.status,
-        avatar: formData.avatarPreview || '',
+      }
+
+      // Handle avatar
+      if (formData.avatarFile) {
+        // Convert to base64
+        testimonialData.avatar = await fileToBase64(formData.avatarFile)
+      } else if (formData.avatarPreview && !formData.avatarPreview.startsWith('blob:')) {
+        // Keep existing avatar URL
+        testimonialData.avatar = formData.avatarPreview
       }
 
       if (editingId) {
-        const response = await apiClient.updateTestimonial(editingId.toString(), payload)
-        if (response.success) {
+        // Update existing testimonial
+        const response = await apiClient.updateTestimonial(editingId, testimonialData)
+        if (response.data?.testimonial) {
+          setTestimonials(prev =>
+            prev.map(t => t.id === editingId ? response.data!.testimonial : t)
+          )
           toast.success('Testimonial berhasil diupdate')
-          await fetchTestimonials()
         }
       } else {
-        const response = await apiClient.createTestimonial(payload)
-        if (response.success) {
+        // Create new testimonial
+        const response = await apiClient.createTestimonial(testimonialData)
+        if (response.data?.testimonial) {
+          setTestimonials(prev => [response.data!.testimonial, ...prev])
           toast.success('Testimonial berhasil ditambahkan')
-          await fetchTestimonials()
         }
       }
 
+      // Refresh stats
+      fetchStats()
       resetForm()
       navigate('/dashboard/testimonials')
     } catch (err: any) {
@@ -192,7 +224,7 @@ const TestimonialManagement: React.FC = () => {
     }
   }
 
-  const handleEdit = (item: TestimonialItem) => {
+  const handleEdit = async (item: TestimonialItem) => {
     setEditingId(item.id)
     setFormData({
       name: item.name,
@@ -208,13 +240,13 @@ const TestimonialManagement: React.FC = () => {
 
   const handleDelete = async (id: number) => {
     if (!window.confirm('Apakah Anda yakin ingin menghapus testimonial ini?')) return
+    
     try {
       setDeleteLoading(id)
-      const response = await apiClient.deleteTestimonial(id.toString())
-      if (response.success) {
-        toast.success('Testimonial berhasil dihapus')
-        await fetchTestimonials()
-      }
+      await apiClient.deleteTestimonial(id)
+      setTestimonials(prev => prev.filter(t => t.id !== id))
+      fetchStats() // Refresh stats
+      toast.success('Testimonial berhasil dihapus')
     } catch (err: any) {
       toast.error(err.message || 'Gagal menghapus testimonial')
     } finally {
@@ -224,11 +256,14 @@ const TestimonialManagement: React.FC = () => {
 
   const handleToggleStatus = async (id: number) => {
     try {
-      const response = await apiClient.toggleTestimonialStatus(id.toString())
-      if (response.success) {
-        const newStatus = response.data?.status
+      const response = await apiClient.toggleTestimonialStatus(id)
+      if (response.data?.testimonial) {
+        setTestimonials(prev =>
+          prev.map(t => t.id === id ? response.data!.testimonial : t)
+        )
+        fetchStats() // Refresh stats
+        const newStatus = response.data.testimonial.status
         toast.success(`Testimonial ${newStatus === 'published' ? 'dipublikasikan' : 'disembunyikan'}`)
-        await fetchTestimonials()
       }
     } catch (err: any) {
       toast.error(err.message || 'Gagal mengubah status')
@@ -241,7 +276,10 @@ const TestimonialManagement: React.FC = () => {
   }
 
   const handleRefresh = async () => {
-    await fetchTestimonials()
+    await Promise.all([
+      fetchTestimonials(),
+      fetchStats()
+    ])
     toast.success('Data berhasil dimuat ulang')
   }
 
@@ -401,13 +439,23 @@ const TestimonialManagement: React.FC = () => {
           {/* Table header */}
           <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
             <p className="text-sm text-gray-600">
-              Menampilkan{' '}
-              <span className="font-semibold">{filteredTestimonials.length}</span> testimonial
-              {searchTerm && ' dari hasil pencarian'}
+              {initialLoading ? (
+                'Memuat data...'
+              ) : (
+                <>
+                  Menampilkan{' '}
+                  <span className="font-semibold">{filteredTestimonials.length}</span> testimonial
+                  {searchTerm && ' dari hasil pencarian'}
+                </>
+              )}
             </p>
             {(searchTerm || filterStatus !== 'all' || filterRating !== 'all') && (
               <button
-                onClick={() => { setSearchTerm(''); setFilterStatus('all'); setFilterRating('all') }}
+                onClick={() => { 
+                  setSearchTerm(''); 
+                  setFilterStatus('all'); 
+                  setFilterRating('all') 
+                }}
                 className="text-xs text-blue-600 hover:text-blue-700 font-medium"
               >
                 Reset Filter
@@ -417,14 +465,14 @@ const TestimonialManagement: React.FC = () => {
 
           <TestimonialTable
             testimonials={filteredTestimonials}
-            loading={loading}
+            loading={initialLoading}
             deleteLoading={deleteLoading}
             onEdit={handleEdit}
             onDelete={handleDelete}
             onToggleStatus={handleToggleStatus}
           />
 
-          {filteredTestimonials.length === 0 && !loading && (
+          {!initialLoading && filteredTestimonials.length === 0 && (
             <div className="text-center py-12">
               <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
               <p className="text-gray-500">
@@ -434,7 +482,11 @@ const TestimonialManagement: React.FC = () => {
               </p>
               {(searchTerm || filterStatus !== 'all' || filterRating !== 'all') && (
                 <button
-                  onClick={() => { setSearchTerm(''); setFilterStatus('all'); setFilterRating('all') }}
+                  onClick={() => { 
+                    setSearchTerm(''); 
+                    setFilterStatus('all'); 
+                    setFilterRating('all') 
+                  }}
                   className="mt-2 text-blue-600 hover:text-blue-700 font-medium"
                 >
                   Reset Filter

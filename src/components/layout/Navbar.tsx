@@ -4,7 +4,8 @@ import LoginButton from './LoginButton';
 import apiClient from '../../services/api'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { CartButton } from '../cart/CartButton'; // ✅ import CartButton
+import { CartButton } from '../cart/CartButton';
+import { getImageUrl } from '../../services/api'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -20,6 +21,7 @@ export const Navbar: React.FC = () => {
   const profileRef = useRef<HTMLDivElement>(null);
   const [isPaketOpen, setIsPaketOpen] = useState(false);
   const paketRef = useRef<HTMLDivElement>(null);
+  const [userPhoto, setUserPhoto] = useState<string | null>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -38,9 +40,12 @@ export const Navbar: React.FC = () => {
     if (!logoRef.current) return;
     gsap.to(logoRef.current, { scale: isScrolled ? 0.9 : 1, duration: 0.3, ease: 'power2.out' });
     if (isScrolled) {
-      gsap.to(logoRef.current.querySelector('.logo-glow'), {
-        opacity: 0.6, scale: 1.2, duration: 1.5, repeat: -1, yoyo: true, ease: 'sine.inOut'
-      });
+      const logoGlow = logoRef.current.querySelector('.logo-glow');
+      if (logoGlow) {
+        gsap.to(logoGlow, {
+          opacity: 0.6, scale: 1.2, duration: 1.5, repeat: -1, yoyo: true, ease: 'sine.inOut'
+        });
+      }
     }
   }, [isScrolled]);
 
@@ -61,8 +66,15 @@ export const Navbar: React.FC = () => {
       try {
         const u = JSON.parse(userStr);
         setUserName(u?.name || u?.email || null);
-      } catch (e) { setUserName(null); }
-    } else { setUserName(null); }
+        setUserPhoto(u?.photo || null);
+      } catch (e) { 
+        setUserName(null); 
+         setUserPhoto(null);
+      }
+    } else { 
+      setUserName(null); 
+      setUserPhoto(null);
+    }
   }, [location.pathname]);
 
   const handleLogout = () => {
@@ -104,9 +116,9 @@ export const Navbar: React.FC = () => {
   ];
 
   const paketItems = [
-    { name: "Nexcube", desc: "Cocok untuk UMKM baru", href: "/paket", color: "from-blue-500 to-cyan-500" },
+    { name: "Website", desc: "Cocok untuk UMKM baru", href: "/paket", color: "from-blue-500 to-cyan-500" },
     // { name: "Paket Digital", desc: "Untuk bisnis berkembang", href: "/paket/digital", color: "from-purple-500 to-pink-500" },
-    { name: "Paket Affiliate", desc: "Solusi lengkap perusahaan", href: "/paket/affiliate", color: "from-orange-500 to-red-500" }
+    { name: "Sertifikasi", desc: "Solusi lengkap perusahaan", href: "/paket/affiliate", color: "from-orange-500 to-red-500" }
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -211,7 +223,11 @@ export const Navbar: React.FC = () => {
                 >
                   <div className="relative">
                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-orange-500 flex items-center justify-center text-white font-bold text-sm shadow-md group-hover:shadow-lg transition-shadow">
-                      {getUserInitials()}
+                      {userPhoto ? (
+                        <img src={getImageUrl(userPhoto)} alt={userName || ''} className="w-full h-full object-cover" />
+                      ) : (
+                        getUserInitials()
+                      )}
                     </div>
                     <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
                   </div>
@@ -234,7 +250,11 @@ export const Navbar: React.FC = () => {
                   <div className="px-4 py-3 bg-gradient-to-br from-blue-50 to-orange-50 border-b border-slate-200">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-orange-500 flex items-center justify-center text-white font-bold text-base shadow-md">
-                        {getUserInitials()}
+                        {userPhoto ? (
+                          <img src={getImageUrl(userPhoto)} alt={userName || ''} className="w-full h-full object-cover" />
+                        ) : (
+                          getUserInitials()
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-bold text-slate-800 truncate">{userName || 'User'}</div>

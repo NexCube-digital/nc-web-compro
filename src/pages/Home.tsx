@@ -330,7 +330,7 @@ export const Home: React.FC = () => {
             </div>
           </div>
           
-          <div className="container relative">
+          <div className="container relative -translate-y-8 md:-translate-y-12">
             <div className="max-w-5xl mx-auto text-center space-y-4 md:space-y-6">
               {/* Trust Badge */}
               <div className={`inline-flex items-center justify-center gap-2 backdrop-blur-xl bg-white/70 border border-white/30 shadow-lg px-4 py-1.5 rounded-2xl transition-all duration-500 delay-100 ${!showHero ? 'opacity-0 -translate-y-10' : 'opacity-100 translate-y-0'}`}>
