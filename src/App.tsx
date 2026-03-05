@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react'
 import { useLocation, Outlet } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
+import { Toaster } from 'react-hot-toast'
 import { Home } from './pages/Home'
 import ErrorBoundary from './components/ErrorBoundary'
 import Loading from './components/Loading'
@@ -86,6 +87,32 @@ const RootLayout = () => {
               </PageTransition>
             </Suspense>
           </div>
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: '#363636',
+                color: '#fff',
+                borderRadius: '12px',
+                padding: '16px',
+                fontSize: '14px',
+                fontWeight: '500',
+              },
+              success: {
+                iconTheme: {
+                  primary: '#10b981',
+                  secondary: '#fff',
+                },
+              },
+              error: {
+                iconTheme: {
+                  primary: '#ef4444',
+                  secondary: '#fff',
+                },
+              },
+            }}
+          />
         </CartProvider>
       </HelmetProvider>
     </ErrorBoundary>

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { FaStar, FaCheckCircle, FaChevronLeft, FaChevronRight, FaTimes } from 'react-icons/fa'
 import { HiSparkles } from 'react-icons/hi'
+import { toast } from 'react-hot-toast'
 import apiClient, { getImageUrl } from '../services/api'
 
 interface TestimonialItem {
@@ -114,12 +115,12 @@ export const Testimonial: React.FC = () => {
     if (!file) return
 
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      alert('Format tidak didukung. Gunakan JPG, PNG, atau WEBP.')
+      toast.error('Format tidak didukung. Gunakan JPG, PNG, atau WEBP.')
       e.target.value = ''
       return
     }
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-      alert(`Ukuran maksimal ${MAX_SIZE_MB}MB.`)
+      toast.error(`Ukuran maksimal ${MAX_SIZE_MB}MB.`)
       e.target.value = ''
       return
     }
@@ -142,7 +143,14 @@ export const Testimonial: React.FC = () => {
     // Check rate limiting
     const submitCheck = canSubmitTestimonial()
     if (!submitCheck.allowed) {
-      alert(`Mohon tunggu ${submitCheck.daysRemaining} hari lagi untuk memberikan ulasan.\n\nAnda dapat memberikan ulasan kembali setelah ${COOLDOWN_DAYS} hari dari ulasan terakhir.`)
+      toast.error(`Mohon tunggu ${submitCheck.daysRemaining} hari lagi untuk memberikan ulasan`, {
+        duration: 4000,
+        icon: '⏱️',
+      })
+      toast('Anda dapat memberikan ulasan kembali setelah 7 hari dari ulasan terakhir', {
+        duration: 5000,
+        icon: 'ℹ️',
+      })
       return
     }
 
@@ -188,10 +196,21 @@ export const Testimonial: React.FC = () => {
         setShowAddModal(false)
         if (fileInputRef.current) fileInputRef.current.value = ''
 
-        alert(`Terima kasih! Ulasan Anda akan ditampilkan setelah diverifikasi oleh admin.\n\nAnda dapat memberikan ulasan kembali ${COOLDOWN_DAYS} hari lagi.`)
+        toast.success('Terima kasih! Ulasan Anda akan ditampilkan setelah diverifikasi oleh admin.', {
+          duration: 4000,
+          icon: '🎉',
+        })
+        setTimeout(() => {
+          toast('Anda dapat memberikan ulasan kembali 7 hari lagi', {
+            duration: 4000,
+            icon: '📅',
+          })
+        }, 500)
       }
     } catch (error: any) {
-      alert(error.message || 'Gagal mengirim ulasan. Silakan coba lagi.')
+      toast.error(error.message || 'Gagal mengirim ulasan. Silakan coba lagi.', {
+        duration: 4000,
+      })
     } finally {
       setSubmitting(false)
     }
