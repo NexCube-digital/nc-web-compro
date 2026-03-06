@@ -4,7 +4,7 @@ import {
   Star, CheckCircle, ArrowLeft, SlidersHorizontal,
   ChevronDown, ChevronUp, X, Sparkles, Upload,
   Building2, User, MessageSquareQuote, Camera,
-  Send, Clock, Trophy, Smile, MessageCircle, Quote
+  Send, Trophy, Smile, MessageCircle, Quote
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import apiClient, { getImageUrl } from '../services/api'
@@ -24,23 +24,8 @@ interface TestimonialItem {
 // ─── Constants ────────────────────────────────────────────────────────────────
 const ACCEPTED_TYPES  = ['image/jpeg', 'image/png', 'image/webp']
 const MAX_SIZE_MB     = 2
-const COOLDOWN_DAYS   = 7
-const STORAGE_KEY     = 'nexcube_last_testimonial_submit'
 const RATING_LABELS   = ['', 'Sangat Buruk', 'Buruk', 'Cukup', 'Baik', 'Sangat Baik']
 const RATING_COLORS   = ['', '#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6']
-
-// ─── Rate-limit helpers ───────────────────────────────────────────────────────
-const getLastSubmit = (): number | null => {
-  const v = localStorage.getItem(STORAGE_KEY)
-  return v ? parseInt(v, 10) : null
-}
-const setLastSubmit = () => localStorage.setItem(STORAGE_KEY, Date.now().toString())
-const checkCooldown = () => {
-  const last = getLastSubmit()
-  if (!last) return { allowed: true, daysLeft: 0 }
-  const days = (Date.now() - last) / 86_400_000
-  return { allowed: days >= COOLDOWN_DAYS, daysLeft: Math.max(0, Math.ceil(COOLDOWN_DAYS - days)) }
-}
 
 // ─── Stars ───────────────────────────────────────────────────────────────────
 const Stars = ({ rating, interactive = false, onSet, size = 'sm' }: {
@@ -122,7 +107,6 @@ export const CreateUlasan: React.FC = () => {
   const [avatarFile, setAvatarFile]= useState<File | null>(null)
   const [errors,     setErrors]    = useState<{name?:string; text?:string}>({})
   const [submitting, setSubmitting]= useState(false)
-  const [cooldown,   setCooldown]  = useState(checkCooldown())
   const [formOpen,   setFormOpen]  = useState(true)
 
   const fetchAll = async () => {
@@ -159,8 +143,6 @@ export const CreateUlasan: React.FC = () => {
     new Promise((res,rej)=>{ const r=new FileReader(); r.readAsDataURL(f); r.onload=()=>res(r.result as string); r.onerror=rej })
 
   const handleSubmit = async () => {
-    const c = checkCooldown()
-    if (!c.allowed) { toast.error(`Tunggu ${c.daysLeft} hari lagi`, { icon:'⏱️' }); return }
     const errs: {name?:string;text?:string} = {}
     if (!form.name.trim()) errs.name = 'Nama wajib diisi'
     if (!form.text.trim()) errs.text = 'Ulasan wajib diisi'
@@ -171,7 +153,6 @@ export const CreateUlasan: React.FC = () => {
       if (avatarFile) payload.avatar = await toBase64(avatarFile)
       const res = await apiClient.createPublicTestimonial(payload)
       if (res.data?.testimonial) {
-        setLastSubmit(); setCooldown(checkCooldown())
         await fetchAll()
         if (form.avatar.startsWith('blob:')) URL.revokeObjectURL(form.avatar)
         setAvatarFile(null)
@@ -391,28 +372,13 @@ export const CreateUlasan: React.FC = () => {
                 <div className={`transition-all duration-300 overflow-hidden ${formOpen ? 'max-h-[9999px] opacity-100' : 'max-h-0 opacity-0 lg:max-h-[9999px] lg:opacity-100'}`}>
                   <div className="px-6 pb-6 space-y-4">
 
-                    {/* cooldown */}
-                    {!cooldown.allowed && (
-                      <div className="bg-amber-50 border border-amber-200/80 rounded-2xl px-4 py-3.5 flex gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
-                          <Clock className="w-4 h-4 text-amber-600" strokeWidth={2.5} />
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-amber-800">Sudah mengirim ulasan</p>
-                          <p className="text-xs text-amber-600 mt-0.5">
-                            Anda bisa mengirim lagi dalam <strong>{cooldown.daysLeft} hari</strong>
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
                     {/* rating */}
                     <div>
                       <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
                         Rating <span className="text-red-400">*</span>
                       </label>
                       <div className="bg-slate-50 rounded-xl px-4 py-3.5 flex items-center gap-3 border border-slate-100">
-                        <Stars rating={form.rating} interactive={cooldown.allowed && !submitting}
+                        <Stars rating={form.rating} interactive={!submitting}
                           onSet={v => setForm(p=>({...p, rating:v}))} size="lg" />
                         <div className="ml-1 border-l border-slate-200 pl-3">
                           <p className="text-sm font-black text-slate-800">{form.rating}/5</p>
@@ -432,7 +398,7 @@ export const CreateUlasan: React.FC = () => {
                         <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" strokeWidth={2} />
                         <input
                           type="text" placeholder="Nama lengkap Anda"
-                          value={form.name} disabled={submitting || !cooldown.allowed}
+                          value={form.name} disabled={submitting}
                           onChange={e => { setForm(p=>({...p,name:e.target.value})); if(errors.name) setErrors(p=>({...p,name:undefined})) }}
                           className={`w-full pl-10 pr-4 py-3 rounded-xl border text-sm outline-none transition-all disabled:bg-slate-50 disabled:cursor-not-allowed ${
                             errors.name
@@ -457,7 +423,7 @@ export const CreateUlasan: React.FC = () => {
                         <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" strokeWidth={2} />
                         <input
                           type="text" placeholder="Nama usaha / perusahaan"
-                          value={form.company} disabled={submitting || !cooldown.allowed}
+                          value={form.company} disabled={submitting}
                           onChange={e => setForm(p=>({...p,company:e.target.value}))}
                           className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 bg-white text-sm outline-none transition-all disabled:bg-slate-50 disabled:cursor-not-allowed"
                         />
@@ -471,7 +437,7 @@ export const CreateUlasan: React.FC = () => {
                       </label>
                       <textarea
                         placeholder="Ceritakan pengalaman Anda menggunakan layanan NexCube..."
-                        rows={4} value={form.text} disabled={submitting || !cooldown.allowed}
+                        rows={4} value={form.text} disabled={submitting}
                         onChange={e => { setForm(p=>({...p,text:e.target.value})); if(errors.text) setErrors(p=>({...p,text:undefined})) }}
                         className={`w-full px-4 py-3 rounded-xl border text-sm outline-none transition-all resize-none disabled:bg-slate-50 disabled:cursor-not-allowed ${
                           errors.text
@@ -492,7 +458,7 @@ export const CreateUlasan: React.FC = () => {
                         Foto Profil <span className="text-slate-300 font-normal normal-case text-[11px]">(opsional)</span>
                       </label>
                       <input ref={fileRef} type="file" accept={ACCEPTED_TYPES.join(',')}
-                        onChange={handleFile} className="hidden" disabled={submitting || !cooldown.allowed} />
+                        onChange={handleFile} className="hidden" disabled={submitting} />
 
                       {form.avatar ? (
                         <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl p-3">
@@ -505,19 +471,19 @@ export const CreateUlasan: React.FC = () => {
                           </div>
                           <div className="flex gap-1.5">
                             <button type="button" onClick={() => fileRef.current?.click()}
-                              disabled={submitting || !cooldown.allowed}
+                              disabled={submitting}
                               className="p-1.5 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors border border-blue-200 disabled:opacity-50">
                               <Camera className="w-3.5 h-3.5" strokeWidth={2.5} />
                             </button>
                             <button type="button" onClick={removeAvatar}
-                              disabled={submitting || !cooldown.allowed}
+                              disabled={submitting}
                               className="p-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition-colors border border-red-200 disabled:opacity-50">
                               <X className="w-3.5 h-3.5" strokeWidth={2.5} />
                             </button>
                           </div>
                         </div>
                       ) : (
-                        <button type="button" disabled={submitting || !cooldown.allowed}
+                        <button type="button" disabled={submitting}
                           onClick={() => fileRef.current?.click()}
                           className="w-full border-2 border-dashed border-slate-200 rounded-xl py-4 flex items-center gap-3 px-4 hover:border-blue-400 hover:bg-blue-50/40 transition-all group disabled:opacity-50 disabled:cursor-not-allowed">
                           <div className="w-10 h-10 rounded-xl bg-slate-100 group-hover:bg-blue-100 flex items-center justify-center transition-colors flex-shrink-0">
@@ -532,27 +498,21 @@ export const CreateUlasan: React.FC = () => {
                     </div>
 
                     {/* submit */}
-                    {cooldown.allowed ? (
-                      <button type="button" onClick={handleSubmit} disabled={submitting}
-                        className="w-full relative overflow-hidden bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-2xl font-black text-sm shadow-lg shadow-blue-200 hover:shadow-xl hover:shadow-blue-300 transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-center gap-2.5 disabled:opacity-60 disabled:translate-y-0 disabled:cursor-not-allowed group">
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        {submitting ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin relative z-10" />
-                            <span className="relative z-10">Mengirim...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Send className="w-4 h-4 relative z-10" strokeWidth={2.5} />
-                            <span className="relative z-10">Kirim Ulasan</span>
-                          </>
-                        )}
-                      </button>
-                    ) : (
-                      <div className="w-full bg-slate-100 text-slate-400 py-3.5 rounded-2xl font-black text-sm text-center cursor-not-allowed select-none">
-                        Kirim Ulasan
-                      </div>
-                    )}
+                    <button type="button" onClick={handleSubmit} disabled={submitting}
+                      className="w-full relative overflow-hidden bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-2xl font-black text-sm shadow-lg shadow-blue-200 hover:shadow-xl hover:shadow-blue-300 transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-center gap-2.5 disabled:opacity-60 disabled:translate-y-0 disabled:cursor-not-allowed group">
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      {submitting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin relative z-10" />
+                          <span className="relative z-10">Mengirim...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 relative z-10" strokeWidth={2.5} />
+                          <span className="relative z-10">Kirim Ulasan</span>
+                        </>
+                      )}
+                    </button>
 
                     <p className="text-center text-xs text-slate-400 flex items-center justify-center gap-1.5">
                       <CheckCircle className="w-3 h-3 text-emerald-400" strokeWidth={2.5} />
