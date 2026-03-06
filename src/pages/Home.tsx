@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, Suspense } from 'react'
+import React, { useRef, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Layout } from '../components/layout/Layout'
 import { Portfolio } from '../components/Portfolio'
@@ -11,7 +11,7 @@ import {
   useFloatingAnimation 
 } from '../hooks/useGsapAnimation'
 import { useCountUp } from '../hooks/useCountUp'
-import { useSmoothScroll, useThreePerformance } from '../hooks/useSmoothAnimation'
+import { useSmoothScroll } from '../hooks/useSmoothAnimation'
 import { useSmoothScrollRAF } from '../hooks/useFrameOptimization'
 import { 
   FaRocket, 
@@ -32,10 +32,6 @@ import {
 } from 'react-icons/fa'
 import { HiSparkles } from 'react-icons/hi'
 import { IoMdCube } from 'react-icons/io'
-
-// Lazy load Three.js components for better performance
-const ThreeBackground = React.lazy(() => import('../components/ThreeBackground'))
-const HeroThree = React.lazy(() => import('../components/HeroThree'))
 
 // Separate StatCounter component to prevent re-initialization on scroll
 interface StatCounterProps {
@@ -81,7 +77,6 @@ export const Home: React.FC = () => {
   useFloatingAnimation('.floating-element');
   
   useSmoothScroll();
-  useThreePerformance();
   
   const { scrollTo } = useSmoothScrollRAF();
   
@@ -246,11 +241,6 @@ export const Home: React.FC = () => {
       </div>
       
       <div className="overflow-hidden" ref={parallaxRef}>
-        {/* Three.js 3D Background */}
-        <Suspense fallback={null}>
-          <ThreeBackground className="opacity-30" />
-        </Suspense>
-        
         {/* Background Elements */}
         <div className="fixed top-0 left-0 w-96 h-96 bg-gradient-to-br from-blue-500/20 to-orange-400/20 rounded-full blur-3xl -translate-x-48 -translate-y-48 animate-pulse parallax-element"></div>
         <div className="fixed bottom-0 right-0 w-96 h-96 bg-gradient-to-br from-orange-400/20 to-blue-500/20 rounded-full blur-3xl translate-x-48 translate-y-48 animate-pulse parallax-element" style={{ animationDelay: '2s' }}></div>
@@ -292,10 +282,6 @@ export const Home: React.FC = () => {
           ref={heroSectionRef} 
           className="relative h-screen flex items-center justify-center overflow-hidden"
         >
-          <Suspense fallback={null}>
-            <HeroThree />
-          </Suspense>
-          
           <div className="absolute inset-0 bg-gradient-to-br from-slate-50 via-blue-50/30 to-orange-50/30"></div>
           
           <div className="absolute inset-0 opacity-[0.03]">

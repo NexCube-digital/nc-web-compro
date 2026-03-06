@@ -31,14 +31,6 @@ export default defineConfig({
             return 'react-vendor'
           }
 
-          if (/node_modules\/three\//.test(id)) {
-            return 'three-core'
-          }
-
-          if (/node_modules\/@react-three\/(fiber|drei)\//.test(id)) {
-            return 'three-react'
-          }
-
           if (/node_modules\/(gsap|animejs)\//.test(id)) {
             return 'animation-vendor'
           }
