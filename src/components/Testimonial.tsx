@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { FaStar, FaCheckCircle, FaChevronLeft, FaChevronRight, FaTimes } from 'react-icons/fa'
 import { HiSparkles } from 'react-icons/hi'
+import { toast } from 'react-hot-toast'
 import apiClient, { getImageUrl } from '../services/api'
 
 interface TestimonialItem {
@@ -18,6 +19,31 @@ const MOBILE_BREAKPOINT = 640
 const MOBILE_AUTO_SLIDE_MS = 5000
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 const MAX_SIZE_MB = 2
+const COOLDOWN_DAYS = 7
+const STORAGE_KEY = 'nexcube_last_testimonial_submit'
+
+// ── Rate Limiting Helpers ───────────────────────────────────────────────
+const getLastSubmitTime = (): number | null => {
+  const stored = localStorage.getItem(STORAGE_KEY)
+  return stored ? parseInt(stored, 10) : null
+}
+
+const setLastSubmitTime = () => {
+  localStorage.setItem(STORAGE_KEY, Date.now().toString())
+}
+
+const canSubmitTestimonial = (): { allowed: boolean; daysRemaining: number } => {
+  const lastSubmit = getLastSubmitTime()
+  if (!lastSubmit) return { allowed: true, daysRemaining: 0 }
+  
+  const daysSinceLastSubmit = (Date.now() - lastSubmit) / (1000 * 60 * 60 * 24)
+  const daysRemaining = Math.max(0, Math.ceil(COOLDOWN_DAYS - daysSinceLastSubmit))
+  
+  return {
+    allowed: daysSinceLastSubmit >= COOLDOWN_DAYS,
+    daysRemaining
+  }
+}
 
 export const Testimonial: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -30,6 +56,7 @@ export const Testimonial: React.FC = () => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [errors, setErrors] = useState<{ name?: string; text?: string }>({})
   const [submitting, setSubmitting] = useState(false)
+  const [cooldownInfo, setCooldownInfo] = useState(canSubmitTestimonial())
   const [isMobileView, setIsMobileView] = useState(false)
 
   useEffect(() => {
@@ -107,12 +134,12 @@ export const Testimonial: React.FC = () => {
     if (!file) return
 
     if (!ACCEPTED_TYPES.includes(file.type)) {
-      alert('Format tidak didukung. Gunakan JPG, PNG, atau WEBP.')
+      toast.error('Format tidak didukung. Gunakan JPG, PNG, atau WEBP.')
       e.target.value = ''
       return
     }
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-      alert(`Ukuran maksimal ${MAX_SIZE_MB}MB.`)
+      toast.error(`Ukuran maksimal ${MAX_SIZE_MB}MB.`)
       e.target.value = ''
       return
     }
@@ -132,6 +159,20 @@ export const Testimonial: React.FC = () => {
 
   // ── Submit to API ───────────────────────────────────────────────────────
   const handleSubmit = async () => {
+    // Check rate limiting
+    const submitCheck = canSubmitTestimonial()
+    if (!submitCheck.allowed) {
+      toast.error(`Mohon tunggu ${submitCheck.daysRemaining} hari lagi untuk memberikan ulasan`, {
+        duration: 4000,
+        icon: '⏱️',
+      })
+      toast('Anda dapat memberikan ulasan kembali setelah 7 hari dari ulasan terakhir', {
+        duration: 5000,
+        icon: 'ℹ️',
+      })
+      return
+    }
+
     const errs: { name?: string; text?: string } = {}
     if (!newReview.name.trim()) errs.name = 'Nama wajib diisi'
     if (!newReview.text.trim()) errs.text = 'Ulasan wajib diisi'
@@ -158,6 +199,10 @@ export const Testimonial: React.FC = () => {
       const response = await apiClient.createPublicTestimonial(testimonialData)
       
       if (response.data?.testimonial) {
+        // Set last submit timestamp for rate limiting
+        setLastSubmitTime()
+        setCooldownInfo(canSubmitTestimonial())
+        
         // Refresh the list to show new testimonials (if published immediately)
         // or just show success message
         await fetchPublishedTestimonials()
@@ -170,10 +215,21 @@ export const Testimonial: React.FC = () => {
         setShowAddModal(false)
         if (fileInputRef.current) fileInputRef.current.value = ''
 
-        alert('Terima kasih! Ulasan Anda akan ditampilkan setelah diverifikasi oleh admin.')
+        toast.success('Terima kasih! Ulasan Anda akan ditampilkan setelah diverifikasi oleh admin.', {
+          duration: 4000,
+          icon: '🎉',
+        })
+        setTimeout(() => {
+          toast('Anda dapat memberikan ulasan kembali 7 hari lagi', {
+            duration: 4000,
+            icon: '📅',
+          })
+        }, 500)
       }
     } catch (error: any) {
-      alert(error.message || 'Gagal mengirim ulasan. Silakan coba lagi.')
+      toast.error(error.message || 'Gagal mengirim ulasan. Silakan coba lagi.', {
+        duration: 4000,
+      })
     } finally {
       setSubmitting(false)
     }
@@ -329,14 +385,26 @@ export const Testimonial: React.FC = () => {
 
         {/* ── CTA ─────────────────────────────────────────────────────── */}
         <div className="text-center">
-          <button 
-            onClick={() => setShowAddModal(true)}
-            disabled={submitting}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-orange-500 hover:from-blue-700 hover:to-orange-600 text-white px-6 py-3 rounded-xl font-bold text-sm md:text-base shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <HiSparkles className="w-5 h-5" />
-            Tambah Ulasan
-          </button>
+          {!cooldownInfo.allowed ? (
+            <div className="inline-flex flex-col items-center gap-2">
+              <div className="inline-flex items-center gap-2 bg-slate-100 text-slate-500 px-6 py-3 rounded-xl font-semibold text-sm md:text-base cursor-not-allowed">
+                <HiSparkles className="w-5 h-5" />
+                Tambah Ulasan
+              </div>
+              <p className="text-xs text-slate-500 max-w-xs">
+                Anda sudah memberikan ulasan. Bisa mengirim ulasan lagi dalam <span className="font-bold text-slate-700">{cooldownInfo.daysRemaining} hari</span>.
+              </p>
+            </div>
+          ) : (
+            <button 
+              onClick={() => setShowAddModal(true)}
+              disabled={submitting}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-orange-500 hover:from-blue-700 hover:to-orange-600 text-white px-6 py-3 rounded-xl font-bold text-sm md:text-base shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <HiSparkles className="w-5 h-5" />
+              Tambah Ulasan
+            </button>
+          )}
         </div>
       </div>
 
