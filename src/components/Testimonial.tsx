@@ -1,5 +1,13 @@
+<<<<<<< HEAD
 import React, { useState, useEffect } from 'react'
 import { FaStar, FaCheckCircle, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
+=======
+import React, { useState, useRef, useEffect } from 'react'
+import { Link } from 'react-router-dom'
+import { FaStar, FaCheckCircle, FaChevronLeft, FaChevronRight, FaTimes } from 'react-icons/fa'
+import { HiSparkles } from 'react-icons/hi'
+import { toast } from 'react-hot-toast'
+>>>>>>> dev
 import apiClient, { getImageUrl } from '../services/api'
 
 interface TestimonialItem {
@@ -15,6 +23,36 @@ interface TestimonialItem {
 const DESKTOP_ITEMS_PER_PAGE = 3
 const MOBILE_BREAKPOINT = 640
 const MOBILE_AUTO_SLIDE_MS = 5000
+<<<<<<< HEAD
+=======
+const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const MAX_SIZE_MB = 2
+const COOLDOWN_DAYS = 7
+const STORAGE_KEY = 'nexcube_last_testimonial_submit'
+
+// ── Rate Limiting Helpers ───────────────────────────────────────────────
+const getLastSubmitTime = (): number | null => {
+  const stored = localStorage.getItem(STORAGE_KEY)
+  return stored ? parseInt(stored, 10) : null
+}
+
+const setLastSubmitTime = () => {
+  localStorage.setItem(STORAGE_KEY, Date.now().toString())
+}
+
+const canSubmitTestimonial = (): { allowed: boolean; daysRemaining: number } => {
+  const lastSubmit = getLastSubmitTime()
+  if (!lastSubmit) return { allowed: true, daysRemaining: 0 }
+
+  const daysSinceLastSubmit = (Date.now() - lastSubmit) / (1000 * 60 * 60 * 24)
+  const daysRemaining = Math.max(0, Math.ceil(COOLDOWN_DAYS - daysSinceLastSubmit))
+
+  return {
+    allowed: daysSinceLastSubmit >= COOLDOWN_DAYS,
+    daysRemaining
+  }
+}
+>>>>>>> dev
 
 export const Testimonial: React.FC = () => {
   const [testimonialPage, setTestimonialPage] = useState(0)
@@ -25,18 +63,16 @@ export const Testimonial: React.FC = () => {
   useEffect(() => {
     const mediaQuery = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
     const syncMobileView = () => setIsMobileView(mediaQuery.matches)
-
     syncMobileView()
-
     if (typeof mediaQuery.addEventListener === 'function') {
       mediaQuery.addEventListener('change', syncMobileView)
       return () => mediaQuery.removeEventListener('change', syncMobileView)
     }
-
     mediaQuery.addListener(syncMobileView)
     return () => mediaQuery.removeListener(syncMobileView)
   }, [])
 
+<<<<<<< HEAD
   // Fetch published testimonials
   useEffect(() => {
     const fetchTestimonials = async () => {
@@ -53,6 +89,24 @@ export const Testimonial: React.FC = () => {
       }
     }
     fetchTestimonials()
+=======
+  const fetchPublishedTestimonials = async () => {
+    try {
+      setLoading(true)
+      const response = await apiClient.getPublishedTestimonials()
+      if (response.data?.testimonials) {
+        setTestimonialsData(response.data.testimonials)
+      }
+    } catch (error) {
+      console.error('Gagal memuat testimonial:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchPublishedTestimonials()
+>>>>>>> dev
   }, [])
 
   const itemsPerPage = isMobileView ? 1 : DESKTOP_ITEMS_PER_PAGE
@@ -62,7 +116,10 @@ export const Testimonial: React.FC = () => {
     (testimonialPage + 1) * itemsPerPage
   )
 
+<<<<<<< HEAD
   // Update page when testimonials change
+=======
+>>>>>>> dev
   useEffect(() => {
     if (testimonialPage >= totalPages && totalPages > 0) {
       setTestimonialPage(totalPages - 1)
@@ -74,11 +131,9 @@ export const Testimonial: React.FC = () => {
 
   useEffect(() => {
     if (!isMobileView || totalPages <= 1 || loading) return
-
     const autoSlideTimer = window.setInterval(() => {
       setTestimonialPage((prevPage) => (prevPage + 1) % totalPages)
     }, MOBILE_AUTO_SLIDE_MS)
-
     return () => window.clearInterval(autoSlideTimer)
   }, [isMobileView, totalPages, loading])
 
@@ -167,8 +222,8 @@ export const Testimonial: React.FC = () => {
             {/* ── Pagination ───────────────────────────────────────────────── */}
             {totalPages > 1 && (
               <div className="flex items-center justify-center gap-4 mb-10">
-                <button 
-                  onClick={() => setTestimonialPage(p => Math.max(0, p - 1))} 
+                <button
+                  onClick={() => setTestimonialPage(p => Math.max(0, p - 1))}
                   disabled={testimonialPage === 0}
                   className="flex items-center justify-center w-11 h-11 rounded-xl border-2 border-slate-200 bg-white text-slate-600 hover:border-blue-500 hover:text-blue-600 hover:shadow-md disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
                 >
@@ -176,19 +231,19 @@ export const Testimonial: React.FC = () => {
                 </button>
                 <div className="flex gap-2 items-center">
                   {Array.from({ length: totalPages }).map((_, i) => (
-                    <button 
-                      key={i} 
+                    <button
+                      key={i}
                       onClick={() => setTestimonialPage(i)}
                       className={`rounded-full transition-all duration-300 ${
-                        i === testimonialPage 
-                          ? 'w-8 h-3 bg-gradient-to-r from-blue-600 to-orange-500' 
+                        i === testimonialPage
+                          ? 'w-8 h-3 bg-gradient-to-r from-blue-600 to-orange-500'
                           : 'w-3 h-3 bg-slate-300 hover:bg-slate-400'
-                      }`} 
+                      }`}
                     />
                   ))}
                 </div>
-                <button 
-                  onClick={() => setTestimonialPage(p => Math.min(totalPages - 1, p + 1))} 
+                <button
+                  onClick={() => setTestimonialPage(p => Math.min(totalPages - 1, p + 1))}
                   disabled={testimonialPage === totalPages - 1}
                   className="flex items-center justify-center w-11 h-11 rounded-xl border-2 border-slate-200 bg-white text-slate-600 hover:border-blue-500 hover:text-blue-600 hover:shadow-md disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
                 >
@@ -198,7 +253,40 @@ export const Testimonial: React.FC = () => {
             )}
           </>
         )}
+<<<<<<< HEAD
       </div>
+=======
+
+        {/* ── CTA ──────────────────────────────────────────────────────── */}
+        {!loading && (
+          <div className="text-center">
+            <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 rounded-3xl p-12 text-white shadow-2xl">
+              <h3 className="text-2xl md:text-3xl font-bold mb-4">Puas dengan layanan kami?</h3>
+              <p className="text-blue-100 mb-8 text-lg max-w-2xl mx-auto">
+                Bagikan pengalaman Anda dan bantu calon klien lain membuat keputusan terbaik bersama NexCube.
+              </p>
+              <Link
+                to="/ulasan"
+                className="inline-flex items-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-xl hover:bg-blue-50 transition-all duration-300 hover:scale-105 hover:shadow-xl"
+              >
+                Buat Ulasan
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </Link>
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      <style>{`
+        @keyframes modalFadeIn {
+          from { opacity: 0; transform: scale(0.96) translateY(14px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+      `}</style>
+>>>>>>> dev
     </section>
   )
 }

@@ -15,6 +15,8 @@ export const PricingCard: React.FC<{
   popular?: boolean;
   badge?: string;
   detailUrl?: string;
+  demoUrl?: string;
+  showDemoButton?: boolean;
   onOrder?: () => void;
 }> = ({ 
   tier, 
@@ -26,6 +28,8 @@ export const PricingCard: React.FC<{
   popular = false,
   badge,
   detailUrl,
+  demoUrl,
+  showDemoButton = false,
   onOrder
 }) => {
   const navigate = useNavigate()
@@ -87,6 +91,17 @@ export const PricingCard: React.FC<{
     window.setTimeout(() => setShowFeaturesModal(false), 180)
   }
 
+  const normalizeDemoUrl = (url?: string) => {
+    const trimmed = url?.trim()
+    if (!trimmed) return ''
+    if (/^https?:\/\//i.test(trimmed)) return trimmed
+    return `https://${trimmed}`
+  }
+
+  const resolvedDemoUrl = normalizeDemoUrl(demoUrl)
+  const shouldShowDemoButton = showDemoButton || Boolean(resolvedDemoUrl)
+  const canOpenDemo = Boolean(resolvedDemoUrl)
+
   // Tambah ke keranjang lalu buka drawer
   const handleAddToCart = () => {
     if (onOrder) {
@@ -111,6 +126,11 @@ export const PricingCard: React.FC<{
         }
       }
     })
+  }
+
+  const handleOpenDemo = () => {
+    if (!resolvedDemoUrl) return
+    window.open(resolvedDemoUrl, '_blank', 'noopener,noreferrer')
   }
   
   const getTierStyles = () => {
@@ -347,7 +367,21 @@ export const PricingCard: React.FC<{
             </div>
 
             <div className="sticky bottom-0 z-20 px-4 sm:px-5 py-4 border-t border-slate-100 bg-white/95 backdrop-blur-sm shadow-lg flex-shrink-0">
-              <div className="grid grid-cols-2 gap-2">
+              <div className={`grid ${shouldShowDemoButton ? 'grid-cols-[1fr_1fr_auto]' : 'grid-cols-2'} gap-2`}>
+                {shouldShowDemoButton && (
+                  <button
+                    onClick={handleOpenDemo}
+                    disabled={!canOpenDemo}
+                    className={`w-full py-2.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center border ${
+                      canOpenDemo
+                        ? 'bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                        : 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+                    }`}
+                  >
+                    Demo
+                  </button>
+                )}
+
                 <button
                   onClick={handleOrderNow}
                   className={`w-full py-2.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 bg-gradient-to-r ${styles.buttonGradient} text-white hover:scale-[1.01]`}
@@ -364,14 +398,14 @@ export const PricingCard: React.FC<{
                     closeFeaturesModal()
                     openCartDrawer()
                   }}
-                  className={`w-full py-2.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
+                  className={`py-2.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${shouldShowDemoButton ? 'w-11 px-0' : 'w-full'} ${
                     justAdded
                       ? 'bg-green-600 text-white border border-green-700'
                       : 'bg-white border border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                   }`}
                 >
                   <HiShoppingCart className="w-4 h-4" />
-                  {justAdded ? 'Lihat' : 'Keranjang'}
+                  {!shouldShowDemoButton && (justAdded ? 'Lihat' : 'Keranjang')}
                 </button>
               </div>
             </div>

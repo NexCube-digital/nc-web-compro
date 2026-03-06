@@ -5,8 +5,8 @@ import { Toaster } from 'react-hot-toast'
 import { Home } from './pages/Home'
 import ErrorBoundary from './components/ErrorBoundary'
 import Loading from './components/Loading'
-import { CartProvider } from './context/CartContext'      // ✅ import
-import { CartDrawer } from './components/cart/CartDrawer' // ✅ import
+import { CartProvider } from './context/CartContext'     
+import { CartDrawer } from './components/cart/CartDrawer'
 
 // Lazy load pages
 const Services         = lazy(() => import('./pages/Services').then(m => ({ default: m.Services })))
@@ -27,6 +27,7 @@ const Dashboard        = lazy(() => import('./dashboard/Dashboard').then(m => ({
 const Checkout         = lazy(() => import('./pages/Checkout').then(m => ({ default: m.Checkout })))
 const OrderSuccess     = lazy(() => import('./pages/OrderSuccess').then(m => ({ default: m.OrderSuccess })))
 const OrderPending     = lazy(() => import('./pages/OrderPending').then(m => ({ default: m.OrderPending })))
+const CreateUlasan     = lazy(() => import('./pages/CreateUlasan').then(m => ({ default: m.CreateUlasan })))
 
 const PageLoader = () => <Loading fullScreen message="Memuat halaman..." />
 
@@ -133,6 +134,7 @@ export const routes = [
       { path: 'services',                 element: <Services /> },
       { path: 'contact',                  element: <Contact /> },
       { path: 'about',                    element: <About /> },
+      { path: 'ulasan',                    element: <CreateUlasan /> },
       { path: 'paket',                    element: <Paket /> },
       // { path: 'paket/digital',            element: <PaketDigital /> },
       { path: 'paket/affiliate',             element: <PaketAffiliate /> },

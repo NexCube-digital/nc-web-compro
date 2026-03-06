@@ -189,6 +189,22 @@ const PackageManagement: React.FC = () => {
                 key={p.id} 
                 className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all group"
               >
+                {/* Package Image */}
+                <div className="h-44 bg-gray-100 overflow-hidden border-b border-gray-100">
+                  {((p.images && p.images.length > 0) || p.image) ? (
+                    <img
+                      src={getImageUrl((p.images && p.images[0]) || p.image)}
+                      alt={p.title}
+                      className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                      <MdOutlineInventory2 className="w-8 h-8 mb-2" />
+                      <span className="text-xs font-medium">Belum ada foto paket</span>
+                    </div>
+                  )}
+                </div>
+
                 {/* Card Header */}
                 <div className="p-5 border-b border-gray-100">
                   <div className="flex items-start justify-between mb-3">

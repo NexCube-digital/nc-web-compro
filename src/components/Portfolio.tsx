@@ -307,27 +307,7 @@ export const Portfolio: React.FC = () => {
           ? renderEmpty()
           : renderGrid()}
 
-        {/* CTA */}
-        {!isLoading && !error && (
-          <div className={`text-center ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-500'}`}>
-            <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 rounded-3xl p-12 text-white shadow-2xl">
-              <h3 className="text-2xl md:text-3xl font-bold mb-4">Ingin Melihat Lebih Banyak?</h3>
-              <p className="text-blue-100 mb-8 text-lg max-w-2xl mx-auto">
-                Kunjungi galeri lengkap kami untuk melihat semua proyek dan testimonial klien
-                yang telah merasakan transformasi bisnis mereka.
-              </p>
-              <Link
-                to="/paket"
-                className="inline-flex items-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-xl hover:bg-blue-50 transition-all duration-300 hover:scale-105 hover:shadow-xl"
-              >
-                Mulai Proyek Anda
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </Link>
-            </div>
-          </div>
-        )}
+        
       </div>
     </section>
   );
