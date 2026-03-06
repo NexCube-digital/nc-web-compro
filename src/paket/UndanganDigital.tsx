@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { Layout } from '../components/layout/Layout'
+import apiClient, { getImageUrl } from '../services/api'
 
 export const UndanganDigital: React.FC = () => {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [packages, setPackages] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   
   useEffect(() => {
@@ -12,12 +15,24 @@ export const UndanganDigital: React.FC = () => {
       setIsLoaded(true);
     }, 100);
     
+    // Fetch packages dengan type 'event' (undangan digital)
+    const fetchPackages = async () => {
+      try {
+        const res = await apiClient.getPackages('event');
+        if (res && res.data) {
+          setPackages(res.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch packages:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchPackages();
+    
     return () => clearTimeout(timer);
   }, []);
-  
-  const handleGoBack = () => {
-    navigate(-1); // Navigate back to previous page
-  };
 
   const paketCategories = [
     {
@@ -65,24 +80,6 @@ export const UndanganDigital: React.FC = () => {
   const handleCategoryClick = (routePath: string) => {
     navigate(routePath);
   };
-
-  const featuredExamples = [
-    {
-      title: 'Undangan Pernikahan Modern',
-      image: '/images/services/undangan-pernikahan.jpg',
-      desc: 'Undangan digital dengan animasi dan fitur RSVP online'
-    },
-    {
-      title: 'Undangan Ulang Tahun',
-      image: '/images/services/undangan-ultah.jpg',
-      desc: 'Desain playful dengan countdown timer dan lokasi maps'
-    },
-    {
-      title: 'Undangan Gathering Perusahaan',
-      image: '/images/services/undangan-corporate.jpg',
-      desc: 'Tampilan profesional dengan fitur konfirmasi kehadiran'
-    }
-  ];
 
   return (
     <Layout>
@@ -155,26 +152,71 @@ export const UndanganDigital: React.FC = () => {
           </div>
           
           <div className={`mb-16 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-200'}`}>
-            <h2 className="text-2xl font-heading font-semibold mb-10 text-center">Contoh Undangan Digital</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {featuredExamples.map((example, index) => (
-                <div 
-                  key={example.title}
-                  className={`rounded-xl overflow-hidden shadow-card hover:shadow-premium transition-all duration-300 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}
-                  style={{ animationDelay: `${400 + (index * 150)}ms` }}
-                >
-                  <img 
-                    src={example.image} 
-                    alt={example.title} 
-                    className="w-full h-52 object-cover"
-                  />
-                  <div className="p-5">
-                    <h3 className="font-heading font-medium text-lg mb-2">{example.title}</h3>
-                    <p className="text-slate-500 text-sm">{example.desc}</p>
+            <h2 className="text-2xl font-heading font-semibold mb-10 text-center">Paket Undangan Digital Kami</h2>
+            
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-accent border-t-transparent"></div>
+                <p className="mt-4 text-slate-500">Memuat paket...</p>
+              </div>
+            ) : packages.length === 0 ? (
+              <div className="text-center py-12 bg-slate-50 rounded-xl">
+                <p className="text-slate-500">Belum ada paket undangan digital tersedia.</p>
+                <p className="text-sm text-slate-400 mt-2">Silakan hubungi kami untuk konsultasi custom.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {packages.map((pkg, index) => (
+                  <div 
+                    key={pkg.id}
+                    className={`rounded-xl overflow-hidden shadow-card hover:shadow-premium transition-all duration-300 group ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}
+                    style={{ animationDelay: `${400 + (index * 150)}ms` }}
+                  >
+                    <a href={pkg.link || '#'} target="_blank" rel="noreferrer" className="block">
+                      <div className="h-52 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center overflow-hidden">
+                        {pkg.images && pkg.images.length > 0 ? (
+                          <img 
+                            src={getImageUrl(pkg.images[0])} 
+                            alt={pkg.title} 
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          />
+                        ) : (
+                          <div className="text-slate-400">
+                            <svg className="w-16 h-16 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    </a>
+                    <div className="p-5">
+                      <h3 className="font-heading font-medium text-lg mb-2">{pkg.title}</h3>
+                      <p className="text-slate-500 text-sm mb-3">{pkg.description || 'Undangan digital interaktif'}</p>
+                      {pkg.price && (
+                        <div className="text-accent font-bold text-lg mb-3">
+                          {typeof pkg.price === 'number' 
+                            ? `Rp ${pkg.price.toLocaleString('id-ID')}` 
+                            : pkg.price}
+                        </div>
+                      )}
+                      {pkg.link && (
+                        <a 
+                          href={pkg.link} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-2 text-accent hover:text-accent/80 font-medium text-sm"
+                        >
+                          Lihat Demo
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </a>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
           
           <div className={`p-8 sm:p-10 bg-white rounded-xl shadow-card mb-16 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-400'}`}>

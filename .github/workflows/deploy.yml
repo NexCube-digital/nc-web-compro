@@ -39,6 +39,7 @@ jobs:
 
       - name: 📤 Deploy to cPanel via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        timeout-minutes: 20
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
@@ -48,10 +49,14 @@ jobs:
           protocol: ftps
           port: 21
           log-level: verbose
+          # Timeout settings to prevent hanging
+          timeout: 600000
           # Disable clean-slate as it often causes timeouts on shared hosting
           dangerous-clean-slate: false
           # Use state file to track changes and only upload modified files
           state-name: .ftp-deploy-sync-state.json
+          # Retry on failure
+          dry-run: false
           exclude: |
             **/.git*
             **/.git*/**
