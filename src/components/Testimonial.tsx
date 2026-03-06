@@ -1,13 +1,6 @@
-<<<<<<< HEAD
 import React, { useState, useEffect } from 'react'
-import { FaStar, FaCheckCircle, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
-=======
-import React, { useState, useRef, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { FaStar, FaCheckCircle, FaChevronLeft, FaChevronRight, FaTimes } from 'react-icons/fa'
-import { HiSparkles } from 'react-icons/hi'
-import { toast } from 'react-hot-toast'
->>>>>>> dev
+import { FaStar, FaCheckCircle, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
 import apiClient, { getImageUrl } from '../services/api'
 
 interface TestimonialItem {
@@ -23,36 +16,6 @@ interface TestimonialItem {
 const DESKTOP_ITEMS_PER_PAGE = 3
 const MOBILE_BREAKPOINT = 640
 const MOBILE_AUTO_SLIDE_MS = 5000
-<<<<<<< HEAD
-=======
-const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
-const MAX_SIZE_MB = 2
-const COOLDOWN_DAYS = 7
-const STORAGE_KEY = 'nexcube_last_testimonial_submit'
-
-// ── Rate Limiting Helpers ───────────────────────────────────────────────
-const getLastSubmitTime = (): number | null => {
-  const stored = localStorage.getItem(STORAGE_KEY)
-  return stored ? parseInt(stored, 10) : null
-}
-
-const setLastSubmitTime = () => {
-  localStorage.setItem(STORAGE_KEY, Date.now().toString())
-}
-
-const canSubmitTestimonial = (): { allowed: boolean; daysRemaining: number } => {
-  const lastSubmit = getLastSubmitTime()
-  if (!lastSubmit) return { allowed: true, daysRemaining: 0 }
-
-  const daysSinceLastSubmit = (Date.now() - lastSubmit) / (1000 * 60 * 60 * 24)
-  const daysRemaining = Math.max(0, Math.ceil(COOLDOWN_DAYS - daysSinceLastSubmit))
-
-  return {
-    allowed: daysSinceLastSubmit >= COOLDOWN_DAYS,
-    daysRemaining
-  }
-}
->>>>>>> dev
 
 export const Testimonial: React.FC = () => {
   const [testimonialPage, setTestimonialPage] = useState(0)
@@ -72,24 +35,6 @@ export const Testimonial: React.FC = () => {
     return () => mediaQuery.removeListener(syncMobileView)
   }, [])
 
-<<<<<<< HEAD
-  // Fetch published testimonials
-  useEffect(() => {
-    const fetchTestimonials = async () => {
-      try {
-        setLoading(true)
-        const response = await apiClient.getPublishedTestimonials()
-        if (response.success && response.data?.testimonials) {
-          setTestimonialsData(response.data.testimonials)
-        }
-      } catch (error) {
-        console.error('Failed to fetch testimonials:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchTestimonials()
-=======
   const fetchPublishedTestimonials = async () => {
     try {
       setLoading(true)
@@ -106,7 +51,6 @@ export const Testimonial: React.FC = () => {
 
   useEffect(() => {
     fetchPublishedTestimonials()
->>>>>>> dev
   }, [])
 
   const itemsPerPage = isMobileView ? 1 : DESKTOP_ITEMS_PER_PAGE
@@ -116,10 +60,6 @@ export const Testimonial: React.FC = () => {
     (testimonialPage + 1) * itemsPerPage
   )
 
-<<<<<<< HEAD
-  // Update page when testimonials change
-=======
->>>>>>> dev
   useEffect(() => {
     if (testimonialPage >= totalPages && totalPages > 0) {
       setTestimonialPage(totalPages - 1)
@@ -253,9 +193,6 @@ export const Testimonial: React.FC = () => {
             )}
           </>
         )}
-<<<<<<< HEAD
-      </div>
-=======
 
         {/* ── CTA ──────────────────────────────────────────────────────── */}
         {!loading && (
@@ -279,14 +216,6 @@ export const Testimonial: React.FC = () => {
         )}
 
       </div>
-
-      <style>{`
-        @keyframes modalFadeIn {
-          from { opacity: 0; transform: scale(0.96) translateY(14px); }
-          to   { opacity: 1; transform: scale(1) translateY(0); }
-        }
-      `}</style>
->>>>>>> dev
     </section>
   )
 }
