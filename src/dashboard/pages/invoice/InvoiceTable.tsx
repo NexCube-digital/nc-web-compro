@@ -3,7 +3,6 @@ import { Invoice } from '../../../services/api'
 import { ConfirmDialog } from '../../../components/ConfirmDialog'
 import { Toast, ToastType } from '../../../components/Toast'
 import { InvoicePDFModal } from '../../../components/InvoicePDFModal'
-import html2pdf from 'html2pdf.js'
 
 interface InvoiceTableProps {
   invoices: Invoice[];
@@ -58,11 +57,12 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
     setShowPDFModal(true)
   }
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     if (!selectedInvoice) return
 
     try {
       setToast({ message: 'Membuat PDF...', type: 'info' })
+      const html2pdf = (await import('html2pdf.js')).default
 
       const element = document.querySelector('.invoice-pdf-content') as HTMLElement
       if (!element) {
@@ -78,7 +78,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
         jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
       }
 
-      html2pdf().set(opt).from(element).save()
+      await html2pdf().set(opt).from(element).save()
       setToast({ message: 'PDF berhasil diunduh', type: 'success' })
       setTimeout(() => setShowPDFModal(false), 500)
     } catch (error) {

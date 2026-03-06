@@ -24,7 +24,6 @@ import {
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useCart } from '../context/CartContext';
-import { openCartDrawer } from '../components/cart/CartDrawer';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -570,7 +569,6 @@ export const PaketAffiliate: React.FC = () => {
                             quantity: 1,
                             description: `${category.title} - ${tier.badge || ''}`,
                           });
-                          openCartDrawer();
                         }}
                       />
                     )}
@@ -621,7 +619,6 @@ export const PaketAffiliate: React.FC = () => {
                               quantity: 1,
                               description: `${category.title} - ${tier.badge || ''}`,
                             });
-                            openCartDrawer();
                           }}
                         />
                       )}

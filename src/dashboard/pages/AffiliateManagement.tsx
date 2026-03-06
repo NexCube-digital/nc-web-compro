@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import * as XLSX from 'xlsx'
 import apiClient from '../../services/api'
 import {
   HiPlus,
@@ -99,7 +98,8 @@ const parseArr = (val: any): string[] => {
   return String(val).split(';').map((s: string) => s.trim()).filter(Boolean)
 }
 
-const downloadTemplate = () => {
+const downloadTemplate = async () => {
+  const XLSX = await import('xlsx')
   const headers = [
     'title', 'type', 'level', 'category', 'price', 'hot',
     'description', 'features', 'includes', 'benefits', 'process', 'timeline',
@@ -142,8 +142,9 @@ const ImportModal: React.FC<ImportModalProps> = ({ onClose, onSuccess }) => {
   const handleFile = (file: File) => {
     if (!file) return
     const reader = new FileReader()
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
+        const XLSX = await import('xlsx')
         const data = new Uint8Array(e.target!.result as ArrayBuffer)
         const wb = XLSX.read(data, { type: 'array' })
         const ws = wb.Sheets[wb.SheetNames[0]]

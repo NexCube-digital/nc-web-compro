@@ -13,7 +13,6 @@ import { FaRocket, FaArrowRight, FaWhatsapp } from 'react-icons/fa';
 import gsap from 'gsap';
 
 import { useCart } from '../context/CartContext';
-import { openCartDrawer } from '../components/cart/CartDrawer';
 
 export const Paket: React.FC = () => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -345,13 +344,14 @@ export const Paket: React.FC = () => {
         {/* Pricing Cards Grid - Per Category */}
         <div className="max-w-7xl mx-auto">
           {/* First Row: Student, Bronze, Silver */}
-          <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mb-6 sm:mb-8">
+          <div className="grid gap-3 sm:gap-6 lg:gap-8 grid-cols-2 lg:grid-cols-3 mb-6 sm:mb-8">
             {categoryPricing.filter((tier, index) => index < 3).map((tier, index) => {
               const isBackendPkg = !!tier.id && !!tier.title
               const title = tier.title || tier.id || `Package ${index + 1}`
               const price = tier.price || ''
               const features = tier.features || []
               const includes = tier.includes || []
+              const imageSrc = (tier.images && tier.images[0]) || tier.image || ''
               const hot = tier.hot || false
               const detailUrl = isBackendPkg ? `/paket/${category.id}/${tier.id}` : undefined
 
@@ -378,6 +378,7 @@ export const Paket: React.FC = () => {
                         price={price}
                         features={features}
                         includes={includes}
+                        imageSrc={imageSrc}
                         accent={tier.accent}
                         badge={tier.badge}
                         popular={hot || tier.popular}
@@ -393,7 +394,6 @@ export const Paket: React.FC = () => {
                           quantity: 1,
                           description: `${category.title} - ${tier.badge || ''}`,
                         });
-                        openCartDrawer();
                       }}
                       />
                     )}
@@ -405,13 +405,14 @@ export const Paket: React.FC = () => {
 
           {/* Second Row: Gold, Platinum (Centered) */}
           {categoryPricing.length > 3 && (
-            <div className="grid gap-6 sm:gap-8 grid-cols-1 sm:grid-cols-2 max-w-4xl mx-auto">
+            <div className="grid gap-3 sm:gap-6 lg:gap-8 grid-cols-2 max-w-4xl mx-auto">
               {categoryPricing.filter((tier, index) => index >= 3).map((tier, index) => {
                 const isBackendPkg = !!tier.id && !!tier.title
                 const title = tier.title || tier.id || `Package ${index + 3 + 1}`
                 const price = tier.price || ''
                 const features = tier.features || []
                 const includes = tier.includes || []
+                const imageSrc = (tier.images && tier.images[0]) || tier.image || ''
                 const hot = tier.hot || false
                 const detailUrl = isBackendPkg ? `/paket/${category.id}/${tier.id}` : undefined
 
@@ -438,6 +439,7 @@ export const Paket: React.FC = () => {
                           price={price}
                           features={features}
                           includes={includes}
+                          imageSrc={imageSrc}
                           accent={tier.accent}
                           badge={tier.badge}
                           popular={hot || tier.popular}
@@ -452,7 +454,6 @@ export const Paket: React.FC = () => {
                             quantity: 1,
                             description: `${category.title} - ${tier.badge || ''}`,
                           });
-                          openCartDrawer();
                         }}
                         />
                       )}

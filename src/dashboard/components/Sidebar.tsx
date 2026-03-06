@@ -3,6 +3,23 @@ import { Link, useNavigate } from 'react-router-dom'
 import apiClient from '../../services/api'
 import { useTheme } from '../ThemeContext'
 
+const DASHBOARD_PREFETCHERS: Record<string, () => Promise<unknown>> = {
+  overview: () => import('./Stats'),
+  team: () => import('../pages/TeamManagement'),
+  users: () => import('../pages/UserManagement'),
+  reports: () => import('../pages/ReportManagement'),
+  clients: () => import('../pages/ClientManagement'),
+  invoices: () => import('../pages/InvoiceManagement'),
+  finances: () => import('../pages/FinanceManagement'),
+  portfolios: () => import('../pages/PortfolioManagement'),
+  testimonials: () => import('../pages/TestimonialManagement'),
+  'paket/website': () => import('../pages/PackageManagement'),
+  'paket/desain': () => import('../pages/PackageManagement'),
+  'paket/event': () => import('../pages/PackageManagement'),
+  'paket/katalog': () => import('../pages/PackageManagement'),
+  'paket/affiliate': () => import('../pages/AffiliateManagement'),
+}
+
 interface SidebarProps {
   open: boolean
   setOpen: (open: boolean) => void
@@ -18,6 +35,7 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
 }) => {
   const navigate = useNavigate()
   const { theme } = useTheme()
+  const [prefetchedTabs, setPrefetchedTabs] = useState<Record<string, boolean>>({})
 
   const isAdmin = userRole === 'admin'
 
@@ -147,6 +165,17 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
     setOpen(false)
   }
 
+  const handlePrefetchTab = (id: string) => {
+    if (prefetchedTabs[id]) return
+    const prefetcher = DASHBOARD_PREFETCHERS[id]
+    if (!prefetcher) return
+
+    setPrefetchedTabs((prev) => ({ ...prev, [id]: true }))
+    prefetcher().catch(() => {
+      setPrefetchedTabs((prev) => ({ ...prev, [id]: false }))
+    })
+  }
+
   const btnActive = 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
   const btnDefault = 'text-slate-400 hover:text-white hover:bg-white/5 hover:scale-[1.01] hover:translate-x-0.5'
   const subBtnActive = 'bg-gradient-to-r from-blue-600/90 via-blue-500/90 to-indigo-600/90 text-white shadow-md shadow-blue-500/20 scale-[1.01]'
@@ -202,6 +231,8 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
             {/* Overview — semua role */}
             <button
               onClick={() => handleNavigate('overview')}
+              onMouseEnter={() => handlePrefetchTab('overview')}
+              onFocus={() => handlePrefetchTab('overview')}
               className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
                 activeTab === '' || activeTab === 'overview' ? btnActive : btnDefault
               }`}
@@ -223,6 +254,7 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
                       activeClass={btnActive}
                       defaultClass={btnDefault}
                       onClick={() => handleNavigate(item.id)}
+                      onPrefetch={() => handlePrefetchTab(item.id)}
                     />
                   ))}
                 </div>
@@ -242,6 +274,7 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
                     activeClass={btnActive}
                     defaultClass={btnDefault}
                     onClick={() => handleNavigate(item.id)}
+                    onPrefetch={() => handlePrefetchTab(item.id)}
                   />
                 ))}
                 {/* Shared content items (semua role) */}
@@ -253,6 +286,7 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
                     activeClass={btnActive}
                     defaultClass={btnDefault}
                     onClick={() => handleNavigate(item.id)}
+                    onPrefetch={() => handlePrefetchTab(item.id)}
                   />
                 ))}
               </div>
@@ -264,6 +298,8 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
               <div className="space-y-1">
                 <button
                   onClick={() => setPkgOpen(!pkgOpen)}
+                  onMouseEnter={() => handlePrefetchTab('paket/website')}
+                  onFocus={() => handlePrefetchTab('paket/website')}
                   className={`group w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
                     isPaketActive ? btnActive : btnDefault
                   }`}
@@ -287,6 +323,7 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
                         activeClass={subBtnActive}
                         defaultClass={subBtnDefault}
                         onClick={() => handleNavigate(item.id)}
+                        onPrefetch={() => handlePrefetchTab(item.id)}
                         small
                       />
                     ))}
@@ -301,6 +338,8 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
               <div className="space-y-1">
                 <button
                   onClick={() => setAffiliateOpen(!affiliateOpen)}
+                  onMouseEnter={() => handlePrefetchTab('paket/affiliate')}
+                  onFocus={() => handlePrefetchTab('paket/affiliate')}
                   className={`group w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
                     isAffiliateActive ? btnActive : btnDefault
                   }`}
@@ -324,6 +363,7 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
                         activeClass={subBtnActive}
                         defaultClass={subBtnDefault}
                         onClick={() => handleNavigate(item.id)}
+                        onPrefetch={() => handlePrefetchTab(item.id)}
                         small
                       />
                     ))}
@@ -360,12 +400,15 @@ interface NavButtonProps {
   activeClass: string
   defaultClass: string
   onClick: () => void
+  onPrefetch?: () => void
   small?: boolean
 }
 
-const NavButton: React.FC<NavButtonProps> = ({ item, active, activeClass, defaultClass, onClick, small }) => (
+const NavButton: React.FC<NavButtonProps> = ({ item, active, activeClass, defaultClass, onClick, onPrefetch, small }) => (
   <button
     onClick={onClick}
+    onMouseEnter={onPrefetch}
+    onFocus={onPrefetch}
     className={`group w-full flex items-center gap-3 px-3 ${small ? 'py-2' : 'py-2.5'} rounded-lg transition-all duration-300 ${active ? activeClass : defaultClass}`}
   >
     <div className={`transition-transform duration-300 group-hover:scale-110 ${small ? 'w-4 h-4 flex items-center justify-center' : ''}`}>

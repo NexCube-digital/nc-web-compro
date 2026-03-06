@@ -1,27 +1,28 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import gsap from 'gsap'
 import DashboardSidebar from './components/Sidebar'
 import DashboardHeader from './components/Header'
-import DashboardStats from './components/Stats'
 import { ThemeProvider } from './ThemeContext'
 import TopProgress from './components/TopProgress'
-import UserManagement from './pages/UserManagement'
-import PortfolioManagement from './pages/PortfolioManagement'
-import ClientManagement from './pages/ClientManagement'
-import InvoiceManagement from './pages/InvoiceManagement'
-import FinanceManagement from './pages/FinanceManagement'
-import ReportManagement from './pages/ReportManagement'
-import ProfilePage from './pages/ProfilePage'
-import TeamManagement from './pages/TeamManagement'
-import PackageManagement from './pages/PackageManagement'
-import PackageForm from './pages/PackageForm'
-import AffiliateManagement from './pages/AffiliateManagement'
-import AffiliateForm from './pages/AffiliateForm'
-import TestimonialManagement from './pages/TestimonialManagement'
 
 import apiClient, { User } from '../services/api'
+
+const DashboardStats = lazy(() => import('./components/Stats'))
+const UserManagement = lazy(() => import('./pages/UserManagement'))
+const PortfolioManagement = lazy(() => import('./pages/PortfolioManagement'))
+const ClientManagement = lazy(() => import('./pages/ClientManagement'))
+const InvoiceManagement = lazy(() => import('./pages/InvoiceManagement'))
+const FinanceManagement = lazy(() => import('./pages/FinanceManagement'))
+const ReportManagement = lazy(() => import('./pages/ReportManagement'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+const TeamManagement = lazy(() => import('./pages/TeamManagement'))
+const PackageManagement = lazy(() => import('./pages/PackageManagement'))
+const PackageForm = lazy(() => import('./pages/PackageForm'))
+const AffiliateManagement = lazy(() => import('./pages/AffiliateManagement'))
+const AffiliateForm = lazy(() => import('./pages/AffiliateForm'))
+const TestimonialManagement = lazy(() => import('./pages/TestimonialManagement'))
 
 // Halaman yang TIDAK boleh di-scroll (fit to screen)
 const NO_SCROLL_TABS = ['overview']
@@ -149,6 +150,12 @@ export const Dashboard: React.FC = () => {
   // Helper: nama tampilan user (sesuaikan field dengan tipe User kamu)
   const displayName = (user as any)?.name || (user as any)?.fullName || (user as any)?.username || ''
 
+  const dashboardContentFallback = (
+    <div className="min-h-[300px] flex items-center justify-center">
+      <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600"></div>
+    </div>
+  )
+
   const renderContent = () => {
     // Guard: user biasa tidak bisa render halaman admin
     const isRestricted = ADMIN_ONLY_TABS.some(
@@ -245,7 +252,9 @@ export const Dashboard: React.FC = () => {
             className={`p-3 sm:p-4 lg:p-6 flex-1 ${isNoScroll ? 'overflow-hidden' : ''}`}
             ref={mainRef}
           >
-            {renderContent()}
+            <Suspense fallback={dashboardContentFallback}>
+              {renderContent()}
+            </Suspense>
           </main>
         </div>
       </div>

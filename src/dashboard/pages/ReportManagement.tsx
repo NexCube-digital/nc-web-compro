@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
-import html2pdf from 'html2pdf.js'
 import apiClient, { Contact, Portfolio, Invoice, Finance } from '../../services/api'
 
 interface ReportData {
@@ -85,23 +84,28 @@ export const ReportManagement: React.FC = () => {
     loadReportData()
   }, [])
 
-  const handleGeneratePDF = () => {
+  const handleGeneratePDF = async () => {
     if (!reportRef.current) return
 
     setIsGenerating(true)
 
-    const element = reportRef.current
-    const opt = {
-      margin: 10,
-      filename: `report-${reportType}-${new Date().toISOString().split('T')[0]}.pdf`,
-      image: { type: 'jpeg' as const, quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { orientation: 'portrait' as const, unit: 'mm', format: 'a4' }
-    }
+    try {
+      const html2pdf = (await import('html2pdf.js')).default
+      const element = reportRef.current
+      const opt = {
+        margin: 10,
+        filename: `report-${reportType}-${new Date().toISOString().split('T')[0]}.pdf`,
+        image: { type: 'jpeg' as const, quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { orientation: 'portrait' as const, unit: 'mm', format: 'a4' }
+      }
 
-    html2pdf().set(opt).from(element).save().then(() => {
+      await html2pdf().set(opt).from(element).save()
+    } catch (error) {
+      console.error('Failed to generate PDF:', error)
+    } finally {
       setIsGenerating(false)
-    })
+    }
   }
 
   const handlePrint = () => {

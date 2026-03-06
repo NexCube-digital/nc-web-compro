@@ -1,13 +1,16 @@
-import React, { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { HiSparkles, HiCheckCircle, HiArrowRight, HiShoppingCart, HiBolt } from 'react-icons/hi2'
+import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { createPortal } from 'react-dom'
+import { HiSparkles, HiCheckCircle, HiShoppingCart, HiBolt } from 'react-icons/hi2'
 import { useCart } from '../context/CartContext'
+import { openCartDrawer } from '../components/cart/CartDrawer'
 
 export const PricingCard: React.FC<{ 
   tier: string; 
   price: string; 
   features: string[]; 
   includes?: string[];
+  imageSrc?: string;
   accent?: string;
   popular?: boolean;
   badge?: string;
@@ -18,6 +21,7 @@ export const PricingCard: React.FC<{
   price, 
   features,
   includes = [],
+  imageSrc,
   accent,
   popular = false,
   badge,
@@ -54,8 +58,34 @@ export const PricingCard: React.FC<{
   const isBronzeTier = tier === 'Bronze';
   
   const [isHovered, setIsHovered] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [showFeaturesModal, setShowFeaturesModal] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
+
+  useEffect(() => {
+    if (!showFeaturesModal) return
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    const animationFrame = window.requestAnimationFrame(() => {
+      setIsModalVisible(true)
+    })
+
+    return () => {
+      window.cancelAnimationFrame(animationFrame)
+      document.body.style.overflow = previousOverflow
+    }
+  }, [showFeaturesModal])
+
+  const openFeaturesModal = () => {
+    setShowFeaturesModal(true)
+  }
+
+  const closeFeaturesModal = () => {
+    setIsModalVisible(false)
+    window.setTimeout(() => setShowFeaturesModal(false), 180)
+  }
 
   // Tambah ke keranjang lalu buka drawer
   const handleAddToCart = () => {
@@ -153,6 +183,18 @@ export const PricingCard: React.FC<{
   const styles = getTierStyles();
   const textColor = isSpecialTier ? 'text-white' : 'text-slate-900';
   const secondaryTextColor = isSpecialTier ? 'text-slate-300' : 'text-slate-600';
+  const featureItems = includes.length > 0 ? includes : features;
+  const featureCount = featureItems.length;
+
+  const fallbackImageByTier: Record<string, string> = {
+    student: '/images/portfolio/compro.png',
+    bronze: '/images/portfolio/menu.png',
+    silver: '/images/portfolio/cdc.png',
+    gold: '/images/portfolio/karomah.png',
+    platinum: '/images/portfolio/ccs.png'
+  }
+
+  const resolvedImageSrc = imageSrc || fallbackImageByTier[tier.toLowerCase()] || '/images/NexCube-full.png'
   
   return (
     <div 
@@ -195,10 +237,13 @@ export const PricingCard: React.FC<{
         </div>
       )}
       
-      <div className="relative z-10 flex flex-col h-full">
-        {/* Tier Header */}
-        <div className="mb-4 pb-4 border-b border-current border-opacity-10">
-          <h3 className={`text-xl sm:text-2xl font-black mb-1 ${textColor} tracking-tight`}>
+      <button type="button" onClick={openFeaturesModal} className="relative z-10 flex flex-col h-full text-left">
+        <div className="rounded-xl overflow-hidden border border-white/20 mb-4 h-28 sm:h-36 bg-slate-100">
+          <img src={resolvedImageSrc} alt={tier} className="w-full h-full object-cover" />
+        </div>
+
+        <div className="mb-3 pb-3 border-b border-current border-opacity-10">
+          <h3 className={`text-lg sm:text-xl font-black mb-1 ${textColor} tracking-tight`}>
             {tier}
           </h3>
           {isGoldTier && (
@@ -209,12 +254,11 @@ export const PricingCard: React.FC<{
           )}
         </div>
 
-        {/* Price Display */}
-        <div className="mb-5">
+        <div className="mt-auto">
           <div className="flex items-start gap-1.5">
             <span className={`text-sm sm:text-base font-bold ${secondaryTextColor} mt-0.5 sm:mt-1`}>Rp</span>
             <div className="flex flex-col">
-              <span className={`text-3xl sm:text-4xl font-black ${textColor} tracking-tighter leading-none`}>
+              <span className={`text-2xl sm:text-3xl font-black ${textColor} tracking-tighter leading-none`}>
                 {priceValue}
               </span>
               {priceDesc && (
@@ -224,106 +268,117 @@ export const PricingCard: React.FC<{
               )}
             </div>
           </div>
-        </div>
-
-        {/* Includes Section */}
-        {includes && includes.length > 0 && (
-          <div className="mb-4 flex-grow">
-            <h4 className={`text-xs font-bold ${textColor} uppercase tracking-wider mb-2 opacity-70`}>
-              Fitur Utama:
-            </h4>
-            <ul className="space-y-1.5 max-h-[400px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
-              {(isExpanded ? includes : includes.slice(0, 5)).map((item, index) => {
-                const { included, text } = processIncludeItem(item);
-                return (
-                  <li 
-                    key={index} 
-                    className={`flex items-start gap-2 transition-all duration-300 ${isHovered ? 'translate-x-0.5' : ''}`}
-                    style={{ transitionDelay: `${index * 40}ms` }}
-                  >
-                    <div className="mt-0.5 flex-shrink-0">
-                      {included ? (
-                        <HiCheckCircle className={`w-3.5 h-3.5 ${styles.iconColor}`} />
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </div>
-                    <span className={`text-[11px] font-medium leading-relaxed ${included ? secondaryTextColor : 'text-slate-400 line-through'}`}>
-                      {text}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
+          <div className={`mt-3 text-xs font-bold ${styles.accentColor}`}>
+            {`Lihat Semua Fitur (${featureCount})`}
           </div>
-        )}
-
-        {/* Features List */}
-        {(!includes || includes.length === 0) && features && features.length > 0 && (
-          <ul className="space-y-2 mb-5 flex-grow">
-            {features.slice(0, 3).map((f, index) => (
-              <li 
-                key={index} 
-                className={`flex items-start gap-2 transition-all duration-300 ${isHovered ? 'translate-x-0.5' : ''}`}
-                style={{ transitionDelay: `${index * 40}ms` }}
-              >
-                <div className="mt-0.5 flex-shrink-0">
-                  <HiCheckCircle className={`w-4 h-4 ${styles.iconColor} ${isHovered ? 'scale-110' : ''} transition-transform duration-300`} />
-                </div>
-                <span className={`text-xs font-medium leading-relaxed ${secondaryTextColor}`}>
-                  {f}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {/* CTA Buttons */}
-        <div className="mt-auto pt-4 space-y-2">
-          {/* Expand fitur */}
-          {includes && includes.length > 5 && (
-            <button 
-              onClick={() => setIsExpanded(!isExpanded)}
-              className={`w-full py-2.5 rounded-xl font-bold text-sm bg-gradient-to-r ${styles.buttonGradient} text-white hover:scale-[1.02] transition-all`}
-            >
-              {isExpanded ? 'Tutup' : `Lihat Semua Fitur (${includes.length})`}
-            </button>
-          )}
-
-          {/* ✅ Tombol Pesan Langsung */}
-          <button
-            onClick={handleOrderNow}
-            className={`w-full py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2
-              bg-gradient-to-r ${styles.buttonGradient} text-white hover:scale-[1.02] shadow-md`}
-          >
-            <HiBolt className="w-4 h-4" />
-            Pesan Sekarang
-          </button>
-
-          {/* ✅ Tombol Tambah Keranjang */}
-          <button
-            onClick={handleAddToCart}
-            className={`w-full py-2.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2
-              ${justAdded
-                ? 'bg-green-100 text-green-700 border border-green-300'
-                : isSpecialTier
-                  ? 'bg-white/10 text-white border border-white/20 hover:bg-white/20'
-                  : 'bg-white border border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-              }`}
-          >
-            {justAdded ? (
-              <>✓ Ditambahkan ke Keranjang</>
-            ) : (
-              <>
-                <HiShoppingCart className="w-4 h-4" />
-                Tambah Keranjang
-              </>
-            )}
-          </button>
         </div>
-      </div>
+      </button>
+
+      {showFeaturesModal && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-3 sm:p-4">
+          <div
+            className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-200 ${isModalVisible ? 'opacity-100' : 'opacity-0'}`}
+            onClick={closeFeaturesModal}
+          />
+          <div
+            className={`relative z-10 w-full max-w-md sm:max-w-lg max-h-[88vh] sm:max-h-[80vh] bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col transition-all duration-200 ${
+              isModalVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 sm:translate-y-2 scale-[0.98]'
+            }`}
+          >
+            <div className={`h-1 w-full bg-gradient-to-r ${styles.buttonGradient}`} />
+
+            <div className="sticky top-0 z-20 px-4 sm:px-5 py-4 border-b border-slate-100 bg-white/95 backdrop-blur-sm shadow-sm flex items-start justify-between gap-4 flex-shrink-0">
+              <div>
+                <h4 className="text-lg font-black text-slate-800">Fitur Paket {tier}</h4>
+                <p className="text-xs text-slate-500 mt-1">Total {featureCount} fitur untuk paket ini</p>
+              </div>
+              <button
+                onClick={closeFeaturesModal}
+                className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 space-y-4">
+              <div className="rounded-xl overflow-hidden bg-slate-100 h-40 sm:h-52">
+                <img src={resolvedImageSrc} alt={tier} className="w-full h-full object-cover" />
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <div className="text-xs font-semibold text-slate-500 mb-1">Harga Paket</div>
+                <div className="flex items-start gap-1.5">
+                  <span className="text-sm font-bold text-slate-600 mt-0.5">Rp</span>
+                  <div className="flex flex-col">
+                    <span className="text-2xl font-black text-slate-900 tracking-tight leading-none">{priceValue}</span>
+                    {priceDesc && (
+                      <span className="text-xs mt-1 text-slate-500 font-medium">{priceDesc}</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <h5 className="text-sm font-bold text-slate-800">Detail Fitur Paket</h5>
+                <p className="text-xs text-slate-500">Semua benefit yang Anda dapatkan:</p>
+              </div>
+
+              <ul className="space-y-2">
+                {featureItems.map((item, index) => {
+                  const { included, text } = processIncludeItem(item);
+                  return (
+                    <li key={index} className="flex items-start gap-2.5">
+                      <div className="mt-0.5 flex-shrink-0">
+                        {included ? (
+                          <HiCheckCircle className="w-4 h-4 text-emerald-500" />
+                        ) : (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                      <span className={`text-sm leading-relaxed ${included ? 'text-slate-700' : 'text-slate-400 line-through'}`}>
+                        {text}
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+
+            <div className="sticky bottom-0 z-20 px-4 sm:px-5 py-4 border-t border-slate-100 bg-white/95 backdrop-blur-sm shadow-lg flex-shrink-0">
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={handleOrderNow}
+                  className={`w-full py-2.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 bg-gradient-to-r ${styles.buttonGradient} text-white hover:scale-[1.01]`}
+                >
+                  <HiBolt className="w-4 h-4" />
+                  Pesan
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (!justAdded) {
+                      handleAddToCart()
+                    }
+                    closeFeaturesModal()
+                    openCartDrawer()
+                  }}
+                  className={`w-full py-2.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
+                    justAdded
+                      ? 'bg-green-600 text-white border border-green-700'
+                      : 'bg-white border border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  <HiShoppingCart className="w-4 h-4" />
+                  {justAdded ? 'Lihat' : 'Keranjang'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }
