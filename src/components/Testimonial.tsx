@@ -233,41 +233,21 @@ export const Testimonial: React.FC = () => {
 
         {/* ── CTA ──────────────────────────────────────────────────────── */}
         {!loading && (
-          <div className="text-center mt-8">
-            <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 rounded-3xl p-10 md:p-14 shadow-2xl">
-
-              {/* stars deco */}
-              <div className="flex justify-center gap-1 mb-5">
-                {[...Array(5)].map((_, i) => (
-                  <FaStar key={i} className="w-5 h-5 text-amber-400 drop-shadow" />
-                ))}
-              </div>
-
-              <h3 className="text-2xl md:text-3xl font-black text-white mb-3 leading-tight">
-                Puas dengan Layanan Kami?
-              </h3>
-              <p className="text-slate-300 mb-8 text-base md:text-lg max-w-xl mx-auto leading-relaxed">
+          <div className="text-center">
+            <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 rounded-3xl p-12 text-white shadow-2xl">
+              <h3 className="text-2xl md:text-3xl font-bold mb-4">Puas dengan layanan kami?</h3>
+              <p className="text-blue-100 mb-8 text-lg max-w-2xl mx-auto">
                 Bagikan pengalaman Anda dan bantu calon klien lain membuat keputusan terbaik bersama NexCube.
               </p>
-
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                <Link
-                  to="/ulasan"
-                  className="inline-flex items-center gap-2.5 bg-white text-slate-900 font-black px-7 py-3.5 rounded-2xl hover:bg-blue-50 transition-all duration-300 hover:scale-105 hover:shadow-xl text-sm shadow-lg"
-                >
-                  <HiSparkles className="w-4.5 h-4.5 text-blue-600" />
-                  Tulis Ulasan Sekarang
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                  </svg>
-                </Link>
-                <span className="text-slate-500 text-xs font-medium hidden sm:block">•</span>
-                <p className="text-slate-400 text-xs font-medium flex items-center gap-1.5">
-                  <FaCheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-                  Ditampilkan setelah diverifikasi admin
-                </p>
-              </div>
-
+              <Link
+                to="/ulasan"
+                className="inline-flex items-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-xl hover:bg-blue-50 transition-all duration-300 hover:scale-105 hover:shadow-xl"
+              >
+                Buat Ulasan
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </Link>
             </div>
           </div>
         )}

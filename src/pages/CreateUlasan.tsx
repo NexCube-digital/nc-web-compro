@@ -289,7 +289,6 @@ export const CreateUlasan: React.FC = () => {
                               <Star key={i} className="w-3 h-3" fill="#FBBF24" stroke="#FBBF24" />
                             )}
                           </div>
-                          <span className="text-xs bg-slate-100 px-2 py-0.5 rounded-full font-bold">{n}</span>
                         </button>
                       ))}
                     </div>
