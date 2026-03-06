@@ -535,44 +535,34 @@ export const PaketAffiliate: React.FC = () => {
                 const price = tier.price || '';
                 const features = tier.features || [];
                 const includes = tier.includes || [];
+                const imageSrc = (tier.images && tier.images[0]) || tier.image || '';
                 const hot = tier.hot || false;
                 const detailUrl = `/paket/solusi/${category.id}/${tier.id}`;
 
                 return (
                   <div key={`pkg-${tier.id}`} className="scroll-fade-in scale-on-scroll">
-                    {category.id === 'undangan' ? (
-                      <a href={tier.link || tier.url || '#'} target="_blank" rel="noopener noreferrer" className="block rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition">
-                        <div className="h-56 w-full bg-gray-100 overflow-hidden">
-                          <img src={(tier.images && tier.images[0]) || tier.image || '/images/placeholder.png'} alt={title} className="w-full h-full object-cover" />
-                        </div>
-                        <div className="p-4 bg-white">
-                          <div className="font-bold text-lg">{title}</div>
-                          <div className="text-sm text-slate-600">{price}</div>
-                        </div>
-                      </a>
-                    ) : (
-                      <PricingCard
-                        tier={title}
-                        price={price}
-                        features={features}
-                        includes={includes}
-                        accent={tier.accent}
-                        badge={tier.badge}
-                        popular={hot || tier.popular}
-                        detailUrl={detailUrl}
-                        onOrder={() => {
-                          addItem({
-                            id: tier.id || `${category.id}-${index}`,
-                            name: title,
-                            price: typeof tier.rawPrice === 'number'
-                              ? tier.rawPrice
-                              : parseInt(String(tier.price || '0').replace(/\D/g, '')) || 0,
-                            quantity: 1,
-                            description: `${category.title} - ${tier.badge || ''}`,
-                          });
-                        }}
-                      />
-                    )}
+                    <PricingCard
+                      tier={title}
+                      price={price}
+                      features={features}
+                      includes={includes}
+                      imageSrc={imageSrc}
+                      accent={tier.accent}
+                      badge={tier.badge}
+                      popular={hot || tier.popular}
+                      detailUrl={detailUrl}
+                      onOrder={() => {
+                        addItem({
+                          id: tier.id || `${category.id}-${index}`,
+                          name: title,
+                          price: typeof tier.rawPrice === 'number'
+                            ? tier.rawPrice
+                            : parseInt(String(tier.price || '0').replace(/\D/g, '')) || 0,
+                          quantity: 1,
+                          description: `${category.title} - ${tier.badge || ''}`,
+                        });
+                      }}
+                    />
                   </div>
                 );
               })}
@@ -585,44 +575,34 @@ export const PaketAffiliate: React.FC = () => {
                   const price = tier.price || '';
                   const features = tier.features || [];
                   const includes = tier.includes || [];
+                  const imageSrc = (tier.images && tier.images[0]) || tier.image || '';
                   const hot = tier.hot || false;
                   const detailUrl = `/paket/solusi/${category.id}/${tier.id}`;
 
                   return (
                     <div key={`pkg-${tier.id}`} className="scroll-fade-in scale-on-scroll">
-                      {category.id === 'undangan' ? (
-                        <a href={tier.link || tier.url || '#'} target="_blank" rel="noopener noreferrer" className="block rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition">
-                          <div className="h-56 w-full bg-gray-100 overflow-hidden">
-                            <img src={(tier.images && tier.images[0]) || tier.image || '/images/placeholder.png'} alt={title} className="w-full h-full object-cover" />
-                          </div>
-                          <div className="p-4 bg-white">
-                            <div className="font-bold text-lg">{title}</div>
-                            <div className="text-sm text-slate-600">{price}</div>
-                          </div>
-                        </a>
-                      ) : (
-                        <PricingCard
-                          tier={title}
-                          price={price}
-                          features={features}
-                          includes={includes}
-                          accent={tier.accent}
-                          badge={tier.badge}
-                          popular={hot || tier.popular}
-                          detailUrl={detailUrl}
-                          onOrder={() => {
-                            addItem({
-                              id: tier.id || `${category.id}-${index + 3}`,
-                              name: title,
-                              price: typeof tier.rawPrice === 'number'
-                                ? tier.rawPrice
-                                : parseInt(String(tier.price || '0').replace(/\D/g, '')) || 0,
-                              quantity: 1,
-                              description: `${category.title} - ${tier.badge || ''}`,
-                            });
-                          }}
-                        />
-                      )}
+                      <PricingCard
+                        tier={title}
+                        price={price}
+                        features={features}
+                        includes={includes}
+                        imageSrc={imageSrc}
+                        accent={tier.accent}
+                        badge={tier.badge}
+                        popular={hot || tier.popular}
+                        detailUrl={detailUrl}
+                        onOrder={() => {
+                          addItem({
+                            id: tier.id || `${category.id}-${index + 3}`,
+                            name: title,
+                            price: typeof tier.rawPrice === 'number'
+                              ? tier.rawPrice
+                              : parseInt(String(tier.price || '0').replace(/\D/g, '')) || 0,
+                            quantity: 1,
+                            description: `${category.title} - ${tier.badge || ''}`,
+                          });
+                        }}
+                      />
                     </div>
                   );
                 })}

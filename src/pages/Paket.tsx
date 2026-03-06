@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async';
 import { PricingCard } from '../ui/PricingCard'
-import apiClient from '../services/api'
+import apiClient, { getImageUrl } from '../services/api'
 import { pricingData } from '../data/pricingData'
 import { Navbar } from '../components/layout/Navbar';
 import { useScrollFadeIn, useScrollScale, useParallax } from '../hooks/useGsapAnimation';
@@ -321,6 +321,45 @@ export const Paket: React.FC = () => {
   // Render pricing cards per category
   const renderPricingSection = (category: typeof paketCategories[0]) => {
     // use backend packages when available; otherwise fallback to pricingData
+
+    const resolveImageSource = (pkg: any): string => {
+      const resolveSingleImage = (img: any): string => {
+        if (!img) return ''
+        if (typeof img === 'string') return img
+        if (typeof img === 'object') return img.url || img.path || img.src || ''
+        return ''
+      }
+
+      let imageCandidate = ''
+
+      if (Array.isArray(pkg.images) && pkg.images.length > 0) {
+        imageCandidate = resolveSingleImage(pkg.images[0])
+      } else if (typeof pkg.images === 'string' && pkg.images.trim()) {
+        const rawImages = pkg.images.trim()
+        if (rawImages.startsWith('[') || rawImages.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(rawImages)
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              imageCandidate = resolveSingleImage(parsed[0])
+            } else if (parsed && typeof parsed === 'object') {
+              imageCandidate = resolveSingleImage(parsed)
+            }
+          } catch {
+            imageCandidate = rawImages
+          }
+        } else {
+          imageCandidate = rawImages
+        }
+      }
+
+      if (!imageCandidate && pkg.image) {
+        imageCandidate = resolveSingleImage(pkg.image)
+      }
+
+      if (!imageCandidate) return ''
+      if (imageCandidate.startsWith('/images/') || imageCandidate.startsWith('http')) return imageCandidate
+      return getImageUrl(imageCandidate)
+    }
     
     const categoryPricing = packages.length > 0
       ? packages.filter(p => (p._normalizedType || normalizeTypeForCategory(p.type)) === category.id)
@@ -351,7 +390,7 @@ export const Paket: React.FC = () => {
               const price = tier.price || ''
               const features = tier.features || []
               const includes = tier.includes || []
-              const imageSrc = (tier.images && tier.images[0]) || tier.image || ''
+              const imageSrc = resolveImageSource(tier)
               const hot = tier.hot || false
               const detailUrl = isBackendPkg ? `/paket/${category.id}/${tier.id}` : undefined
 
@@ -361,42 +400,29 @@ export const Paket: React.FC = () => {
                   className="scroll-fade-in scale-on-scroll"
                 >
                   <div className="block h-full">
-                    {isBackendPkg && category.id === 'undangan' ? (
-                      // Render event package as clickable cover image
-                      <a href={tier.link || tier.url || '#'} target="_blank" rel="noopener noreferrer" className="block rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition">
-                        <div className="h-56 w-full bg-gray-100 overflow-hidden">
-                          <img src={(tier.images && tier.images[0]) || tier.image || '/images/placeholder.png'} alt={title} className="w-full h-full object-cover" />
-                        </div>
-                        <div className="p-4 bg-white">
-                          <div className="font-bold text-lg">{title}</div>
-                          <div className="text-sm text-slate-600">{price}</div>
-                        </div>
-                      </a>
-                    ) : (
-                      <PricingCard 
-                        tier={title}
-                        price={price}
-                        features={features}
-                        includes={includes}
-                        imageSrc={imageSrc}
-                        accent={tier.accent}
-                        badge={tier.badge}
-                        popular={hot || tier.popular}
-                        detailUrl={detailUrl}
+                    <PricingCard 
+                      tier={title}
+                      price={price}
+                      features={features}
+                      includes={includes}
+                      imageSrc={imageSrc}
+                      accent={tier.accent}
+                      badge={tier.badge}
+                      popular={hot || tier.popular}
+                      detailUrl={detailUrl}
 
-                        onOrder={() => {
-                        addItem({
-                          id: tier.id || `${category.id}-${index}`,
-                          name: title,
-                          price: typeof tier.rawPrice === 'number' 
-                            ? tier.rawPrice 
-                            : parseInt(String(tier.price || '0').replace(/\D/g, '')) || 0,
-                          quantity: 1,
-                          description: `${category.title} - ${tier.badge || ''}`,
-                        });
-                      }}
-                      />
-                    )}
+                      onOrder={() => {
+                      addItem({
+                        id: tier.id || `${category.id}-${index}`,
+                        name: title,
+                        price: typeof tier.rawPrice === 'number' 
+                          ? tier.rawPrice 
+                          : parseInt(String(tier.price || '0').replace(/\D/g, '')) || 0,
+                        quantity: 1,
+                        description: `${category.title} - ${tier.badge || ''}`,
+                      });
+                    }}
+                    />
                   </div>
                 </div>
               )
@@ -412,7 +438,7 @@ export const Paket: React.FC = () => {
                 const price = tier.price || ''
                 const features = tier.features || []
                 const includes = tier.includes || []
-                const imageSrc = (tier.images && tier.images[0]) || tier.image || ''
+                const imageSrc = resolveImageSource(tier)
                 const hot = tier.hot || false
                 const detailUrl = isBackendPkg ? `/paket/${category.id}/${tier.id}` : undefined
 
@@ -422,41 +448,28 @@ export const Paket: React.FC = () => {
                     className="scroll-fade-in scale-on-scroll"
                   >
                     <div className="block h-full">
-                      {isBackendPkg && category.id === 'undangan' ? (
-                        <a href={tier.link || tier.url || '#'} target="_blank" rel="noopener noreferrer" className="block rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition">
-                          <div className="h-56 w-full bg-gray-100 overflow-hidden">
-                            <img src={(tier.images && tier.images[0]) || tier.image || '/images/placeholder.png'} alt={title} className="w-full h-full object-cover" />
-                          </div>
-                          <div className="p-4 bg-white">
-                            <div className="font-bold text-lg">{title}</div>
-                            <div className="
-                            text-sm text-slate-600">{price}</div>
-                          </div>
-                        </a>
-                      ) : (
-                        <PricingCard 
-                          tier={title}
-                          price={price}
-                          features={features}
-                          includes={includes}
-                          imageSrc={imageSrc}
-                          accent={tier.accent}
-                          badge={tier.badge}
-                          popular={hot || tier.popular}
-                          detailUrl={detailUrl}
-                          onOrder={() => {
-                          addItem({
-                            id: tier.id || `${category.id}-${index + 3}`,
-                            name: title,
-                            price: typeof tier.rawPrice === 'number'
-                              ? tier.rawPrice
-                              : parseInt(String(tier.price || '0').replace(/\D/g, '')) || 0,
-                            quantity: 1,
-                            description: `${category.title} - ${tier.badge || ''}`,
-                          });
-                        }}
-                        />
-                      )}
+                      <PricingCard 
+                        tier={title}
+                        price={price}
+                        features={features}
+                        includes={includes}
+                        imageSrc={imageSrc}
+                        accent={tier.accent}
+                        badge={tier.badge}
+                        popular={hot || tier.popular}
+                        detailUrl={detailUrl}
+                        onOrder={() => {
+                        addItem({
+                          id: tier.id || `${category.id}-${index + 3}`,
+                          name: title,
+                          price: typeof tier.rawPrice === 'number'
+                            ? tier.rawPrice
+                            : parseInt(String(tier.price || '0').replace(/\D/g, '')) || 0,
+                          quantity: 1,
+                          description: `${category.title} - ${tier.badge || ''}`,
+                        });
+                      }}
+                      />
                     </div>
                   </div>
                 )
