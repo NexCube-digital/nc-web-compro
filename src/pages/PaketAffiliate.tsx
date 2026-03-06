@@ -538,6 +538,9 @@ export const PaketAffiliate: React.FC = () => {
                 const imageSrc = (tier.images && tier.images[0]) || tier.image || '';
                 const hot = tier.hot || false;
                 const detailUrl = `/paket/solusi/${category.id}/${tier.id}`;
+                const demoUrl = category.id === 'undangan'
+                  ? (tier.link || tier.demoUrl || tier.url || tier.previewUrl || tier.sampleUrl)
+                  : undefined;
 
                 return (
                   <div key={`pkg-${tier.id}`} className="scroll-fade-in scale-on-scroll">
@@ -551,6 +554,8 @@ export const PaketAffiliate: React.FC = () => {
                       badge={tier.badge}
                       popular={hot || tier.popular}
                       detailUrl={detailUrl}
+                      demoUrl={demoUrl}
+                      showDemoButton={category.id === 'undangan'}
                       onOrder={() => {
                         addItem({
                           id: tier.id || `${category.id}-${index}`,
@@ -578,6 +583,9 @@ export const PaketAffiliate: React.FC = () => {
                   const imageSrc = (tier.images && tier.images[0]) || tier.image || '';
                   const hot = tier.hot || false;
                   const detailUrl = `/paket/solusi/${category.id}/${tier.id}`;
+                  const demoUrl = category.id === 'undangan'
+                    ? (tier.link || tier.demoUrl || tier.url || tier.previewUrl || tier.sampleUrl)
+                    : undefined;
 
                   return (
                     <div key={`pkg-${tier.id}`} className="scroll-fade-in scale-on-scroll">
@@ -591,6 +599,8 @@ export const PaketAffiliate: React.FC = () => {
                         badge={tier.badge}
                         popular={hot || tier.popular}
                         detailUrl={detailUrl}
+                        demoUrl={demoUrl}
+                        showDemoButton={category.id === 'undangan'}
                         onOrder={() => {
                           addItem({
                             id: tier.id || `${category.id}-${index + 3}`,

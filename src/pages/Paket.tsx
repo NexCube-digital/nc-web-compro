@@ -393,6 +393,9 @@ export const Paket: React.FC = () => {
               const imageSrc = resolveImageSource(tier)
               const hot = tier.hot || false
               const detailUrl = isBackendPkg ? `/paket/${category.id}/${tier.id}` : undefined
+              const demoUrl = category.id === 'undangan'
+                ? (tier.link || tier.demoUrl || tier.url || tier.previewUrl || tier.sampleUrl)
+                : undefined
 
               return (
                 <div 
@@ -410,6 +413,8 @@ export const Paket: React.FC = () => {
                       badge={tier.badge}
                       popular={hot || tier.popular}
                       detailUrl={detailUrl}
+                      demoUrl={demoUrl}
+                      showDemoButton={category.id === 'undangan'}
 
                       onOrder={() => {
                       addItem({
@@ -441,6 +446,9 @@ export const Paket: React.FC = () => {
                 const imageSrc = resolveImageSource(tier)
                 const hot = tier.hot || false
                 const detailUrl = isBackendPkg ? `/paket/${category.id}/${tier.id}` : undefined
+                const demoUrl = category.id === 'undangan'
+                  ? (tier.link || tier.demoUrl || tier.url || tier.previewUrl || tier.sampleUrl)
+                  : undefined
 
                 return (
                   <div 
@@ -458,6 +466,8 @@ export const Paket: React.FC = () => {
                         badge={tier.badge}
                         popular={hot || tier.popular}
                         detailUrl={detailUrl}
+                        demoUrl={demoUrl}
+                        showDemoButton={category.id === 'undangan'}
                         onOrder={() => {
                         addItem({
                           id: tier.id || `${category.id}-${index + 3}`,

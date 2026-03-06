@@ -163,9 +163,9 @@ export const Checkout: React.FC = () => {
   const hasPendingPayment = !!(pendingInvoiceId && pendingSnapToken);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white pt-24 pb-16">
-      <div className="container mx-auto px-4 max-w-5xl">
-        <div className="mb-8">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white pt-20 sm:pt-24 pb-10 sm:pb-16">
+      <div className="container mx-auto px-3 sm:px-4 max-w-5xl">
+        <div className="mb-6 sm:mb-8">
           <button
             onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition-colors mb-4"
@@ -183,10 +183,10 @@ export const Checkout: React.FC = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 lg:gap-8">
           {/* Left: Form */}
-          <div className="lg:col-span-3">
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
+          <div className="lg:col-span-3 order-2 lg:order-1">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 md:p-8">
               <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
                 <span className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">1</span>
                 Data Pemesan
@@ -224,8 +224,8 @@ export const Checkout: React.FC = () => {
                   <label className="block text-sm font-semibold text-slate-700 mb-1.5">
                     Nomor WhatsApp <span className="text-red-500">*</span>
                   </label>
-                  <div className="flex gap-2">
-                    <div className="px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-600 font-medium text-sm flex items-center">
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="px-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-600 font-medium text-sm flex items-center justify-center sm:justify-start sm:w-auto">
                       🇮🇩 +62
                     </div>
                     <input
@@ -327,8 +327,8 @@ export const Checkout: React.FC = () => {
           </div>
 
           {/* Right: Ringkasan */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sticky top-24">
+          <div className="lg:col-span-2 order-1 lg:order-2">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
               <h2 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
                 <span className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">2</span>
                 Ringkasan Pesanan
