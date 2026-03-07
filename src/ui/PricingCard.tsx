@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createPortal } from 'react-dom'
-import { HiSparkles, HiCheckCircle, HiShoppingCart, HiBolt } from 'react-icons/hi2'
+import { HiSparkles, HiCheckCircle, HiShoppingCart, HiBolt, HiStar, HiMapPin } from 'react-icons/hi2'
 import { useCart } from '../context/CartContext'
 import { openCartDrawer } from '../components/cart/CartDrawer'
 
@@ -12,6 +12,7 @@ export const PricingCard: React.FC<{
   includes?: string[];
   imageSrc?: string;
   accent?: string;
+  comparePrice?: string;
   popular?: boolean;
   badge?: string;
   detailUrl?: string;
@@ -25,6 +26,7 @@ export const PricingCard: React.FC<{
   includes = [],
   imageSrc,
   accent,
+  comparePrice,
   popular = false,
   badge,
   detailUrl,
@@ -39,6 +41,8 @@ export const PricingCard: React.FC<{
   const cleanPrice = price.replace(/Rp\s?/gi, '').trim();
   const priceValue = cleanPrice.includes(' ') ? cleanPrice.split(' ')[0] : cleanPrice;
   const priceDesc = cleanPrice.includes(' ') ? cleanPrice.split(' ').slice(1).join(' ') : '';
+  const comparePriceValue = comparePrice?.replace(/Rp\s?/gi, '').trim() || '';
+  const hasComparePrice = Boolean(comparePriceValue);
 
   // Parse numeric price for cart
   const numericPrice = parseInt(priceValue.replace(/\./g, '').replace(/,/g, ''), 10) || 0;
@@ -65,6 +69,8 @@ export const PricingCard: React.FC<{
   const [showFeaturesModal, setShowFeaturesModal] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
+  const [modalQty, setModalQty] = useState(1);
+  const [modalNote, setModalNote] = useState('');
 
   useEffect(() => {
     if (!showFeaturesModal) return
@@ -75,6 +81,9 @@ export const PricingCard: React.FC<{
     const animationFrame = window.requestAnimationFrame(() => {
       setIsModalVisible(true)
     })
+
+    setModalQty(1)
+    setModalNote('')
 
     return () => {
       window.cancelAnimationFrame(animationFrame)
@@ -103,25 +112,27 @@ export const PricingCard: React.FC<{
   const canOpenDemo = Boolean(resolvedDemoUrl)
 
   // Tambah ke keranjang lalu buka drawer
-  const handleAddToCart = () => {
+  const handleAddToCart = (quantity = 1) => {
     if (onOrder) {
-      onOrder()
+      for (let index = 0; index < quantity; index += 1) {
+        onOrder()
+      }
     } else {
-      addItem({ id: tier, name: `Paket ${tier}`, price: numericPrice, quantity: 1 })
+      addItem({ id: tier, name: `Paket ${tier}`, price: numericPrice, quantity })
     }
     setJustAdded(true)
     setTimeout(() => setJustAdded(false), 2000)
   }
 
   // Pesan langsung — TIDAK tambah ke cart, langsung ke checkout via navigate state
-  const handleOrderNow = () => {
+  const handleOrderNow = (quantity = 1) => {
     navigate('/checkout', {
       state: {
         directOrder: {
           id: tier,
           name: `Paket ${tier}`,
           price: numericPrice,
-          quantity: 1,
+          quantity,
           description: priceDesc || undefined
         }
       }
@@ -205,6 +216,8 @@ export const PricingCard: React.FC<{
   const secondaryTextColor = isSpecialTier ? 'text-slate-300' : 'text-slate-600';
   const featureItems = includes.length > 0 ? includes : features;
   const featureCount = featureItems.length;
+  const modalPrice = numericPrice * modalQty;
+  const formatRupiah = (value: number) => `Rp${new Intl.NumberFormat('id-ID').format(value)}`;
 
   const fallbackImageByTier: Record<string, string> = {
     student: '/images/portfolio/compro.png',
@@ -218,7 +231,7 @@ export const PricingCard: React.FC<{
   
   return (
     <div 
-      className={`group relative rounded-2xl p-5 sm:p-6 mt-4 sm:mt-5 transition-all duration-500 h-full flex flex-col backdrop-blur-sm
+      className={`group relative rounded-xl p-3 sm:p-4 mt-2 sm:mt-3 transition-all duration-500 h-full flex flex-col backdrop-blur-sm
         ${styles.bg} ${styles.border} ${styles.glow}
         ${isHovered ? '-translate-y-1 scale-[1.01]' : ''} 
         ${popular ? 'ring-2 sm:ring-4 ring-blue-500/30 ring-offset-1 sm:ring-offset-2' : ''}`}
@@ -257,60 +270,99 @@ export const PricingCard: React.FC<{
         </div>
       )}
       
-      <button type="button" onClick={openFeaturesModal} className="relative z-10 flex flex-col h-full text-left">
-        <div className="rounded-xl overflow-hidden border border-white/20 mb-4 h-28 sm:h-36 bg-slate-100">
-          <img src={resolvedImageSrc} alt={tier} className="w-full h-full object-cover" />
-        </div>
+      <div className="relative z-10 flex flex-col h-full">
+        <button type="button" onClick={openFeaturesModal} className="flex flex-col h-full text-left">
+          <div className="rounded-lg overflow-hidden border border-white/20 mb-3 h-20 sm:h-28 bg-slate-100">
+            <img src={resolvedImageSrc} alt={tier} className="w-full h-full object-cover" />
+          </div>
 
-        <div className="mb-3 pb-3 border-b border-current border-opacity-10">
-          <h3 className={`text-lg sm:text-xl font-black mb-1 ${textColor} tracking-tight`}>
-            {tier}
-          </h3>
-          {isGoldTier && (
-            <div className={`flex items-center gap-1 ${styles.accentColor} mt-1`}>
-              <HiSparkles className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="text-xs font-bold">Premium Choice</span>
-            </div>
-          )}
-        </div>
+          <div className="mb-2">
+            <h3 className={`text-sm sm:text-base font-bold ${textColor} tracking-tight leading-snug`}>
+              {tier}
+            </h3>
+            {isGoldTier && (
+              <div className={`flex items-center gap-1 ${styles.accentColor} mt-1`}>
+                <HiSparkles className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="text-xs font-bold">Premium Choice</span>
+              </div>
+            )}
+          </div>
 
-        <div className="mt-auto">
-          <div className="flex items-start gap-1.5">
-            <span className={`text-sm sm:text-base font-bold ${secondaryTextColor} mt-0.5 sm:mt-1`}>Rp</span>
-            <div className="flex flex-col">
-              <span className={`text-2xl sm:text-3xl font-black ${textColor} tracking-tighter leading-none`}>
-                {priceValue}
+          <div className="mt-auto space-y-2">
+            <div className="flex items-end gap-2 flex-wrap">
+              <span className={`text-xl sm:text-2xl font-black ${textColor} tracking-tight leading-none`}>
+                Rp{priceValue}
               </span>
-              {priceDesc && (
-                <span className={`text-xs sm:text-sm mt-1 ${secondaryTextColor} font-semibold`}>
-                  {priceDesc}
+              {hasComparePrice && (
+                <span className={`text-xs sm:text-sm font-semibold ${secondaryTextColor} line-through opacity-80`}>
+                  Rp{comparePriceValue}
                 </span>
               )}
             </div>
+
+            {priceDesc && (
+              <span className={`block text-xs sm:text-sm ${secondaryTextColor} font-medium`}>
+                {priceDesc}
+              </span>
+            )}
+
+            <div className={`space-y-1 text-[11px] sm:text-xs ${secondaryTextColor}`}>
+              <div className="flex items-center gap-1.5">
+                <HiStar className="w-4 h-4 text-accent" />
+                <span className="font-semibold">5.0</span>
+                <span>• {featureCount}+ fitur</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <HiMapPin className="w-4 h-4 text-accent" />
+                <span className="truncate">NexCube Digital</span>
+              </div>
+            </div>
           </div>
-          <div className={`mt-3 text-xs font-bold ${styles.accentColor}`}>
-            {`Lihat Semua Fitur (${featureCount})`}
-          </div>
-        </div>
-      </button>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            if (!justAdded) {
+              handleAddToCart()
+            }
+            openCartDrawer()
+          }}
+          className={`mt-3 w-full py-2 rounded-lg text-sm sm:text-base font-bold transition-all duration-300 border ${
+            justAdded
+              ? 'bg-accent text-white border-accent'
+              : 'bg-white/80 text-accent border-accent/40 hover:bg-accent/5 hover:border-accent/70'
+          }`}
+        >
+          {justAdded ? 'Lihat Keranjang' : '+ Keranjang'}
+        </button>
+
+        <button
+          type="button"
+          onClick={openFeaturesModal}
+          className="mt-1.5 text-[11px] sm:text-xs font-semibold text-slate-600 hover:text-primary transition-colors"
+        >
+          {`Lihat Semua Fitur (${featureCount})`}
+        </button>
+      </div>
 
       {showFeaturesModal && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-3 sm:p-4">
+        <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-2 sm:p-4">
           <div
             className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-200 ${isModalVisible ? 'opacity-100' : 'opacity-0'}`}
             onClick={closeFeaturesModal}
           />
           <div
-            className={`relative z-10 w-full max-w-md sm:max-w-lg max-h-[88vh] sm:max-h-[80vh] bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col transition-all duration-200 ${
+            className={`relative z-10 w-full max-w-6xl max-h-[92vh] sm:max-h-[88vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all duration-200 ${
               isModalVisible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-4 sm:translate-y-2 scale-[0.98]'
             }`}
           >
             <div className={`h-1 w-full bg-gradient-to-r ${styles.buttonGradient}`} />
 
-            <div className="sticky top-0 z-20 px-4 sm:px-5 py-4 border-b border-slate-100 bg-white/95 backdrop-blur-sm shadow-sm flex items-start justify-between gap-4 flex-shrink-0">
+            <div className="sticky top-0 z-20 px-4 sm:px-6 py-3 border-b border-slate-100 bg-white/95 backdrop-blur-sm shadow-sm flex items-start justify-between gap-4 flex-shrink-0">
               <div>
-                <h4 className="text-lg font-black text-slate-800">Fitur Paket {tier}</h4>
-                <p className="text-xs text-slate-500 mt-1">Total {featureCount} fitur untuk paket ini</p>
+                <h4 className="text-base sm:text-lg font-black text-slate-800">{tier}</h4>
+                <p className="text-xs text-slate-500 mt-1">Detail produk & pengaturan pembelian</p>
               </div>
               <button
                 onClick={closeFeaturesModal}
@@ -320,93 +372,158 @@ export const PricingCard: React.FC<{
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 space-y-4">
-              <div className="rounded-xl overflow-hidden bg-slate-100 h-40 sm:h-52">
-                <img src={resolvedImageSrc} alt={tier} className="w-full h-full object-cover" />
-              </div>
+            <div className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 sm:py-5">
+              <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-4 sm:gap-6">
+                <div className="space-y-4">
+                  <div className="border-b border-slate-100">
+                    <div className="flex items-center gap-5 text-sm font-semibold text-slate-500">
+                      <span className="pb-2 border-b-2 border-accent text-accent">Detail Produk</span>
+                      <span className="pb-2">Ulasan</span>
+                      <span className="pb-2">Rekomendasi</span>
+                    </div>
+                  </div>
 
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <div className="text-xs font-semibold text-slate-500 mb-1">Harga Paket</div>
-                <div className="flex items-start gap-1.5">
-                  <span className="text-sm font-bold text-slate-600 mt-0.5">Rp</span>
-                  <div className="flex flex-col">
-                    <span className="text-2xl font-black text-slate-900 tracking-tight leading-none">{priceValue}</span>
-                    {priceDesc && (
-                      <span className="text-xs mt-1 text-slate-500 font-medium">{priceDesc}</span>
-                    )}
+                  <div className="grid grid-cols-1 md:grid-cols-[300px_minmax(0,1fr)] gap-4 sm:gap-6">
+                    <div>
+                      <div className="rounded-xl overflow-hidden bg-slate-50 border border-slate-200 h-48 sm:h-64 md:h-72 p-2 flex items-center justify-center">
+                        <img src={resolvedImageSrc} alt={tier} className="w-full h-full object-contain" />
+                      </div>
+                      <div className="mt-2 grid grid-cols-5 gap-2">
+                        {[0, 1, 2, 3, 4].map((thumb) => (
+                          <div key={thumb} className="h-14 rounded-lg overflow-hidden border border-slate-200 bg-white p-1 flex items-center justify-center">
+                            <img src={resolvedImageSrc} alt={`${tier}-${thumb + 1}`} className="w-full h-full object-contain" />
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="mt-3 space-y-1 text-xs text-slate-500">
+                        <div>Kondisi: Baru</div>
+                        <div>Min. Beli: 1</div>
+                        <div>Kategori: Paket Digital</div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 max-h-[52vh] sm:max-h-[58vh] overflow-y-auto pr-2 pb-4">
+                      <div>
+                        <h5 className="text-lg font-bold text-slate-900 leading-snug">{tier}</h5>
+                        <div className="mt-2 flex items-end gap-2 flex-wrap">
+                          <span className="text-2xl font-black text-slate-900 leading-none">{formatRupiah(numericPrice)}</span>
+                          {hasComparePrice && (
+                            <span className="text-sm text-slate-400 line-through">Rp{comparePriceValue}</span>
+                          )}
+                        </div>
+                      </div>
+
+                      <p className="text-sm text-slate-700 leading-relaxed">
+                        {featureItems[0] || 'Paket layanan digital untuk kebutuhan bisnis dengan kualitas profesional.'}
+                      </p>
+
+                      <ul className="space-y-1">
+                        {featureItems.map((item, index) => {
+                          const { included, text } = processIncludeItem(item)
+                          return (
+                            <li key={index} className="flex items-start gap-2 text-sm">
+                              {included ? (
+                                <HiCheckCircle className="w-4 h-4 text-accent mt-0.5 flex-shrink-0" />
+                              ) : (
+                                <span className="w-4 h-4 mt-0.5 rounded-full border border-slate-300 flex-shrink-0" />
+                              )}
+                              <span className={included ? 'text-slate-700' : 'text-slate-400 line-through'}>{text}</span>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-1">
-                <h5 className="text-sm font-bold text-slate-800">Detail Fitur Paket</h5>
-                <p className="text-xs text-slate-500">Semua benefit yang Anda dapatkan:</p>
-              </div>
+                <div>
+                  <div className="border border-slate-200 rounded-xl p-4 bg-white sticky top-2">
+                    <div className="rounded-lg bg-gradient-to-r from-accent to-primary text-white p-3 mb-4">
+                      <div className="text-sm font-bold">Spesial Diskon</div>
+                      <div className="text-xs opacity-90 mt-1">Penawaran untuk paket ini</div>
+                    </div>
 
-              <ul className="space-y-2">
-                {featureItems.map((item, index) => {
-                  const { included, text } = processIncludeItem(item);
-                  return (
-                    <li key={index} className="flex items-start gap-2.5">
-                      <div className="mt-0.5 flex-shrink-0">
-                        {included ? (
-                          <HiCheckCircle className="w-4 h-4 text-emerald-500" />
-                        ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                          </svg>
-                        )}
+                    <h6 className="text-lg font-black text-slate-800 mb-3">Atur jumlah & catatan</h6>
+
+                    <label className="block text-xs text-slate-500 mb-1">Catatan</label>
+                    <textarea
+                      value={modalNote}
+                      onChange={(event) => setModalNote(event.target.value)}
+                      placeholder="Tambahkan catatan untuk pesanan"
+                      className="w-full h-20 resize-none rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/25 focus:border-accent mb-3"
+                    />
+
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="inline-flex items-center border border-slate-200 rounded-lg overflow-hidden">
+                        <button
+                          onClick={() => setModalQty((qty) => Math.max(1, qty - 1))}
+                          className="w-9 h-9 text-slate-600 hover:bg-slate-50"
+                        >
+                          −
+                        </button>
+                        <div className="w-10 text-center text-sm font-bold text-slate-800">{modalQty}</div>
+                        <button
+                          onClick={() => setModalQty((qty) => Math.min(99, qty + 1))}
+                          className="w-9 h-9 text-accent hover:bg-accent/5"
+                        >
+                          +
+                        </button>
                       </div>
-                      <span className={`text-sm leading-relaxed ${included ? 'text-slate-700' : 'text-slate-400 line-through'}`}>
-                        {text}
-                      </span>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
+                      <span className="text-xs text-slate-500">Stok: tersedia</span>
+                    </div>
 
-            <div className="sticky bottom-0 z-20 px-4 sm:px-5 py-4 border-t border-slate-100 bg-white/95 backdrop-blur-sm shadow-lg flex-shrink-0">
-              <div className={`grid ${shouldShowDemoButton ? 'grid-cols-[1fr_1fr_auto]' : 'grid-cols-2'} gap-2`}>
-                {shouldShowDemoButton && (
-                  <button
-                    onClick={handleOpenDemo}
-                    disabled={!canOpenDemo}
-                    className={`w-full py-2.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center border ${
-                      canOpenDemo
-                        ? 'bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-                        : 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
-                    }`}
-                  >
-                    Demo
-                  </button>
-                )}
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-500">Subtotal</span>
+                        <span className="text-2xl font-black text-slate-900">{formatRupiah(modalPrice)}</span>
+                      </div>
+                    </div>
 
-                <button
-                  onClick={handleOrderNow}
-                  className={`w-full py-2.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 bg-gradient-to-r ${styles.buttonGradient} text-white hover:scale-[1.01]`}
-                >
-                  <HiBolt className="w-4 h-4" />
-                  Pesan
-                </button>
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => {
+                          if (!justAdded) {
+                            handleAddToCart(modalQty)
+                          }
+                          closeFeaturesModal()
+                          openCartDrawer()
+                        }}
+                        className={`w-full py-2.5 rounded-xl font-bold text-base transition-all duration-300 border ${
+                          justAdded
+                            ? 'bg-accent text-white border-accent'
+                            : 'bg-accent text-white border-accent hover:brightness-95'
+                        }`}
+                      >
+                        {justAdded ? 'Lihat Keranjang' : '+ Keranjang'}
+                      </button>
 
-                <button
-                  onClick={() => {
-                    if (!justAdded) {
-                      handleAddToCart()
-                    }
-                    closeFeaturesModal()
-                    openCartDrawer()
-                  }}
-                  className={`py-2.5 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${shouldShowDemoButton ? 'w-11 px-0' : 'w-full'} ${
-                    justAdded
-                      ? 'bg-green-600 text-white border border-green-700'
-                      : 'bg-white border border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-                  }`}
-                >
-                  <HiShoppingCart className="w-4 h-4" />
-                  {!shouldShowDemoButton && (justAdded ? 'Lihat' : 'Keranjang')}
-                </button>
+                      <button
+                        onClick={() => {
+                          closeFeaturesModal()
+                          handleOrderNow(modalQty)
+                        }}
+                        className="w-full py-2.5 rounded-xl font-bold text-base border border-accent text-accent bg-white hover:bg-accent/5 transition-all duration-300"
+                      >
+                        Beli Langsung
+                      </button>
+
+                      {shouldShowDemoButton && (
+                        <button
+                          onClick={handleOpenDemo}
+                          disabled={!canOpenDemo}
+                          className={`w-full py-2.5 rounded-xl font-semibold text-sm border transition-all duration-300 ${
+                            canOpenDemo
+                              ? 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                              : 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+                          }`}
+                        >
+                          Lihat Demo
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
