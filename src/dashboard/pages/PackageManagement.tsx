@@ -147,7 +147,14 @@ const PackageManagement: React.FC = () => {
                 <div className="p-4">
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="font-bold text-lg text-gray-800">{p.title}</h3>
-                    {p.price && <span className="text-green-600 font-semibold">{p.price}</span>}
+                    {p.price && (
+                      <div className="flex items-center gap-1.5">
+                        {p.originalPrice && (
+                          <span className="text-gray-400 line-through text-xs font-medium">{p.originalPrice}</span>
+                        )}
+                        <span className="text-green-600 font-bold">{p.price}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -226,12 +233,15 @@ const PackageManagement: React.FC = () => {
                           <span>{getTypeLabel(p.type)}</span>
                         </span>
                         {p.price && (
-                          <span className="text-green-600 font-semibold">
+                          <div className="flex items-center gap-1.5">
                             {p.originalPrice && (
-                              <span className="text-gray-400 line-through text-xs mr-1">{p.originalPrice}</span>
+                              <span className="text-gray-400 line-through text-xs font-medium">{p.originalPrice}</span>
                             )}
-                            {p.price}
-                          </span>
+                            <span className="text-green-600 font-bold text-sm">{p.price}</span>
+                            {p.originalPrice && (
+                              <span className="bg-red-50 text-red-600 text-[10px] font-bold px-1.5 py-0.5 rounded-full">DISKON</span>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
