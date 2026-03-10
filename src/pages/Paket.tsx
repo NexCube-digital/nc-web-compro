@@ -393,9 +393,9 @@ export const Paket: React.FC = () => {
               const imageSrc = resolveImageSource(tier)
               const hot = tier.hot || false
               const detailUrl = isBackendPkg ? `/paket/${category.id}/${tier.id}` : undefined
-              const demoUrl = tier.demoUrl || (category.id === 'undangan'
-                ? (tier.link || tier.url || tier.previewUrl || tier.sampleUrl)
-                : undefined)
+              const demoUrl = category.id === 'undangan'
+                ? (tier.demoUrl || tier.link || tier.url || tier.previewUrl || tier.sampleUrl)
+                : undefined
 
               return (
                 <div 
@@ -415,7 +415,7 @@ export const Paket: React.FC = () => {
                       detailUrl={detailUrl}
                       demoUrl={demoUrl}
                       comparePrice={tier.originalPrice || undefined}
-                      showDemoButton={Boolean(demoUrl) || category.id === 'undangan'}
+                      showDemoButton={category.id === 'undangan'}
 
                       onOrder={() => {
                       addItem({
@@ -447,9 +447,9 @@ export const Paket: React.FC = () => {
                 const imageSrc = resolveImageSource(tier)
                 const hot = tier.hot || false
                 const detailUrl = isBackendPkg ? `/paket/${category.id}/${tier.id}` : undefined
-                const demoUrl = tier.demoUrl || (category.id === 'undangan'
-                  ? (tier.link || tier.url || tier.previewUrl || tier.sampleUrl)
-                  : undefined)
+                const demoUrl = category.id === 'undangan'
+                  ? (tier.demoUrl || tier.link || tier.url || tier.previewUrl || tier.sampleUrl)
+                  : undefined
 
                 return (
                   <div 
