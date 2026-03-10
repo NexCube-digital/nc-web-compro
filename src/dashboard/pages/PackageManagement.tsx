@@ -134,7 +134,7 @@ const PackageManagement: React.FC = () => {
           {packages.map((p) => (
             p.type === 'event' ? (
               <div key={p.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-all group">
-                <a href={p.link || '#'} target="_blank" rel="noreferrer" className="block">
+                <a href={p.demoUrl || p.link || '#'} target="_blank" rel="noreferrer" className="block">
                   <div className="h-52 bg-gray-100 flex items-center justify-center overflow-hidden">
                     {p.images && p.images.length > 0 ? (
                       <img src={getImageUrl(p.images[0])}  alt={p.title} className="w-full h-full object-cover" />

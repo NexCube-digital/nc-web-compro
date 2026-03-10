@@ -172,7 +172,7 @@ export const UndanganDigital: React.FC = () => {
                     className={`rounded-xl overflow-hidden shadow-card hover:shadow-premium transition-all duration-300 group ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}
                     style={{ animationDelay: `${400 + (index * 150)}ms` }}
                   >
-                    <a href={pkg.link || '#'} target="_blank" rel="noreferrer" className="block">
+                    <a href={pkg.demoUrl || pkg.link || '#'} target="_blank" rel="noreferrer" className="block">
                       <div className="h-52 bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center overflow-hidden">
                         {pkg.images && pkg.images.length > 0 ? (
                           <img 

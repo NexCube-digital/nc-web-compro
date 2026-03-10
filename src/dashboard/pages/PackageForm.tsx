@@ -96,7 +96,7 @@ const PackageForm: React.FC = () => {
           setForm({
             title: p.title || '',
             description: p.description || '',
-            link: p.link || '',
+            link: p.link || p.demoUrl || '',
             type: p.type || 'website',
             price: p.price || '',
             originalPrice: p.originalPrice || '',
@@ -156,7 +156,7 @@ const PackageForm: React.FC = () => {
         process: form.process.split('\n').map((s: string) => s.trim()).filter((s: string) => s),
         timeline: form.timeline,
         hot: Boolean(form.hot),
-        demoUrl: form.demoUrl || '',
+        demoUrl: form.demoUrl || form.link || '',
         originalPrice: form.originalPrice || '',
       }
       if (editId) {
