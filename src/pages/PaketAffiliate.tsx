@@ -556,7 +556,7 @@ export const PaketAffiliate: React.FC = () => {
                       detailUrl={detailUrl}
                       demoUrl={demoUrl}
                       comparePrice={tier.originalPrice || undefined}
-                      showDemoButton={Boolean(demoUrl) || category.id === 'undangan'}
+                      showDemoButton={category.id === 'undangan'}
                       onOrder={() => {
                         addItem({
                           id: tier.id || `${category.id}-${index}`,
@@ -602,7 +602,7 @@ export const PaketAffiliate: React.FC = () => {
                         detailUrl={detailUrl}
                         demoUrl={demoUrl}
                         comparePrice={tier.originalPrice || undefined}
-                        showDemoButton={Boolean(demoUrl) || category.id === 'undangan'}
+                        showDemoButton={category.id === 'undangan'}
                         onOrder={() => {
                           addItem({
                             id: tier.id || `${category.id}-${index + 3}`,

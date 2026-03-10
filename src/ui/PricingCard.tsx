@@ -108,7 +108,7 @@ export const PricingCard: React.FC<{
   }
 
   const resolvedDemoUrl = normalizeDemoUrl(demoUrl)
-  const shouldShowDemoButton = showDemoButton || Boolean(resolvedDemoUrl)
+  const shouldShowDemoButton = showDemoButton
   const canOpenDemo = Boolean(resolvedDemoUrl)
 
   // Tambah ke keranjang lalu buka drawer
