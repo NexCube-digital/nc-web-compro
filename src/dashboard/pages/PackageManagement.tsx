@@ -226,7 +226,12 @@ const PackageManagement: React.FC = () => {
                           <span>{getTypeLabel(p.type)}</span>
                         </span>
                         {p.price && (
-                          <span className="text-green-600 font-semibold">{p.price}</span>
+                          <span className="text-green-600 font-semibold">
+                            {p.originalPrice && (
+                              <span className="text-gray-400 line-through text-xs mr-1">{p.originalPrice}</span>
+                            )}
+                            {p.price}
+                          </span>
                         )}
                       </div>
                     </div>

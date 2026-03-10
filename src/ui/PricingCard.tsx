@@ -290,14 +290,14 @@ export const PricingCard: React.FC<{
 
           <div className="mt-auto space-y-2">
             <div className="flex items-end gap-2 flex-wrap">
-              <span className={`text-xl sm:text-2xl font-black ${textColor} tracking-tight leading-none`}>
-                Rp{priceValue}
-              </span>
               {hasComparePrice && (
                 <span className={`text-xs sm:text-sm font-semibold ${secondaryTextColor} line-through opacity-80`}>
                   Rp{comparePriceValue}
                 </span>
               )}
+              <span className={`text-xl sm:text-2xl font-black ${textColor} tracking-tight leading-none`}>
+                Rp{priceValue}
+              </span>
             </div>
 
             {priceDesc && (
@@ -407,10 +407,10 @@ export const PricingCard: React.FC<{
                       <div>
                         <h5 className="text-lg font-bold text-slate-900 leading-snug">{tier}</h5>
                         <div className="mt-2 flex items-end gap-2 flex-wrap">
-                          <span className="text-2xl font-black text-slate-900 leading-none">{formatRupiah(numericPrice)}</span>
                           {hasComparePrice && (
                             <span className="text-sm text-slate-400 line-through">Rp{comparePriceValue}</span>
                           )}
+                          <span className="text-2xl font-black text-slate-900 leading-none">{formatRupiah(numericPrice)}</span>
                         </div>
                       </div>
 

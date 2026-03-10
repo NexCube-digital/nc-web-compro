@@ -42,6 +42,8 @@ const PackageForm: React.FC = () => {
     link: '',
     type: 'website',
     price: '',
+    originalPrice: '',
+    demoUrl: '',
     features: '',
     includes: '', // newline-separated
     benefits: '', // newline-separated
@@ -97,6 +99,8 @@ const PackageForm: React.FC = () => {
             link: p.link || '',
             type: p.type || 'website',
             price: p.price || '',
+            originalPrice: p.originalPrice || '',
+            demoUrl: p.demoUrl || '',
             features: (p.features || []).join(', '),
             includes: Array.isArray(p.includes) ? p.includes.join('\n') : (p.includes || []).toString(),
             benefits: Array.isArray(p.benefits) ? p.benefits.join('\n') : (p.benefits || []).toString(),
@@ -152,6 +156,8 @@ const PackageForm: React.FC = () => {
         process: form.process.split('\n').map((s: string) => s.trim()).filter((s: string) => s),
         timeline: form.timeline,
         hot: Boolean(form.hot),
+        demoUrl: form.demoUrl || '',
+        originalPrice: form.originalPrice || '',
       }
       if (editId) {
         await apiClient.updatePackage(editId, payload)
@@ -283,10 +289,11 @@ const PackageForm: React.FC = () => {
                 )}
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Harga
+                  Harga Akhir <span className="text-red-500">*</span>
+                  <span className="text-gray-500 text-xs ml-2">(harga yang ditampilkan)</span>
                 </label>
                 <input 
                   value={form.price} 
@@ -294,6 +301,25 @@ const PackageForm: React.FC = () => {
                   className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="e.g., Rp 2.500.000"
                 />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Harga Awal
+                  <span className="text-gray-500 text-xs ml-2">(opsional, akan dicoret)</span>
+                </label>
+                <input 
+                  value={form.originalPrice} 
+                  onChange={e => setForm({ ...form, originalPrice: e.target.value })} 
+                  className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  placeholder="e.g., Rp 3.000.000"
+                />
+                {form.originalPrice && form.price && (
+                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                    <span>Preview:</span>
+                    <span className="line-through text-gray-400">{form.originalPrice}</span>
+                    <span className="font-semibold">{form.price}</span>
+                  </p>
+                )}
               </div>
               {form.type !== 'event' && (
                 <div>
@@ -324,6 +350,19 @@ const PackageForm: React.FC = () => {
                 />
               </div>
             )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Link Demo
+                <span className="text-gray-500 text-xs ml-2">(opsional, URL untuk tombol "Lihat Demo" di frontend)</span>
+              </label>
+              <input 
+                value={form.demoUrl} 
+                onChange={e => setForm({ ...form, demoUrl: e.target.value })} 
+                className="w-full border border-gray-300 px-4 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                placeholder="https://demo.nexcube-digital.com/contoh"
+              />
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">

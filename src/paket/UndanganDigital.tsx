@@ -194,14 +194,21 @@ export const UndanganDigital: React.FC = () => {
                       <p className="text-slate-500 text-sm mb-3">{pkg.description || 'Undangan digital interaktif'}</p>
                       {pkg.price && (
                         <div className="text-accent font-bold text-lg mb-3">
+                          {pkg.originalPrice && (
+                            <span className="text-slate-400 line-through text-sm mr-2 font-normal">
+                              {typeof pkg.originalPrice === 'number' 
+                                ? `Rp ${pkg.originalPrice.toLocaleString('id-ID')}` 
+                                : pkg.originalPrice}
+                            </span>
+                          )}
                           {typeof pkg.price === 'number' 
                             ? `Rp ${pkg.price.toLocaleString('id-ID')}` 
                             : pkg.price}
                         </div>
                       )}
-                      {pkg.link && (
+                      {(pkg.demoUrl || pkg.link) && (
                         <a 
-                          href={pkg.link} 
+                          href={pkg.demoUrl || pkg.link} 
                           target="_blank" 
                           rel="noreferrer"
                           className="inline-flex items-center gap-2 text-accent hover:text-accent/80 font-medium text-sm"

@@ -398,6 +398,9 @@ export const PaketDigital: React.FC = () => {
                 
                 {/* Price */}
                 <div className="relative mb-4">
+                  {pkg.originalPrice && pkg.price && (
+                    <span className="text-sm text-slate-400 line-through mr-2">{pkg.originalPrice}</span>
+                  )}
                   <span className="text-3xl font-black text-slate-800">{pkg.price || 'Hubungi'}</span>
                   {pkg.price && <span className="text-slate-500 text-sm">/tahun</span>}
                 </div>
@@ -459,6 +462,9 @@ export const PaketDigital: React.FC = () => {
                   
                   {/* Price */}
                   <div className="text-right">
+                    {pkg.originalPrice && pkg.price && (
+                      <div className="text-sm text-slate-400 line-through">{pkg.originalPrice}</div>
+                    )}
                     <div className="text-2xl font-black text-slate-800">{pkg.price || 'Custom'}</div>
                     {pkg.price && <div className="text-sm text-slate-500">/tahun</div>}
                   </div>
