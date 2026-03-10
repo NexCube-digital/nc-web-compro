@@ -26,6 +26,16 @@ const PackageForm: React.FC = () => {
   const params = new URLSearchParams(location.search)
   const editId = params.get('edit')
 
+  const getTypeRoute = (type: string) => {
+    switch (type) {
+      case 'website': return '/dashboard/paket/website'
+      case 'desain':  return '/dashboard/paket/desain'
+      case 'event':   return '/dashboard/paket/event'
+      case 'katalog': return '/dashboard/paket/katalog'
+      default:        return '/dashboard/paket'
+    }
+  }
+
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -159,7 +169,7 @@ const PackageForm: React.FC = () => {
           } catch (e) { console.error('Upload images after create failed', e) }
         }
       }
-      navigate('/dashboard/paket')
+      navigate(getTypeRoute(form.type))
     } catch (err) {
       console.error(err)
       alert('Gagal menyimpan paket')
