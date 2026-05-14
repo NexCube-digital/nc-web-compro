@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Finance } from '../../../services/api'
 
 interface FormFinanceProps {
@@ -10,9 +10,15 @@ interface FormFinanceProps {
   onCancel: () => void;
 }
 
-const PAYMENT_METHODS = ['Bank Transfer', 'Cash', 'Check', 'E-wallet', 'Credit Card'];
-const FINANCE_CATEGORIES = ['Salary', 'Office Supplies', 'Project Payment', 'Equipment', 'Marketing', 'Utilities', 'Maintenance', 'Other'];
+const PAYMENT_METHODS = ['Bank Transfer', 'Qris', 'Cash', 'Check', 'E-wallet', 'Credit Card'];
+const FINANCE_CATEGORIES = ['Salary', 'Office Supplies', 'Project Payment', 'Deposit', 'Equipment', 'Marketing', 'Utilities', 'Maintenance', 'Other'];
 const FINANCE_STATUSES = ['pending', 'completed', 'cancelled'] as const;
+
+const formatAmountToId = (value: string): string => {
+  const numericOnly = value.replace(/\D/g, '');
+  if (!numericOnly) return '';
+  return Number(numericOnly).toLocaleString('id-ID');
+};
 
 export const FormFinance: React.FC<FormFinanceProps> = ({
   formData,
@@ -22,6 +28,28 @@ export const FormFinance: React.FC<FormFinanceProps> = ({
   onSubmit,
   onCancel
 }) => {
+  const [amountDisplay, setAmountDisplay] = useState(
+    formData.amount > 0 ? Number(formData.amount).toLocaleString('id-ID') : ''
+  );
+
+  useEffect(() => {
+    setAmountDisplay(formData.amount > 0 ? Number(formData.amount).toLocaleString('id-ID') : '');
+  }, [formData.amount]);
+
+  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formattedValue = formatAmountToId(e.target.value);
+    const numericValue = formattedValue.replace(/\D/g, '');
+
+    setAmountDisplay(formattedValue);
+
+    onInputChange({
+      target: {
+        name: 'amount',
+        value: numericValue
+      }
+    } as React.ChangeEvent<HTMLInputElement>);
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-slate-200">
       <h2 className="text-2xl font-bold mb-6 text-slate-900">
@@ -87,17 +115,16 @@ export const FormFinance: React.FC<FormFinanceProps> = ({
               Jumlah (Rp) <span className="text-red-500">*</span>
             </label>
             <input
-              type="number"
+              type="text"
               name="amount"
-              value={formData.amount}
-              onChange={onInputChange}
+              value={amountDisplay}
+              onChange={handleAmountChange}
               required
-              min="0"
-              step="1000"
+              inputMode="numeric"
               className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Contoh: 500000"
+              placeholder="Contoh: 10.000"
             />
-            <p className="text-xs text-slate-500 mt-1">Dalam Rupiah tanpa format (1000, 500000, dst)</p>
+            <p className="text-xs text-slate-500 mt-1">Format otomatis Rupiah (contoh: 1.000, 10.000, 500.000)</p>
           </div>
         </div>
 
