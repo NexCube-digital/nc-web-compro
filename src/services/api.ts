@@ -345,18 +345,12 @@ class ApiClient {
 
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => {
-
-        this.activeRequests = Math.max(0, this.activeRequests - 1);
-        if (this.activeRequests === 0) this.emitLoading(false);
-        return response;
-
         if (this.token) {
           this.markActivity();
         }
-        // decrement active requests and notify
-        this.activeRequests = Math.max(0, this.activeRequests - 1)
-        if (this.activeRequests === 0) this.emitLoading(false)
-        return response
+        this.activeRequests = Math.max(0, this.activeRequests - 1);
+        if (this.activeRequests === 0) this.emitLoading(false);
+        return response;
       },
       (error) => {
         this.activeRequests = Math.max(0, this.activeRequests - 1);
@@ -723,11 +717,21 @@ class ApiClient {
 
   // ── Finance endpoints ───────────────────────────────────────────────────────
 
-  async getFinances(): Promise<ApiResponse<Finance[]>> {
-    const response = await this.request<any>('/finances', 'GET');
-    if (response.data && response.data.items) response.data = response.data.items;
-    return response as ApiResponse<Finance[]>;
+ async getFinances(): Promise<ApiResponse<Finance[]>> {
+  const response = await this.request<any>(`/finances?_t=${Date.now()}`, 'GET');
+
+  if (response.data) {
+    if (Array.isArray(response.data.items)) {
+      response.data = response.data.items;
+    } else if (Array.isArray(response.data)) {
+      // already array
+    } else if (Array.isArray(response.data.data)) {
+      response.data = response.data.data;
+    }
   }
+
+  return response as ApiResponse<Finance[]>;
+}
 
   async getFinance(id: string): Promise<ApiResponse<Finance>> {
     return this.request<Finance>(`/finances/${id}`, 'GET');
