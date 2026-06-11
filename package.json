@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/package.json",
   "name": "nexcube-website",
   "private": true,
   "version": "0.0.0",
@@ -16,6 +17,7 @@
     "animejs": "^4.3.1",
     "autoprefixer": "^10.4.16",
     "axios": "^1.13.2",
+    "compression": "^1.8.1",
     "gsap": "^3.14.2",
     "html2pdf": "^0.0.11",
     "html2pdf.js": "^0.12.1",
