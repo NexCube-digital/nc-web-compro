@@ -1,7 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Layout } from '../components/layout/Layout';
 import apiClient from '../services/api';
+import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaClock, FaWhatsapp, FaPaperPlane, FaCheckCircle } from 'react-icons/fa';
+import { HiSparkles } from 'react-icons/hi';
 
 export const Contact: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -17,54 +19,36 @@ export const Contact: React.FC = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Array kontak info yang terstruktur
   const contactInfo = [
     {
-      title: "Telepon",
-      info: "+62 813 1743 5622",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
-        </svg>
-      )
+      title: "Telepon / WhatsApp",
+      info: "+62 859 5031 3360",
+      icon: <FaPhoneAlt className="w-5 h-5 text-[#126EFE]" />,
+      badgeBg: 'bg-blue-50 border-blue-100'
     },
     {
-      title: "Email",
+      title: "Email Resmi",
       info: "info@nexcube.com",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-          <polyline points="22,6 12,13 2,6" />
-        </svg>
-      )
+      icon: <FaEnvelope className="w-5 h-5 text-[#FBA41C]" />,
+      badgeBg: 'bg-amber-50 border-amber-100'
     },
     {
-      title: "Lokasi",
+      title: "Alamat Studio",
       info: "Jl. Bukit Jarian dlm VI, Bandung",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
-          <circle cx="12" cy="10" r="3" />
-        </svg>
-      )
+      icon: <FaMapMarkerAlt className="w-5 h-5 text-rose-500" />,
+      badgeBg: 'bg-rose-50 border-rose-100'
     },
     {
-      title: "Jam Kerja",
+      title: "Jam Kerja Layanan",
       info: "Senin - Jumat: 09:00 - 17:00\nSabtu: 09:00 - 13:00",
-      icon: (
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polyline points="12 6 12 12 16 14"></polyline>
-        </svg>
-      )
+      icon: <FaClock className="w-5 h-5 text-emerald-500" />,
+      badgeBg: 'bg-emerald-50 border-emerald-100'
     }
   ];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Clear error when user types
     if (errors[name]) {
       setErrors(prev => {
         const newErrors = { ...prev };
@@ -76,24 +60,20 @@ export const Contact: React.FC = () => {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
-    if (!formData.name.trim()) newErrors.name = 'Nama harus diisi';
+    if (!formData.name.trim()) newErrors.name = 'Nama lengkap wajib diisi';
     if (!formData.email.trim()) {
-      newErrors.email = 'Email harus diisi';
+      newErrors.email = 'Alamat email wajib diisi';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Format email tidak valid';
     }
-    if (!formData.message.trim()) newErrors.message = 'Pesan harus diisi';
-    
+    if (!formData.message.trim()) newErrors.message = 'Pesan atau detail proyek wajib diisi';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
-    
     setIsSubmitting(true);
 
     try {
@@ -118,10 +98,9 @@ export const Contact: React.FC = () => {
         service: ''
       });
       
-      // Show success notification
       setTimeout(() => {
         setSubmitted(false);
-      }, 5000);
+      }, 6000);
     } catch (error: any) {
       setErrors({ form: error.message || 'Terjadi kesalahan saat mengirim pesan' });
     } finally {
@@ -131,207 +110,278 @@ export const Contact: React.FC = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-b from-slate-50/50 to-white py-8 sm:py-14">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50/40 via-white to-slate-50/50 pt-32 lg:pt-36 pb-16 overflow-hidden">
         <Helmet>
           <title>Hubungi Kami - NexCube Digital</title>
           <meta name="description" content="Hubungi NexCube Digital untuk konsultasi gratis 15 menit dan diskusikan kebutuhan digital Anda" />
         </Helmet>
         
-        <div className="container">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-8 sm:mb-12">
-              <h1 className="text-3xl sm:text-4xl font-heading font-semibold text-slate-900 drop-shadow-sm mb-2">Hubungi Kami</h1>
-              <div className="w-20 h-1 bg-gradient-modern mx-auto mb-4 rounded-full"></div>
-              <p className="text-slate-500 mt-3 sm:mt-4 text-base sm:text-lg">
-                Konsultasi gratis 15 menit untuk semua klien baru.
-              </p>
+        <div className="container mx-auto px-4 md:px-6 max-w-6xl relative">
+          
+          {/* Ambient Glows */}
+          <div className="absolute top-10 left-10 w-96 h-96 bg-blue-300/10 rounded-full blur-3xl pointer-events-none"></div>
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-amber-300/10 rounded-full blur-3xl pointer-events-none"></div>
+
+          {/* Header */}
+          <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
+            <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider text-[#126EFE] shadow-xs">
+              <HiSparkles className="w-3.5 h-3.5 text-[#FBA41C]" />
+              <span>KONSULTASI DIGITAL GRATIS 15 MENIT</span>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6 sm:gap-10">
-              <div className="md:col-span-2">
-                {submitted ? (
-                  <div className="p-8 sm:p-10 bg-gradient-to-br from-green-50 to-green-100/50 rounded-2xl border border-green-100 text-center backdrop-blur-sm shadow-premium">
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 text-green-600 mb-6">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    </div>
-                    <h2 className="text-2xl font-heading font-semibold mb-3 text-green-800">Terima Kasih!</h2>
-                    <p className="text-green-700 text-lg mb-8">Pesan Anda telah terkirim. Tim kami akan menghubungi Anda segera.</p>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+              Hubungi <span className="bg-gradient-to-r from-[#126EFE] via-blue-600 to-[#FBA41C] bg-clip-text text-transparent">Tim NexCube</span>
+            </h1>
+
+            <p className="text-slate-600 text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+              Ada pertanyaan atau ingin mendiskusikan ide proyek digital Anda? Kirimkan pesan di bawah ini atau hubungi kami langsung via WhatsApp.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            {/* Form Section (Left 7 Cols) */}
+            <div className="lg:col-span-7">
+              {submitted ? (
+                <div className="p-8 sm:p-12 bg-white rounded-3xl border border-emerald-200 shadow-xl text-center space-y-4">
+                  <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+                    <FaCheckCircle className="w-8 h-8" />
+                  </div>
+                  <h2 className="text-2xl font-black text-slate-900">Pesan Berhasil Terkirim!</h2>
+                  <p className="text-slate-600 text-sm sm:text-base max-w-md mx-auto leading-relaxed font-medium">
+                    Terima kasih telah menghubungi NexCube Digital. Tim spesialis kami akan segera menanggapi pesan Anda via Email/WhatsApp.
+                  </p>
+                  <div className="pt-4">
                     <button 
                       onClick={() => setSubmitted(false)}
-                      className="btn-secondary bg-white px-8"
+                      className="bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold px-6 py-2.5 rounded-2xl text-xs sm:text-sm transition-colors cursor-pointer"
                     >
                       Kirim Pesan Lain
                     </button>
                   </div>
-                ) : (
-                  <form onSubmit={handleSubmit} className="card-glass rounded-2xl p-6 sm:p-10 shadow-premium">
-                    {errors.form && (
-                      <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-                        {errors.form}
-                      </div>
-                    )}
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit} className="bg-white rounded-3xl p-6 sm:p-10 border border-slate-200/90 shadow-xl shadow-blue-500/5 space-y-6 relative overflow-hidden">
+                  
+                  {/* Top Accent Gradient Line */}
+                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#126EFE] via-blue-600 to-[#FBA41C]" />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label htmlFor="name" className="block text-sm font-medium text-slate-700">
-                          Nama <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          id="name"
-                          name="name"
-                          type="text"
-                          value={formData.name}
-                          onChange={handleChange}
-                          className={`input-premium w-full text-base ${errors.name ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`}
-                        />
-                        {errors.name && <p className="text-red-500 text-xs">{errors.name}</p>}
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <label htmlFor="email" className="block text-sm font-medium text-slate-700">
-                          Email <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          id="email"
-                          name="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                          className={`input-premium w-full ${errors.email ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`}
-                        />
-                        {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <label htmlFor="company" className="block text-sm font-medium text-slate-700">
-                          Perusahaan / Proyek
-                        </label>
-                        <input
-                          id="company"
-                          name="company"
-                          type="text"
-                          value={formData.company}
-                          onChange={handleChange}
-                          className="input-premium w-full"
-                        />
-                      </div>
+                  {errors.form && (
+                    <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs sm:text-sm font-semibold">
+                      {errors.form}
+                    </div>
+                  )}
 
-                      <div className="space-y-2">
-                        <label htmlFor="phone" className="block text-sm font-medium text-slate-700">
-                          Nomor Telepon
-                        </label>
-                        <input
-                          id="phone"
-                          name="phone"
-                          type="tel"
-                          value={formData.phone}
-                          onChange={handleChange}
-                          className="input-premium w-full"
-                          placeholder="+62 812 3456 7890"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <label htmlFor="service" className="block text-sm font-medium text-slate-700">
-                          Layanan yang Dibutuhkan
-                        </label>
-                        <select
-                          id="service"
-                          name="service"
-                          value={formData.service}
-                          onChange={handleChange}
-                          className="input-premium w-full"
-                        >
-                          <option value="">Pilih layanan</option>
-                          <option value="website">Website</option>
-                          <option value="undangan">Undangan Digital</option>
-                          <option value="desain">Desain Grafis</option>
-                          <option value="katalog">Menu & Katalog</option>
-                          <option value="lainnya">Lainnya</option>
-                        </select>
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <label htmlFor="budget" className="block text-sm font-medium text-slate-700">
-                          Budget
-                        </label>
-                        <select
-                          id="budget"
-                          name="budget"
-                          value={formData.budget}
-                          onChange={handleChange}
-                          className="input-premium w-full"
-                        >
-                          <option value="">Pilih budget</option>
-                          <option value="< 1jt">Dibawah 1 juta</option>
-                          <option value="1-3jt">1 - 3 juta</option>
-                          <option value="3-5jt">3 - 5 juta</option>
-                          <option value="5-10jt">5 - 10 juta</option>
-                          <option value="> 10jt">Diatas 10 juta</option>
-                        </select>
-                      </div>
-                      
-                      <div className="space-y-2 md:col-span-2">
-                        <label htmlFor="message" className="block text-sm font-medium text-slate-700">
-                          Pesan <span className="text-red-500">*</span>
-                        </label>
-                        <textarea
-                          id="message"
-                          name="message"
-                          rows={5}
-                          value={formData.message}
-                          onChange={handleChange}
-                          className={`input-premium w-full ${errors.message ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`}
-                          placeholder="Jelaskan kebutuhan proyek Anda..."
-                        />
-                        {errors.message && <p className="text-red-500 text-xs">{errors.message}</p>}
-                      </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    
+                    {/* Name */}
+                    <div className="space-y-1.5">
+                      <label htmlFor="name" className="block text-xs sm:text-sm font-bold text-slate-700">
+                        Nama Lengkap <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        id="name"
+                        name="name"
+                        type="text"
+                        value={formData.name}
+                        onChange={handleChange}
+                        placeholder="Contoh: Budi Santoso"
+                        className={`w-full bg-slate-50 border px-4 py-3 rounded-2xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all ${
+                          errors.name ? 'border-rose-400' : 'border-slate-200 focus:border-[#126EFE]'
+                        }`}
+                      />
+                      {errors.name && <p className="text-rose-500 text-xs font-semibold">{errors.name}</p>}
                     </div>
                     
-                    <div className="mt-8 sm:mt-10">
-                      <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="w-full md:w-auto btn-premium flex items-center justify-center text-base"
+                    {/* Email */}
+                    <div className="space-y-1.5">
+                      <label htmlFor="email" className="block text-xs sm:text-sm font-bold text-slate-700">
+                        Email Resmi <span className="text-rose-500">*</span>
+                      </label>
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="budi@perusahaan.com"
+                        className={`w-full bg-slate-50 border px-4 py-3 rounded-2xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all ${
+                          errors.email ? 'border-rose-400' : 'border-slate-200 focus:border-[#126EFE]'
+                        }`}
+                      />
+                      {errors.email && <p className="text-rose-500 text-xs font-semibold">{errors.email}</p>}
+                    </div>
+                    
+                    {/* Company */}
+                    <div className="space-y-1.5">
+                      <label htmlFor="company" className="block text-xs sm:text-sm font-bold text-slate-700">
+                        Nama Perusahaan / Bisnis
+                      </label>
+                      <input
+                        id="company"
+                        name="company"
+                        type="text"
+                        value={formData.company}
+                        onChange={handleChange}
+                        placeholder="PT / CV / Toko Anda"
+                        className="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-2xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:border-[#126EFE] focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all"
+                      />
+                    </div>
+
+                    {/* Phone */}
+                    <div className="space-y-1.5">
+                      <label htmlFor="phone" className="block text-xs sm:text-sm font-bold text-slate-700">
+                        Nomor WhatsApp / Telepon
+                      </label>
+                      <input
+                        id="phone"
+                        name="phone"
+                        type="tel"
+                        value={formData.phone}
+                        onChange={handleChange}
+                        placeholder="081234567890"
+                        className="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-2xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:border-[#126EFE] focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all"
+                      />
+                    </div>
+                    
+                    {/* Service Needed */}
+                    <div className="space-y-1.5">
+                      <label htmlFor="service" className="block text-xs sm:text-sm font-bold text-slate-700">
+                        Kategori Layanan
+                      </label>
+                      <select
+                        id="service"
+                        name="service"
+                        value={formData.service}
+                        onChange={handleChange}
+                        className="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-2xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:border-[#126EFE] focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all"
                       >
-                        {isSubmitting ? (
-                          <>
-                            <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Mengirim...
-                          </>
-                        ) : 'Kirim Pesan'}
-                      </button>
+                        <option value="">Pilih Kategori</option>
+                        <option value="website">Website Premium</option>
+                        <option value="undangan">Undangan Digital</option>
+                        <option value="desain">Desain Grafis & Branding</option>
+                        <option value="katalog">Katalog Digital & QR Menu</option>
+                        <option value="lainnya">Lainnya / Custom</option>
+                      </select>
                     </div>
-                  </form>
-                )}
-              </div>
-              
-              <div className="space-y-6">
-                {contactInfo.map((item, index) => (
-                  <div key={index} className="card-glass rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-premium">
-                    <div className="flex items-start gap-4">
-                      <div className="p-3 bg-gradient-premium-light rounded-xl shadow-sm text-premium-700">
-                        {item.icon}
-                      </div>
-                      <div>
-                        <h3 className="font-medium text-lg mb-1">{item.title}</h3>
-                        <p className="text-slate-600 whitespace-pre-line">{item.info}</p>
-                      </div>
+                    
+                    {/* Budget */}
+                    <div className="space-y-1.5">
+                      <label htmlFor="budget" className="block text-xs sm:text-sm font-bold text-slate-700">
+                        Perkiraan Budget
+                      </label>
+                      <select
+                        id="budget"
+                        name="budget"
+                        value={formData.budget}
+                        onChange={handleChange}
+                        className="w-full bg-slate-50 border border-slate-200 px-4 py-3 rounded-2xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:border-[#126EFE] focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all"
+                      >
+                        <option value="">Pilih Budget</option>
+                        <option value="< 1jt">Di bawah Rp 1 Juta</option>
+                        <option value="1-3jt">Rp 1 - 3 Juta</option>
+                        <option value="3-5jt">Rp 3 - 5 Juta</option>
+                        <option value="5-10jt">Rp 5 - 10 Juta</option>
+                        <option value="> 10jt">Di atas Rp 10 Juta</option>
+                      </select>
                     </div>
+                    
+                    {/* Message */}
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <label htmlFor="message" className="block text-xs sm:text-sm font-bold text-slate-700">
+                        Detail Pesan & Proyek <span className="text-rose-500">*</span>
+                      </label>
+                      <textarea
+                        id="message"
+                        name="message"
+                        rows={4}
+                        value={formData.message}
+                        onChange={handleChange}
+                        placeholder="Jelaskan gambaran singkat kebutuhan proyek Anda..."
+                        className={`w-full bg-slate-50 border px-4 py-3 rounded-2xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all ${
+                          errors.message ? 'border-rose-400' : 'border-slate-200 focus:border-[#126EFE]'
+                        }`}
+                      />
+                      {errors.message && <p className="text-rose-500 text-xs font-semibold">{errors.message}</p>}
+                    </div>
+
                   </div>
-                ))}
-              </div>
+                  
+                  {/* Submit Button */}
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full bg-gradient-to-r from-[#126EFE] to-blue-700 hover:from-[#0950be] hover:to-blue-800 text-white font-extrabold py-3.5 px-8 rounded-2xl text-xs sm:text-sm shadow-md shadow-blue-500/20 transition-all duration-200 flex items-center justify-center gap-2 hover:scale-102 active:scale-98 cursor-pointer disabled:opacity-50"
+                    >
+                      {isSubmitting ? (
+                        <span>Mengirim Pesan...</span>
+                      ) : (
+                        <>
+                          <FaPaperPlane className="w-3.5 h-3.5" />
+                          <span>Kirim Pesan Konsultasi</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
+            
+            {/* Info Section (Right 5 Cols) */}
+            <div className="lg:col-span-5 space-y-4">
+              
+              {contactInfo.map((item, index) => (
+                <div 
+                  key={index} 
+                  className="bg-white rounded-3xl p-5 border border-slate-200/90 shadow-sm hover:shadow-md transition-all duration-300 flex items-start gap-4"
+                >
+                  <div className={`w-11 h-11 rounded-2xl ${item.badgeBg} border flex items-center justify-center shrink-0`}>
+                    {item.icon}
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-sm text-slate-900 mb-1">{item.title}</h3>
+                    <p className="text-xs sm:text-sm text-slate-600 font-medium whitespace-pre-line leading-relaxed">{item.info}</p>
+                  </div>
+                </div>
+              ))}
+
+              {/* Direct WhatsApp Fast Response Box */}
+              <div className="bg-gradient-to-br from-emerald-500 to-teal-700 rounded-3xl p-6 text-white shadow-xl space-y-3 relative overflow-hidden">
+                <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[11px] font-extrabold text-emerald-200">
+                  <FaWhatsapp className="w-3.5 h-3.5 text-emerald-300" />
+                  <span>RESPON CEPAT WHATSAPP</span>
+                </div>
+
+                <h3 className="text-lg font-black tracking-tight leading-snug">
+                  Ingin Respon Langsung & Diskusi Lebih Cepat?
+                </h3>
+
+                <p className="text-emerald-100 text-xs leading-relaxed font-medium">
+                  Hubungi tim konsultan kami via WhatsApp untuk mendapatkan estimasi harga & jawaban instan.
+                </p>
+
+                <div className="pt-2">
+                  <a 
+                    href="https://wa.me/6285950313360?text=Halo%20NexCube%20Digital%2C%20saya%20ingin%20berkonsultasi%20langsung%20tentang%20proyek%20saya"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 bg-white text-emerald-800 font-extrabold px-6 py-2.5 rounded-2xl text-xs shadow-md hover:bg-emerald-50 transition-all cursor-pointer"
+                  >
+                    <FaWhatsapp className="w-4 h-4 text-emerald-600" />
+                    <span>Chat WhatsApp Sekarang</span>
+                  </a>
+                </div>
+              </div>
+
+            </div>
+
           </div>
+
         </div>
       </div>
     </Layout>
-  )
-}
+  );
+};
 
 export default Contact;

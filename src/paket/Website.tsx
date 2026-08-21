@@ -1,177 +1,182 @@
-import React, { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
-import { PricingCard } from '../ui/PricingCard'
-import { pricingData } from '../data/pricingData'
+import { PricingCard } from '../ui/PricingCard';
+import { pricingData } from '../data/pricingData';
 import { Layout } from '../components/layout/Layout';
+import { FaGlobe, FaArrowLeft, FaChevronDown } from 'react-icons/fa';
+import { HiSparkles } from 'react-icons/hi';
+import { useCart } from '../context/CartContext';
+import apiClient, { getImageUrl } from '../services/api';
 
 export const Website: React.FC = () => {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [packages, setPackages] = useState<any[]>([]);
   const navigate = useNavigate();
+  const { addItem } = useCart();
   
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoaded(true);
-    }, 100);
-    
+    const timer = setTimeout(() => setIsLoaded(true), 100);
     return () => clearTimeout(timer);
   }, []);
-  
-  const handleGoBack = () => {
-    navigate(-1);
+
+  // Fetch website packages from backend
+  useEffect(() => {
+    const fetchWebsitePackages = async () => {
+      try {
+        const res = await apiClient.getPackages('website');
+        if (res && res.data && res.data.length > 0) {
+          setPackages(res.data);
+        }
+      } catch (e) {
+        console.error('Failed to load website packages from backend', e);
+      }
+    };
+    fetchWebsitePackages();
+  }, []);
+
+  const resolveImageSource = (pkg: any): string => {
+    if (!pkg) return '';
+    let imageCandidate = '';
+    if (Array.isArray(pkg.images) && pkg.images.length > 0) {
+      const firstImg = pkg.images[0];
+      imageCandidate = typeof firstImg === 'string' ? firstImg : (firstImg?.url || firstImg?.path || firstImg?.src || '');
+    } else if (typeof pkg.images === 'string' && pkg.images.trim()) {
+      const rawImages = pkg.images.trim();
+      if (rawImages.startsWith('[') || rawImages.startsWith('{')) {
+        try {
+          const parsed = JSON.parse(rawImages);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const firstImg = parsed[0];
+            imageCandidate = typeof firstImg === 'string' ? firstImg : (firstImg?.url || firstImg?.path || '');
+          }
+        } catch {
+          imageCandidate = rawImages;
+        }
+      } else {
+        imageCandidate = rawImages;
+      }
+    } else if (pkg.image) {
+      imageCandidate = typeof pkg.image === 'string' ? pkg.image : (pkg.image?.url || pkg.image?.path || '');
+    }
+
+    if (!imageCandidate) return '';
+    if (imageCandidate.startsWith('/images/') || imageCandidate.startsWith('http')) return imageCandidate;
+    return getImageUrl(imageCandidate);
   };
 
-  const paketCategories = [
+  const websitePricing = packages.length > 0
+    ? packages
+    : pricingData.filter(item => ['student', 'bronze', 'silver', 'gold', 'platinum'].includes(item.id));
+
+  const faqs = [
     {
-      id: 'website',
-      title: 'Website Premium',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-      ),
-      routePath: '/paket/website'
+      q: 'Apa perbedaan utama antar paket website?',
+      a: 'Perbedaan utama mencakup kapasitas halaman, fitur integrasi admin (WP/CPanel), domain gratis (.my.id, .com, .co.id), email bisnis, serta kuota pembuatan konten foto/video.'
     },
     {
-      id: 'undangan',
-      title: 'Undangan Digital',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-        </svg>
-      ),
-      routePath: '/paket/undangan-digital'
+      q: 'Apakah ada biaya tersembunyi setelah pengerjaan?',
+      a: 'Tidak ada biaya tersembunyi. Harga yang tercantum sudah termasuk sewa domain dan hosting untuk tahun pertama serta garansi perbaikan bug.'
     },
     {
-      id: 'desain',
-      title: 'Desain Grafis',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      ),
-      routePath: '/paket/desain-grafis'
+      q: 'Berapa lama waktu pengerjaan website?',
+      a: 'Waktu pengerjaan berkisar antara 2 hari hingga 3 minggu tergantung paket yang dipilih dan kelengkapan materi dari Anda.'
     },
     {
-      id: 'katalog',
-      title: 'Katalog Digital',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-        </svg>
-      ),
-      routePath: '/paket/menu-katalog'
+      q: 'Bagaimana jika bisnis saya membutuhkan fitur kustom?',
+      a: 'Kami menyediakan layanan pengembangan website custom penuh. Anda bisa berkonsultasi gratis dengan tim developer kami melalui WhatsApp.'
     }
   ];
 
-  const handleCategoryClick = (routePath: string) => {
-    navigate(routePath);
-  };
-
-  const websitePricing = pricingData.filter(item => 
-    ['student', 'bronze', 'silver', 'gold', 'platinum'].includes(item.id)
-  );
-
   return (
     <Layout>
-      <div className="min-h-screen py-8 sm:py-16 bg-gradient-to-b from-slate-50/50 to-white">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50/40 via-white to-slate-50/50 pt-28 lg:pt-32 pb-16 overflow-hidden">
         <Helmet>
-          <title>Paket Website - NexCube Digital</title>
+          <title>Paket Website Premium - NexCube Digital</title>
           <meta name="description" content="Pilihan paket website NexCube Digital mulai dari paket mahasiswa hingga platinum untuk kebutuhan bisnis Anda" />
         </Helmet>
 
-        <div className="container">
-          {/* Category filter removed — sidebar provides navigation */}
+        <div className="container mx-auto px-4 md:px-6 max-w-6xl relative">
+          
+          {/* Header */}
+          <div className={`text-center max-w-3xl mx-auto mb-12 space-y-3 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}>
+            <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider text-[#126EFE] shadow-xs">
+              <FaGlobe className="w-3.5 h-3.5" />
+              <span>WEBSITE PREMIUM & SEO FRIENDLY</span>
+            </div>
 
-          <div className={`text-center max-w-3xl mx-auto mb-8 sm:mb-10 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}>
-            <h1 className="text-2xl sm:text-3xl font-heading font-semibold">Paket Website</h1>
-            <p className="text-slate-500 mt-3 sm:mt-4 text-base sm:text-lg">
-              Pilih paket sesuai kebutuhan — dari paket mahasiswa hingga solusi lengkap berskala enterprise.
+            <h1 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+              Paket Pembuatan <span className="bg-gradient-to-r from-[#126EFE] via-blue-600 to-[#FBA41C] bg-clip-text text-transparent">Website</span>
+            </h1>
+
+            <p className="text-slate-600 text-sm sm:text-base leading-relaxed">
+              Pilih paket sesuai kebutuhan bisnis Anda — dari paket mahasiswa, UMKM, hingga solusi lengkap skala enterprise.
             </p>
           </div>
 
-          <div className={`grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 mb-8 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-200'}`}>
-            {websitePricing.map((tier, index) => (
-              <div 
-                key={tier.id}
-                style={{ animationDelay: `${400 + (index * 100)}ms` }}
-                className={!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}
-              >
-                <Link to={`/paket/${tier.id}`} className="block h-full">
+          {/* Pricing Grid - Spacious 3 Columns Grid */}
+          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-200'}`}>
+            {websitePricing.map((tier, index) => {
+              const isBackendPkg = !!tier.id && !!tier.title;
+              const title = tier.title || tier.name || `Paket ${index + 1}`;
+              const price = tier.price || '';
+              const features = tier.features || [];
+              const includes = tier.includes || [];
+              const imageSrc = resolveImageSource(tier);
+              const hot = tier.hot || tier.popular || false;
+              const detailUrl = isBackendPkg ? `/paket/website/${tier.id}` : `/paket/${tier.id}`;
+
+              return (
+                <div key={tier.id || index} className="h-full">
                   <PricingCard 
-                    tier={tier.title}
-                    price={tier.price}
-                    features={tier.features}
+                    tier={title}
+                    price={price}
+                    features={features}
+                    includes={includes}
+                    imageSrc={imageSrc}
                     accent={tier.accent}
                     badge={tier.badge}
-                    popular={tier.popular}
+                    popular={hot}
+                    detailUrl={detailUrl}
+                    onOrder={() => {
+                      addItem({
+                        id: tier.id || `website-${index}`,
+                        name: title,
+                        price: typeof tier.rawPrice === 'number'
+                          ? tier.rawPrice
+                          : parseInt(String(tier.price || '0').replace(/\D/g, '')) || 0,
+                        quantity: 1,
+                        description: `Website - ${tier.badge || ''}`,
+                      });
+                    }}
                   />
-                </Link>
-              </div>
-            ))}
+                </div>
+              );
+            })}
           </div>
 
-          <div className={`mt-12 bg-white p-6 md:p-10 rounded-xl shadow-card ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-500'}`}>
-            <h2 className="text-xl font-heading font-semibold mb-6">Pertanyaan Umum tentang Paket Website</h2>
+          {/* FAQ Accordion Section */}
+          <div className="bg-white p-6 sm:p-10 rounded-3xl border border-slate-200/90 shadow-sm max-w-4xl mx-auto space-y-6">
+            <div className="flex items-center gap-2 text-slate-900 font-bold text-lg sm:text-xl border-b border-slate-100 pb-4">
+              <HiSparkles className="text-[#FBA41C] w-5 h-5" />
+              <h2>Pertanyaan Umum Tentang Paket Website</h2>
+            </div>
             
-            <div className="space-y-4">
-              <details className="group border-b pb-4">
-                <summary className="flex justify-between items-center font-medium cursor-pointer list-none">
-                  <span>Apa perbedaan utama antar paket?</span>
-                  <span className="transition group-open:rotate-180">
-                    <svg fill="none" height="24" width="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                  </span>
-                </summary>
-                <p className="text-slate-500 mt-4">
-                  Perbedaan utama antar paket mencakup jumlah halaman/konten, fitur tambahan seperti akses admin, domain premium, email bisnis, serta kompleksitas desain dan integrasi yang ditawarkan. Semakin tinggi tier paket, semakin banyak fitur dan fleksibilitas yang Anda dapatkan.
-                </p>
-              </details>
-              
-              <details className="group border-b pb-4">
-                <summary className="flex justify-between items-center font-medium cursor-pointer list-none">
-                  <span>Apakah ada biaya tersembunyi?</span>
-                  <span className="transition group-open:rotate-180">
-                    <svg fill="none" height="24" width="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                  </span>
-                </summary>
-                <p className="text-slate-500 mt-4">
-                  Tidak ada biaya tersembunyi. Harga yang tercantum sudah termasuk domain dan hosting untuk tahun pertama. Perpanjangan tahunan akan diinformasikan menjelang masa berakhir layanan.
-                </p>
-              </details>
-              
-              <details className="group border-b pb-4">
-                <summary className="flex justify-between items-center font-medium cursor-pointer list-none">
-                  <span>Bagaimana cara memulai?</span>
-                  <span className="transition group-open:rotate-180">
-                    <svg fill="none" height="24" width="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                  </span>
-                </summary>
-                <p className="text-slate-500 mt-4">
-                  Pilih paket yang sesuai dengan kebutuhan Anda, lalu klik "Detail Paket" untuk melihat informasi lengkap. Setelah itu, Anda dapat menghubungi kami melalui tombol "Pesan Paket Ini" atau melalui halaman kontak untuk memulai diskusi lebih lanjut.
-                </p>
-              </details>
-              
-              <details className="group">
-                <summary className="flex justify-between items-center font-medium cursor-pointer list-none">
-                  <span>Bagaimana jika kebutuhan saya khusus?</span>
-                  <span className="transition group-open:rotate-180">
-                    <svg fill="none" height="24" width="24" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">
-                      <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                  </span>
-                </summary>
-                <p className="text-slate-500 mt-4">
-                  Kami juga menyediakan layanan custom yang dapat disesuaikan dengan kebutuhan spesifik bisnis Anda. Silakan hubungi tim kami untuk konsultasi dan penawaran khusus.
-                </p>
-              </details>
+            <div className="space-y-3">
+              {faqs.map((faq, idx) => (
+                <details key={idx} className="group border border-slate-100 rounded-2xl p-4 transition-colors hover:bg-slate-50/80">
+                  <summary className="flex justify-between items-center font-bold text-slate-800 text-xs sm:text-sm cursor-pointer list-none">
+                    <span>{faq.q}</span>
+                    <FaChevronDown className="w-3.5 h-3.5 text-[#126EFE] transition-transform group-open:rotate-180 shrink-0 ml-2" />
+                  </summary>
+                  <p className="text-slate-600 text-xs sm:text-sm leading-relaxed mt-3 pt-3 border-t border-slate-100 font-medium">
+                    {faq.a}
+                  </p>
+                </details>
+              ))}
             </div>
           </div>
+
         </div>
       </div>
     </Layout>

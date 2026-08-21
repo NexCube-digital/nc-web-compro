@@ -1,5 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { HiSparkles } from 'react-icons/hi';
+import { FaCheckCircle } from 'react-icons/fa';
 
 export const OrderSuccess: React.FC = () => {
   const navigate = useNavigate();
@@ -11,12 +13,13 @@ export const OrderSuccess: React.FC = () => {
       <div className="max-w-md w-full text-center">
         {/* Animasi checkmark */}
         <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-green-200">
-          <svg className="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-          </svg>
+          <FaCheckCircle className="w-12 h-12 text-green-500" />
         </div>
 
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Pembayaran Berhasil! 🎉</h1>
+        <h1 className="text-3xl font-bold text-slate-900 mb-2 flex items-center justify-center gap-2">
+          <span>Pembayaran Berhasil!</span>
+          <HiSparkles className="w-8 h-8 text-amber-500" />
+        </h1>
         <p className="text-slate-600 mb-6">
           Terima kasih atas pesanan Anda. Tim kami akan segera menghubungi Anda untuk proses selanjutnya.
         </p>

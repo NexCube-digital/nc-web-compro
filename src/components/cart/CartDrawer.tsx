@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useCart } from '../../context/CartContext';
 import { useNavigate } from 'react-router-dom';
+import { FaShoppingCart, FaTimes, FaTrashAlt, FaPlus, FaMinus, FaArrowRight, FaShieldAlt } from 'react-icons/fa';
+import { HiSparkles } from 'react-icons/hi';
 
-// Global state untuk buka/tutup drawer (simpel tanpa library tambahan)
 let _setOpen: React.Dispatch<React.SetStateAction<boolean>> | null = null;
 export const openCartDrawer = () => _setOpen?.(true);
 export const closeCartDrawer = () => _setOpen?.(false);
@@ -12,7 +13,6 @@ export const CartDrawer: React.FC = () => {
   const { items, totalPrice, totalItems, removeItem, updateQuantity } = useCart();
   const navigate = useNavigate();
 
-  // Expose setter ke luar
   _setOpen = setIsOpen;
 
   const formatRupiah = (num: number) =>
@@ -25,120 +25,151 @@ export const CartDrawer: React.FC = () => {
 
   return (
     <>
-      {/* Overlay */}
+      {/* Backdrop Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-[60] transition-opacity"
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] transition-opacity duration-300"
           onClick={() => setIsOpen(false)}
         />
       )}
 
-      {/* Drawer */}
-      <div className={`fixed right-0 top-0 h-full w-full max-w-md bg-white z-[70] shadow-2xl transform transition-transform duration-300 flex flex-col ${
+      {/* Drawer Panel */}
+      <div className={`fixed right-0 top-0 h-full w-full max-w-md bg-white/95 backdrop-blur-xl z-[70] shadow-2xl border-l border-slate-200/80 transform transition-transform duration-300 ease-out flex flex-col ${
         isOpen ? 'translate-x-0' : 'translate-x-full'
       }`}>
+        
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-          <div className="flex items-center gap-2">
-            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <h2 className="text-lg font-bold text-slate-800">Keranjang</h2>
-            {totalItems > 0 && (
-              <span className="bg-blue-600 text-white text-xs font-bold rounded-full px-2 py-0.5">
-                {totalItems}
-              </span>
-            )}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#126EFE] to-blue-700 text-white flex items-center justify-center shadow-md shadow-blue-500/20">
+              <FaShoppingCart className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-black text-slate-900 tracking-tight">Keranjang Belanja</h2>
+                {totalItems > 0 && (
+                  <span className="bg-gradient-to-r from-[#FBA41C] to-amber-500 text-slate-900 text-[10px] font-black rounded-full px-2 py-0.5 shadow-xs">
+                    {totalItems} Paket
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 font-medium">NexCube Digital Solutions</p>
+            </div>
           </div>
+          
           <button
             onClick={() => setIsOpen(false)}
-            className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+            className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 flex items-center justify-center transition-colors cursor-pointer"
           >
-            <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <FaTimes className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        {/* Content Items List */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
           {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center gap-4">
-              <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center">
-                <svg className="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
+            <div className="flex flex-col items-center justify-center h-full text-center space-y-4 py-12">
+              <div className="w-20 h-20 bg-blue-50 border border-blue-100 rounded-3xl flex items-center justify-center text-[#126EFE] shadow-inner">
+                <FaShoppingCart className="w-8 h-8 text-blue-400" />
               </div>
-              <div>
-                <p className="font-semibold text-slate-700">Keranjang kosong</p>
-                <p className="text-sm text-slate-500 mt-1">Tambah paket untuk memulai pesanan</p>
+              <div className="space-y-1">
+                <h3 className="font-extrabold text-slate-900 text-base">Keranjang Belanja Kosong</h3>
+                <p className="text-xs text-slate-500 max-w-xs leading-relaxed">
+                  Pilih paket website, undangan, atau desain grafis pilihan Anda untuk memulai pesanan.
+                </p>
               </div>
-              <button
-                onClick={() => { setIsOpen(false); navigate('/paket'); }}
-                className="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
-              >
-                Lihat Paket
-              </button>
+              <div className="pt-2">
+                <button
+                  onClick={() => { setIsOpen(false); navigate('/paket'); }}
+                  className="px-6 py-2.5 bg-gradient-to-r from-[#126EFE] to-blue-700 text-white rounded-2xl text-xs font-extrabold shadow-md shadow-blue-500/20 hover:scale-105 transition-all cursor-pointer"
+                >
+                  Jelajahi Paket
+                </button>
+              </div>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {items.map((item) => (
-                <div key={item.id} className="flex gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                  {/* Icon */}
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                    {item.name.charAt(0)}
+                <div key={item.id} className="relative bg-white rounded-2xl p-4 border border-slate-200/90 shadow-sm hover:border-blue-200 transition-all space-y-3 group">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#126EFE] via-blue-600 to-[#FBA41C] text-white font-black text-sm flex items-center justify-center shrink-0 shadow-xs">
+                        {item.name.charAt(0)}
+                      </div>
+                      <div>
+                        <h4 className="font-extrabold text-slate-900 text-xs sm:text-sm leading-snug line-clamp-1">{item.name}</h4>
+                        {item.description && (
+                          <p className="text-[11px] text-slate-500 font-medium line-clamp-1">{item.description}</p>
+                        )}
+                        <p className="text-[#126EFE] font-black text-xs sm:text-sm mt-0.5">{formatRupiah(item.price)}</p>
+                      </div>
+                    </div>
+
+                    {/* Delete Item */}
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                      title="Hapus dari keranjang"
+                    >
+                      <FaTrashAlt className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-800 text-sm truncate">{item.name}</p>
-                    {item.description && (
-                      <p className="text-xs text-slate-500 truncate">{item.description}</p>
-                    )}
-                    <p className="text-blue-600 font-bold text-sm mt-1">{formatRupiah(item.price)}</p>
-                    {/* Quantity control */}
-                    <div className="flex items-center gap-2 mt-2">
+
+                  {/* Quantity controls */}
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+                    <span className="text-slate-500 font-medium text-[11px]">Jumlah Paket:</span>
+                    <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-2 py-1">
                       <button
                         onClick={() => item.quantity > 1 ? updateQuantity(item.id, item.quantity - 1) : removeItem(item.id)}
-                        className="w-7 h-7 rounded-full bg-slate-200 hover:bg-slate-300 flex items-center justify-center text-slate-700 font-bold text-sm transition-colors"
-                      >−</button>
-                      <span className="text-sm font-semibold text-slate-700 w-6 text-center">{item.quantity}</span>
+                        className="w-5 h-5 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 flex items-center justify-center text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+                      >
+                        <FaMinus className="w-2.5 h-2.5" />
+                      </button>
+                      <span className="text-xs font-black text-slate-900 w-5 text-center">{item.quantity}</span>
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="w-7 h-7 rounded-full bg-blue-100 hover:bg-blue-200 flex items-center justify-center text-blue-700 font-bold text-sm transition-colors"
-                      >+</button>
+                        className="w-5 h-5 rounded-lg bg-[#126EFE] hover:bg-blue-700 flex items-center justify-center text-white font-bold text-xs transition-colors cursor-pointer"
+                      >
+                        <FaPlus className="w-2.5 h-2.5" />
+                      </button>
                     </div>
                   </div>
-                  {/* Remove */}
-                  <button
-                    onClick={() => removeItem(item.id)}
-                    className="p-1.5 hover:bg-red-50 rounded-lg text-slate-400 hover:text-red-500 transition-colors self-start"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Footer - Total + CTA */}
+        {/* Footer Checkout Box */}
         {items.length > 0 && (
-          <div className="border-t border-slate-200 px-6 py-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-slate-600 font-medium">Total Pembayaran</span>
-              <span className="text-xl font-bold text-blue-600">{formatRupiah(totalPrice)}</span>
+          <div className="border-t border-slate-200/90 bg-white p-6 space-y-4 shadow-lg">
+            
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
+                <span>Total Item ({totalItems})</span>
+                <span>Termasuk Garansi Bug</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-extrabold text-slate-900">Total Tagihan</span>
+                <span className="text-xl font-black bg-gradient-to-r from-[#126EFE] to-blue-700 bg-clip-text text-transparent">
+                  {formatRupiah(totalPrice)}
+                </span>
+              </div>
             </div>
+
             <button
               onClick={handleCheckout}
-              className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-200"
+              className="w-full py-3.5 bg-gradient-to-r from-[#126EFE] via-blue-600 to-[#FBA41C] hover:from-[#0950be] hover:to-blue-800 text-white font-extrabold rounded-2xl shadow-lg shadow-blue-500/20 transition-all duration-200 flex items-center justify-center gap-2 text-xs sm:text-sm hover:scale-102 active:scale-98 cursor-pointer"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-              Lanjut ke Pembayaran
+              <span>Lanjut ke Pembayaran</span>
+              <FaArrowRight className="w-3.5 h-3.5" />
             </button>
+
+            <div className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 font-medium pt-1">
+              <FaShieldAlt className="w-3 h-3 text-emerald-500" />
+              <span>Pembayaran Aman & Terverifikasi Midtrans</span>
+            </div>
+
           </div>
         )}
       </div>

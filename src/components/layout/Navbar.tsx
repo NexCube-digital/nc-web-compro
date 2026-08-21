@@ -1,278 +1,364 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import LoginButton from './LoginButton';
-import apiClient from '../../services/api'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import { CartButton } from '../cart/CartButton';
-import { getImageUrl } from '../../services/api'
+import React, { useEffect, useRef, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
+import apiClient, { getImageUrl } from '../../services/api'
+import { CartButton } from '../cart/CartButton'
+import LoginButton from './LoginButton'
+import { FaGlobe, FaEnvelopeOpenText, FaPalette, FaBookOpen } from 'react-icons/fa'
+import { HiSparkles } from 'react-icons/hi'
 
-gsap.registerPlugin(ScrollTrigger)
+type NavLinkItem = {
+  name: string
+  href: string
+  icon: React.ReactNode
+}
 
 export const Navbar: React.FC = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userName, setUserName] = useState<string | null>(null);
-  const logoRef = useRef<HTMLDivElement>(null);
-  const profileRef = useRef<HTMLDivElement>(null);
-  const [isPaketOpen, setIsPaketOpen] = useState(false);
-  const paketRef = useRef<HTMLDivElement>(null);
-  const [userPhoto, setUserPhoto] = useState<string | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [isPaketOpen, setIsPaketOpen] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [userName, setUserName] = useState<string | null>(null)
+  const [userPhoto, setUserPhoto] = useState<string | null>(null)
+  const location = useLocation()
+  const navigate = useNavigate()
+  const profileRef = useRef<HTMLDivElement>(null)
+  const paketRef = useRef<HTMLDivElement>(null)
+
+  const navLinks: NavLinkItem[] = [
+    {
+      name: 'Beranda',
+      href: '/',
+      icon: (
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 11.5 12 4l9 7.5M5 10v10h14V10" />
+        </svg>
+      ),
+    },
+    {
+      name: 'Layanan',
+      href: '/services',
+      icon: (
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12m-6-6h12M7 4h10a2 2 0 012 2v12a2 2 0 01-2 2H7a2 2 0 01-2-2V6a2 2 0 012-2z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'Paket',
+      href: '/paket',
+      icon: (
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8 4-8-4m16 0-8-4-8 4m16 0v10l-8 4-8-4V7" />
+        </svg>
+      ),
+    },
+    
+    {
+      name: 'Tentang',
+      href: '/about',
+      icon: (
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'Kontak',
+      href: '/contact',
+      icon: (
+        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+      ),
+    },
+  ]
+
+  const paketItems = [
+    { 
+      name: 'Website Premium', 
+      desc: 'Solusi website kustom & responsif', 
+      href: '/paket/website',
+      icon: <FaGlobe className="w-4 h-4" />,
+      badgeBg: 'bg-blue-50 border border-blue-100',
+      iconColor: 'text-[#126EFE]'
+    },
+    { 
+      name: 'Undangan Digital', 
+      desc: 'E-invitation interaktif & elegan', 
+      href: '/paket/undangan-digital',
+      icon: <FaEnvelopeOpenText className="w-4 h-4" />,
+      badgeBg: 'bg-amber-50 border border-amber-100',
+      iconColor: 'text-[#FBA41C]'
+    },
+    { 
+      name: 'Desain Grafis', 
+      desc: 'Branding visual & aset promosi HD', 
+      href: '/paket/desain-grafis',
+      icon: <FaPalette className="w-4 h-4" />,
+      badgeBg: 'bg-rose-50 border border-rose-100',
+      iconColor: 'text-rose-600'
+    },
+    { 
+      name: 'Katalog Digital', 
+      desc: 'Menu QR online & katalog produk', 
+      href: '/paket/menu-katalog',
+      icon: <FaBookOpen className="w-4 h-4" />,
+      badgeBg: 'bg-emerald-50 border border-emerald-100',
+      iconColor: 'text-emerald-600'
+    },
+  ]
+
+  const isActive = (path: string) => {
+    if (path === '/') return location.pathname === '/'
+    return location.pathname === path || location.pathname.startsWith(`${path}/`)
+  }
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
-        setIsProfileOpen(false);
+        setIsProfileOpen(false)
       }
       if (paketRef.current && !paketRef.current.contains(event.target as Node)) {
-        setIsPaketOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    if (!logoRef.current) return;
-    gsap.to(logoRef.current, { scale: isScrolled ? 0.9 : 1, duration: 0.3, ease: 'power2.out' });
-    if (isScrolled) {
-      const logoGlow = logoRef.current.querySelector('.logo-glow');
-      if (logoGlow) {
-        gsap.to(logoGlow, {
-          opacity: 0.6, scale: 1.2, duration: 1.5, repeat: -1, yoyo: true, ease: 'sine.inOut'
-        });
+        setIsPaketOpen(false)
       }
     }
-  }, [isScrolled]);
 
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 10);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+    const handleScroll = () => setIsScrolled(window.scrollY > 12)
 
-  useEffect(() => { setIsMenuOpen(false); }, [location.pathname]);
+    document.addEventListener('mousedown', handleClickOutside)
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll()
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const token = localStorage.getItem('authToken');
-    const userStr = localStorage.getItem('user');
-    setIsAuthenticated(!!token);
-    if (userStr) {
-      try {
-        const u = JSON.parse(userStr);
-        setUserName(u?.name || u?.email || null);
-        setUserPhoto(u?.photo || null);
-      } catch (e) { 
-        setUserName(null); 
-         setUserPhoto(null);
-      }
-    } else { 
-      setUserName(null); 
-      setUserPhoto(null);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      window.removeEventListener('scroll', handleScroll)
     }
-  }, [location.pathname]);
+  }, [])
+
+  useEffect(() => {
+    setIsMenuOpen(false)
+    setIsProfileOpen(false)
+    setIsPaketOpen(false)
+  }, [location.pathname])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const token = localStorage.getItem('authToken')
+    const userStr = localStorage.getItem('user')
+    setIsAuthenticated(!!token)
+
+    if (!userStr) {
+      setUserName(null)
+      setUserPhoto(null)
+      return
+    }
+
+    try {
+      const user = JSON.parse(userStr)
+      setUserName(user?.name || user?.email || null)
+      setUserPhoto(user?.photo || null)
+    } catch {
+      setUserName(null)
+      setUserPhoto(null)
+    }
+  }, [location.pathname])
 
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('user');
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('user')
     }
-    apiClient.setToken(null);
-    setIsAuthenticated(false);
-    setUserName(null);
-    setIsProfileOpen(false);
-    navigate('/');
-  };
+
+    apiClient.setToken(null)
+    setIsAuthenticated(false)
+    setUserName(null)
+    setUserPhoto(null)
+    setIsProfileOpen(false)
+    navigate('/')
+  }
 
   const getUserInitials = () => {
-    if (!userName) return 'U';
-    const names = userName.split(' ');
-    if (names.length >= 2) return `${names[0][0]}${names[1][0]}`.toUpperCase();
-    return userName.substring(0, 2).toUpperCase();
-  };
+    if (!userName) return 'U'
 
-  const navLinks = [
-    {
-      name: 'Home', href: '/',
-      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-3m0 0l7-4 7 4M5 9v10a1 1 0 001 1h12a1 1 0 001-1V9m-9 16l4-4m0 0l4 4m-4-4V5" /></svg>
-    },
-    {
-      name: 'Paket', href: '/paket',
-      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-    },
-    {
-      name: 'Tentang', href: '/about',
-      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
-    },
-    {
-      name: 'Kontak', href: '/contact',
-      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+    const names = userName.split(' ').filter(Boolean)
+    if (names.length >= 2) {
+      return `${names[0][0]}${names[1][0]}`.toUpperCase()
     }
-  ];
 
-  const paketItems = [
-    { name: "Website", desc: "Cocok untuk UMKM baru", href: "/paket", color: "from-blue-500 to-cyan-500" },
-    // { name: "Paket Digital", desc: "Untuk bisnis berkembang", href: "/paket/digital", color: "from-purple-500 to-pink-500" },
-    { name: "Sertifikasi", desc: "Solusi lengkap perusahaan", href: "/paket/affiliate", color: "from-orange-500 to-red-500" }
-  ];
-
-  const isActive = (path: string) => location.pathname === path;
-  const isPaketActive = () => location.pathname.startsWith("/paket");
-  const isDropdownItemActive = (href: string) => location.pathname === href;
-  const getPaketInitials = (name: string) => name ? name.charAt(0).toUpperCase() : "P";
+    return userName.substring(0, 2).toUpperCase()
+  }
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      isScrolled
-        ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-slate-200'
-        : 'bg-white/90 backdrop-blur-sm border-b border-slate-100'
-    }`}>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 md:h-18">
-
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
-            <div className="relative" ref={logoRef}>
-              <img
-                src="/images/NexCube-full.png"
-                alt="NexCube Digital"
-                className="h-9 md:h-10 w-auto transition-transform duration-200 group-hover:scale-105"
-              />
-            </div>
-            <div className="hidden sm:block">
-              <div className="text-base md:text-lg font-bold text-slate-900 tracking-tight">NexCube</div>
-              <div className="text-xs text-slate-600 font-medium">Digital</div>
+    <nav className="fixed inset-x-0 top-3 z-50 px-3 sm:px-4">
+      <div
+        className={`mx-auto max-w-7xl rounded-[28px] border backdrop-blur-xl transition-all duration-300 ${
+          isScrolled
+            ? 'border-blue-200/70 bg-white/90 shadow-[0_22px_50px_rgba(18,110,254,0.12)]'
+            : 'border-blue-100/60 bg-white/84 shadow-[0_16px_40px_rgba(15,23,42,0.10)]'
+        }`}
+      >
+        <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-5 lg:px-6">
+          <Link to="/" className="flex items-center gap-3 shrink-0">
+            <img src="/images/NexCube-full.png" alt="NexCube Digital" className="h-9 w-auto sm:h-10" />
+            <div className="hidden xl:block">
+              <div className="text-sm font-semibold tracking-tight text-slate-900">NexCube Digital</div>
+              <div className="text-[11px] text-slate-500">Modern digital solutions</div>
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-2">
-            {navLinks.map((link) => {
-              if (link.name === "Paket") {
-                return (
-                  <div key={link.name} className="relative" ref={paketRef}>
-                    <button
-                      onClick={() => setIsPaketOpen(!isPaketOpen)}
-                      className={`relative px-4 py-2 text-sm font-semibold transition-all duration-200 rounded-lg flex items-center gap-2 ${
-                        isPaketActive() ? "text-blue-600 bg-blue-50" : "text-slate-700 hover:text-slate-900 hover:bg-slate-50"
-                      }`}
-                    >
-                      <span className="w-5 h-5">{link.icon}</span>
-                      <span>Paket</span>
-                      <svg className={`w-4 h-4 transition-transform ${isPaketOpen ? "rotate-180" : ""}`}
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                    <div className={`absolute left-0 mt-3 w-72 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden transition-all duration-200 origin-top ${
-                      isPaketOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
-                    }`}>
-                      <div className="p-2">
-                        {paketItems.map((paket) => {
-                          const active = isDropdownItemActive(paket.href);
-                          return (
-                            <Link key={paket.name} to={paket.href} onClick={() => setIsPaketOpen(false)}
-                              className={`group flex items-start gap-3 p-3 rounded-lg transition-all duration-200 ${
-                                active ? "bg-blue-50 border border-blue-200 shadow-sm" : "hover:bg-slate-50"
-                              }`}
-                            >
-                              <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${paket.color} flex items-center justify-center text-white font-bold shadow`}>
-                                {getPaketInitials(paket.name)}
-                              </div>
-                              <div className="flex-1">
-                                <div className={`font-semibold ${active ? "text-blue-600" : "text-slate-800 group-hover:text-blue-600"}`}>
-                                  {paket.name}
+          <div className="hidden lg:flex flex-1 justify-center">
+            <div className="flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50/80 p-1 shadow-inner shadow-blue-100/70">
+              {navLinks.map((link) => {
+                if (link.name === 'Paket') {
+                  return (
+                    <div key={link.name} className="relative" ref={paketRef}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsPaketOpen((current) => !current)
+                          setIsProfileOpen(false)
+                        }}
+                        className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                          isActive('/paket') ? 'bg-[#126EFE] text-white shadow-sm' : 'text-slate-700 hover:bg-white hover:text-slate-950'
+                        }`}
+                      >
+                        {link.icon}
+                        <span>{link.name}</span>
+                        <svg className={`h-4 w-4 transition-transform duration-200 ${isPaketOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+
+                      <div
+                        className={`absolute left-1/2 top-full mt-3 w-[24rem] -translate-x-1/2 overflow-hidden rounded-3xl border border-slate-200/90 bg-white/95 backdrop-blur-xl shadow-2xl shadow-blue-500/10 transition-all duration-200 z-50 ${
+                          isPaketOpen ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0 pointer-events-none'
+                        }`}
+                      >
+                        {/* Header Banner inside Dropdown */}
+                        <div className="bg-gradient-to-r from-blue-50 via-indigo-50/50 to-amber-50/30 px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <HiSparkles className="w-4 h-4 text-[#FBA41C]" />
+                            <span className="text-xs font-black uppercase tracking-wider text-slate-800">Paket Layanan Digital</span>
+                          </div>
+                          <Link 
+                            to="/paket" 
+                            onClick={() => setIsPaketOpen(false)}
+                            className="text-[11px] font-bold text-[#126EFE] hover:underline"
+                          >
+                            Lihat Semua →
+                          </Link>
+                        </div>
+
+                        <div className="p-2 space-y-1">
+                          {paketItems.map((paket) => {
+                            const active = location.pathname === paket.href
+                            return (
+                              <Link
+                                key={paket.name}
+                                to={paket.href}
+                                onClick={() => setIsPaketOpen(false)}
+                                className={`flex items-center gap-3.5 rounded-2xl p-3 transition-all duration-200 border ${
+                                  active 
+                                    ? 'bg-blue-50/90 border-blue-100 text-[#126EFE] shadow-xs' 
+                                    : 'border-transparent text-slate-700 hover:bg-slate-50 hover:border-slate-100'
+                                }`}
+                              >
+                                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${paket.badgeBg} ${paket.iconColor} shadow-2xs`}>
+                                  {paket.icon}
                                 </div>
-                                <div className="text-xs text-slate-500">{paket.desc}</div>
-                              </div>
-                              {active && <div className="w-2 h-2 mt-2 bg-blue-600 rounded-full"></div>}
-                            </Link>
-                          );
-                        })}
+                                <div className="min-w-0 flex-1">
+                                  <div className="text-sm font-black text-slate-900 leading-tight group-hover:text-[#126EFE] transition-colors">
+                                    {paket.name}
+                                  </div>
+                                  <div className="mt-0.5 text-xs text-slate-500 font-medium truncate">
+                                    {paket.desc}
+                                  </div>
+                                </div>
+                              </Link>
+                            )
+                          })}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              }
-              return (
-                <Link key={link.name} to={link.href}
-                  className={`relative px-4 py-2 text-sm font-semibold transition-all duration-200 rounded-lg flex items-center gap-2 ${
-                    isActive(link.href) ? "text-blue-600 bg-blue-50" : "text-slate-700 hover:text-slate-900 hover:bg-slate-50"
-                  }`}
-                >
-                  <span className="w-5 h-5">{link.icon}</span>
-                  <span>{link.name}</span>
-                </Link>
-              );
-            })}
+                  )
+                }
+
+                return (
+                  <Link
+                    key={link.name}
+                    to={link.href}
+                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                      isActive(link.href) ? 'bg-[#126EFE] text-white shadow-sm' : 'text-slate-700 hover:bg-white hover:text-slate-950'
+                    }`}
+                  >
+                    {link.icon}
+                    <span>{link.name}</span>
+                  </Link>
+                )
+              })}
+            </div>
           </div>
 
-          {/* ✅ Desktop Right: CartButton + Login/Profile */}
           <div className="hidden lg:flex items-center gap-3">
-            <CartButton /> {/* ✅ cart di desktop */}
+            <CartButton />
+
             {isAuthenticated ? (
               <div className="relative" ref={profileRef}>
                 <button
-                  onClick={() => setIsProfileOpen(!isProfileOpen)}
-                  className="flex items-center gap-2 p-1.5 pr-3 rounded-lg hover:bg-slate-100 transition-all duration-200 group"
+                  type="button"
+                  onClick={() => {
+                    setIsProfileOpen((current) => !current)
+                    setIsPaketOpen(false)
+                  }}
+                  className="flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50/80 px-2.5 py-1.5 text-slate-700 transition-colors hover:bg-emerald-100/80"
                 >
-                  <div className="relative">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-orange-500 flex items-center justify-center text-white font-bold text-sm shadow-md group-hover:shadow-lg transition-shadow">
-                      {userPhoto ? (
-                        <img src={getImageUrl(userPhoto)} alt={userName || ''} className="w-full h-full object-cover" />
-                      ) : (
-                        getUserInitials()
-                      )}
-                    </div>
-                    <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                  <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 text-sm font-semibold text-white shadow-md">
+                    {userPhoto ? <img src={getImageUrl(userPhoto)} alt={userName || ''} className="h-full w-full object-cover" /> : getUserInitials()}
                   </div>
-                  <div className="text-left hidden xl:block">
-                    <div className="text-sm font-semibold text-slate-800 leading-tight">
-                      {userName ? userName.split(' ')[0] : 'User'}
-                    </div>
-                    <div className="text-xs text-slate-500">Admin</div>
+                  <div className="hidden xl:block text-left">
+                    <div className="text-sm font-medium leading-tight text-slate-900">{userName ? userName.split(' ')[0] : 'User'}</div>
+                    <div className="text-[11px] text-slate-500">Administrator</div>
                   </div>
-                  <svg className={`w-4 h-4 text-slate-600 transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`}
-                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`h-4 w-4 text-slate-500 transition-transform duration-200 ${isProfileOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
 
-                {/* Profile Dropdown */}
-                <div className={`absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden transition-all duration-200 origin-top-right ${
-                  isProfileOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
-                }`}>
-                  <div className="px-4 py-3 bg-gradient-to-br from-blue-50 to-orange-50 border-b border-slate-200">
+                <div
+                  className={`absolute right-0 mt-3 w-72 overflow-hidden rounded-3xl border border-emerald-100 bg-white shadow-[0_24px_60px_rgba(15,23,42,0.14)] transition-all duration-200 ${
+                    isProfileOpen ? 'translate-y-0 opacity-100' : '-translate-y-2 opacity-0 pointer-events-none'
+                  }`}
+                >
+                  <div className="border-b border-emerald-100 px-4 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-orange-500 flex items-center justify-center text-white font-bold text-base shadow-md">
-                        {userPhoto ? (
-                          <img src={getImageUrl(userPhoto)} alt={userName || ''} className="w-full h-full object-cover" />
-                        ) : (
-                          getUserInitials()
-                        )}
+                      <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-emerald-500 to-cyan-500 text-base font-semibold text-white">
+                        {userPhoto ? <img src={getImageUrl(userPhoto)} alt={userName || ''} className="h-full w-full object-cover" /> : getUserInitials()}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-bold text-slate-800 truncate">{userName || 'User'}</div>
-                        <div className="text-xs text-slate-600">Administrator</div>
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-semibold text-slate-900">{userName || 'User'}</div>
+                        <div className="text-xs text-slate-500">Administrator</div>
                       </div>
                     </div>
                   </div>
-                  <div className="py-2">
-                    <Link to="/dashboard" onClick={() => setIsProfileOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="p-2">
+                    <Link
+                      to="/dashboard"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-700 transition-colors hover:bg-emerald-50 hover:text-slate-950"
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
                       </svg>
                       <span>Dashboard</span>
                     </Link>
-                    <button onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="mt-1 flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700"
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                       </svg>
                       <span>Logout</span>
@@ -285,16 +371,16 @@ export const Navbar: React.FC = () => {
             )}
           </div>
 
-          {/* ✅ Mobile Right: CartButton + Hamburger */}
-          <div className="lg:hidden flex items-center gap-1">
-            <CartButton /> {/* ✅ cart di mobile */}
+          <div className="flex items-center gap-2 lg:hidden">
+            <CartButton />
             <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+              type="button"
+              onClick={() => setIsMenuOpen((current) => !current)}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-blue-100 bg-blue-50/80 text-[#126EFE] hover:bg-[#126EFE] hover:text-white transition-colors"
               aria-label="Toggle menu"
               aria-expanded={isMenuOpen}
             >
-              <svg className="w-6 h-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                 {isMenuOpen ? (
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 ) : (
@@ -309,31 +395,89 @@ export const Navbar: React.FC = () => {
           </div>
         </div>
 
-        {/* Mobile Menu Dropdown */}
-        <div className={`lg:hidden absolute top-full left-0 right-0 bg-white border-b border-slate-200 shadow-lg transition-all duration-200 ${
-          isMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'
-        }`}>
-          <div className="px-4 py-4 space-y-1 max-h-[calc(100vh-4rem)] overflow-y-auto">
-            {navLinks.map((link) => (
-              <Link key={link.name} to={link.href} onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 text-base font-semibold rounded-lg transition-colors ${
-                  isActive(link.href) ? 'text-blue-600 bg-blue-50' : 'text-slate-700 hover:bg-slate-50'
-                }`}
-              >
-                <span className="w-5 h-5">{link.icon}</span>
-                <span>{link.name}</span>
-              </Link>
-            ))}
+        <div
+          className={`lg:hidden overflow-hidden border-t border-white/10 transition-all duration-200 ${
+            isMenuOpen ? 'max-h-[34rem] opacity-100' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <div className="space-y-2 px-3 py-3">
+            {navLinks.map((link) => {
+              if (link.name === 'Paket') {
+                return (
+                  <div key={link.name} className="rounded-3xl border border-white/10 bg-white/5 p-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsPaketOpen((current) => !current)}
+                      className={`flex w-full items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium transition-colors ${
+                        isActive('/paket') ? 'bg-emerald-50 text-slate-950' : 'text-slate-700 hover:bg-emerald-50 hover:text-slate-950'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        {link.icon}
+                        <span>{link.name}</span>
+                      </span>
+                      <svg className={`h-4 w-4 transition-transform ${isPaketOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
 
-            <div className="pt-4 mt-4 border-t border-slate-200 space-y-2">
+                    <div className={`grid gap-2 overflow-hidden transition-all duration-200 ${isPaketOpen ? 'mt-2 max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                      {paketItems.map((paket) => (
+                        <Link
+                          key={paket.name}
+                          to={paket.href}
+                          onClick={() => setIsMenuOpen(false)}
+                          className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3 text-sm text-slate-700 transition-colors hover:bg-blue-50/50"
+                        >
+                          <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${paket.badgeBg} ${paket.iconColor}`}>
+                            {paket.icon}
+                          </div>
+                          <div>
+                            <div className="font-bold text-slate-900 leading-tight">{paket.name}</div>
+                            <div className="mt-0.5 text-xs text-slate-500 font-medium">{paket.desc}</div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )
+              }
+
+              return (
+                <Link
+                  key={link.name}
+                  to={link.href}
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`flex items-center gap-3 rounded-3xl border px-4 py-3 text-sm font-medium transition-colors ${
+                    isActive(link.href)
+                      ? 'border-emerald-100 bg-emerald-50 text-slate-950'
+                      : 'border-emerald-100 bg-white text-slate-700 hover:bg-emerald-50 hover:text-slate-950'
+                  }`}
+                >
+                  {link.icon}
+                  <span>{link.name}</span>
+                </Link>
+              )
+            })}
+
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-2">
               {isAuthenticated ? (
                 <>
-                  <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}
-                    className="block w-full text-center px-4 py-3 rounded-lg font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors">
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="block rounded-2xl px-4 py-3 text-center text-sm font-medium text-slate-700 transition-colors hover:bg-emerald-50 hover:text-slate-950"
+                  >
                     Dashboard
                   </Link>
-                  <button onClick={() => { setIsMenuOpen(false); handleLogout(); }}
-                    className="w-full px-4 py-3 rounded-lg font-medium border border-slate-300 text-slate-700 hover:bg-slate-50 transition-colors">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMenuOpen(false)
+                      handleLogout()
+                    }}
+                    className="mt-2 block w-full rounded-2xl px-4 py-3 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 hover:text-rose-700"
+                  >
                     Logout
                   </button>
                 </>
@@ -345,8 +489,7 @@ export const Navbar: React.FC = () => {
             </div>
           </div>
         </div>
-
       </div>
     </nav>
-  );
-};
+  )
+}

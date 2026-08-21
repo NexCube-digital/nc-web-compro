@@ -14,8 +14,7 @@ const Contact          = lazy(() => import('./pages/Contact').then(m => ({ defau
 const About            = lazy(() => import('./pages/About').then(m => ({ default: m.About })))
 const PaketDetail      = lazy(() => import('./pages/PaketDetail').then(m => ({ default: m.PaketDetail })))
 const Paket            = lazy(() => import('./pages/Paket').then(m => ({ default: m.Paket })))
-// const PaketDigital     = lazy(() => import('./pages/PaketDigital').then(m => ({ default: m.PaketDigital })))
-const PaketAffiliate      = lazy(() => import('./pages/PaketAffiliate').then(m => ({ default: m.PaketAffiliate })))
+const PaketAffiliate   = lazy(() => import('./pages/PaketAffiliate').then(m => ({ default: m.PaketAffiliate })))
 const Website          = lazy(() => import('./paket/Website').then(m => ({ default: m.Website })))
 const UndanganDigital  = lazy(() => import('./paket/UndanganDigital').then(m => ({ default: m.UndanganDigital })))
 const DesainGrafis     = lazy(() => import('./paket/DesainGrafis').then(m => ({ default: m.DesainGrafis })))
@@ -136,7 +135,6 @@ export const routes = [
       { path: 'about',                    element: <About /> },
       { path: 'ulasan',                    element: <CreateUlasan /> },
       { path: 'paket',                    element: <Paket /> },
-      // { path: 'paket/digital',            element: <PaketDigital /> },
       { path: 'paket/affiliate',             element: <PaketAffiliate /> },
       { path: 'paket/website',            element: <Website /> },
       { path: 'paket/undangan-digital',   element: <UndanganDigital /> },

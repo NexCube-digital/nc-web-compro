@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { FaClock, FaInfoCircle } from 'react-icons/fa';
 
 export const OrderPending: React.FC = () => {
   const navigate = useNavigate();
@@ -10,12 +11,13 @@ export const OrderPending: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-yellow-50 to-white flex items-center justify-center px-4 pt-16">
       <div className="max-w-md w-full text-center">
         <div className="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-yellow-200">
-          <svg className="w-12 h-12 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <FaClock className="w-12 h-12 text-yellow-500 animate-spin" style={{ animationDuration: '4s' }} />
         </div>
 
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Menunggu Pembayaran ⏳</h1>
+        <h1 className="text-3xl font-bold text-slate-900 mb-2 flex items-center justify-center gap-2">
+          <span>Menunggu Pembayaran</span>
+          <FaClock className="w-7 h-7 text-yellow-500" />
+        </h1>
         <p className="text-slate-600 mb-6">
           Pesanan Anda sedang menunggu konfirmasi pembayaran. Selesaikan pembayaran sebelum batas waktu habis.
         </p>
@@ -36,7 +38,10 @@ export const OrderPending: React.FC = () => {
         )}
 
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6 text-left">
-          <p className="text-sm text-yellow-800 font-medium">ℹ️ Info Penting</p>
+          <p className="text-sm text-yellow-800 font-medium flex items-center gap-2">
+            <FaInfoCircle className="text-yellow-600" />
+            <span>Info Penting</span>
+          </p>
           <p className="text-xs text-yellow-700 mt-1">
             Status pesanan akan diperbarui otomatis setelah pembayaran dikonfirmasi. Cek email Anda untuk instruksi pembayaran.
           </p>
