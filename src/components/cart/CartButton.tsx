@@ -8,11 +8,11 @@ export const CartButton: React.FC = () => {
   return (
     <button
       onClick={openCartDrawer}
-      className="relative p-2.5 rounded-lg hover:bg-slate-100 transition-colors group"
+      className="relative flex h-10 w-10 items-center justify-center rounded-full border border-blue-100 bg-blue-50/80 hover:bg-[#126EFE] text-[#126EFE] hover:text-white transition-all duration-200 shadow-xs group cursor-pointer"
       aria-label="Buka keranjang"
     >
       <svg
-        className="w-6 h-6 text-slate-700 group-hover:text-blue-600 transition-colors"
+        className="w-4 h-4 text-[#126EFE] group-hover:text-white transition-colors"
         fill="none" stroke="currentColor" viewBox="0 0 24 24"
       >
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -20,7 +20,7 @@ export const CartButton: React.FC = () => {
         />
       </svg>
       {totalItems > 0 && (
-        <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-blue-600 text-white text-xs font-bold rounded-full flex items-center justify-center px-1 shadow-md animate-bounce-once">
+        <span className="absolute -top-1 -right-1 min-w-[18px] h-4 bg-[#FBA41C] text-slate-900 text-[10px] font-extrabold rounded-full flex items-center justify-center px-1 shadow-xs">
           {totalItems > 99 ? '99+' : totalItems}
         </span>
       )}

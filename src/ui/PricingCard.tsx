@@ -231,119 +231,108 @@ export const PricingCard: React.FC<{
   
   return (
     <div 
-      className={`group relative rounded-xl p-3 sm:p-4 mt-2 sm:mt-3 transition-all duration-500 h-full flex flex-col backdrop-blur-sm
-        ${styles.bg} ${styles.border} ${styles.glow}
-        ${isHovered ? '-translate-y-1 scale-[1.01]' : ''} 
-        ${popular ? 'ring-2 sm:ring-4 ring-blue-500/30 ring-offset-1 sm:ring-offset-2' : ''}`}
+      className={`group relative rounded-3xl p-5 sm:p-6 transition-all duration-300 h-full flex flex-col backdrop-blur-sm overflow-hidden bg-white border border-slate-200/90 shadow-lg shadow-blue-500/5 hover:shadow-2xl hover:border-blue-300 hover:-translate-y-1.5
+        ${popular ? 'ring-2 ring-[#126EFE] ring-offset-2' : ''}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Shimmer */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transform rounded-2xl pointer-events-none" />
+      {/* Top Accent Gradient Line */}
+      <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#126EFE] via-blue-600 to-[#FBA41C]" />
+
+      {/* Shimmer Effect */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transform pointer-events-none" />
       
-      {/* Corner Glow */}
-      <div className={`absolute -top-16 -right-16 w-32 h-32 rounded-full blur-3xl opacity-20 group-hover:opacity-30 transition-all duration-700 pointer-events-none ${
-        isSpecialTier ? 'bg-purple-500' :
-        isGoldTier ? 'bg-amber-400' :
-        isSilverTier ? 'bg-slate-400' :
-        isBronzeTier ? 'bg-orange-400' :
-        'bg-emerald-400'
-      }`} />
-      
-      {/* Popular Badge */}
-      {popular && (
-        <div className="absolute -top-4 sm:-top-5 left-1/2 transform -translate-x-1/2 z-30 w-max">
-          <div className="relative px-3 sm:px-5 py-1.5 sm:py-2 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white text-[10px] sm:text-xs font-black rounded-full shadow-xl sm:shadow-2xl shadow-purple-500/50 flex items-center gap-1 sm:gap-2 animate-pulse whitespace-nowrap">
-            <HiSparkles className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-            <span className="tracking-wide sm:tracking-wider">PALING POPULER</span>
-            <HiSparkles className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
-          </div>
+      <div className="relative z-10 flex flex-col h-full pt-1">
+        
+        {/* Top Badge Header Row */}
+        <div className="flex items-center justify-between gap-2 mb-3 min-h-[26px]">
+          {popular ? (
+            <div className="px-3 py-1 bg-gradient-to-r from-[#126EFE] to-[#FBA41C] text-white text-[10px] font-black rounded-full shadow-xs flex items-center gap-1 uppercase tracking-wider">
+              <HiSparkles className="w-3 h-3 text-white" />
+              <span>PALING POPULER</span>
+            </div>
+          ) : badge ? (
+            <div className="px-3 py-1 bg-blue-50 border border-blue-100 text-[#126EFE] text-[10px] font-bold rounded-full uppercase tracking-wider">
+              {badge}
+            </div>
+          ) : <div />}
         </div>
-      )}
-      
-      {/* Custom Badge */}
-      {badge && !popular && (
-        <div className="absolute -top-3 sm:-top-4 left-1/2 transform -translate-x-1/2 z-30 w-max">
-          <div className={`px-3 sm:px-4 py-1 sm:py-1.5 bg-gradient-to-r ${styles.badgeGradient} text-white text-[10px] sm:text-xs font-bold rounded-full shadow-md uppercase tracking-wide sm:tracking-widest whitespace-nowrap`}>
-            {badge}
-          </div>
-        </div>
-      )}
-      
-      <div className="relative z-10 flex flex-col h-full">
-        <button type="button" onClick={openFeaturesModal} className="flex flex-col h-full text-left">
-          <div className="rounded-lg overflow-hidden border border-white/20 mb-3 h-20 sm:h-28 bg-slate-100">
-            <img src={resolvedImageSrc} alt={tier} className="w-full h-full object-cover" />
+
+        <button type="button" onClick={openFeaturesModal} className="flex flex-col h-full text-left cursor-pointer">
+          
+          {/* Image Showcase - object-contain to prevent text clipping */}
+          <div className="rounded-2xl overflow-hidden border border-slate-100 mb-4 h-36 bg-gradient-to-br from-slate-50 via-white to-slate-100 p-3 flex items-center justify-center group-hover:scale-102 transition-transform duration-300">
+            <img src={resolvedImageSrc} alt={tier} className="w-full h-full object-contain drop-shadow-xs" />
           </div>
 
-          <div className="mb-2">
-            <h3 className={`text-sm sm:text-base font-bold ${textColor} tracking-tight leading-snug`}>
+          <div className="mb-3">
+            <h3 className="text-xl font-black text-slate-900 tracking-tight leading-snug">
               {tier}
             </h3>
             {isGoldTier && (
-              <div className={`flex items-center gap-1 ${styles.accentColor} mt-1`}>
-                <HiSparkles className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span className="text-xs font-bold">Premium Choice</span>
+              <div className="flex items-center gap-1 text-[#FBA41C] mt-0.5">
+                <HiSparkles className="w-3.5 h-3.5" />
+                <span className="text-xs font-bold">Pilihan Favorit</span>
               </div>
             )}
           </div>
 
-          <div className="mt-auto space-y-2">
-            <div className="flex items-end gap-2 flex-wrap">
+          <div className="mt-auto space-y-3 pt-2">
+            <div className="flex items-baseline gap-2 flex-wrap">
+              <span className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-[#126EFE] to-blue-700 bg-clip-text text-transparent tracking-tight leading-none">
+                Rp{priceValue}
+              </span>
               {hasComparePrice && (
-                <span className={`text-xs sm:text-sm font-semibold ${secondaryTextColor} line-through opacity-80`}>
+                <span className="text-xs font-semibold text-slate-400 line-through">
                   Rp{comparePriceValue}
                 </span>
               )}
-              <span className={`text-xl sm:text-2xl font-black ${textColor} tracking-tight leading-none`}>
-                Rp{priceValue}
-              </span>
             </div>
 
             {priceDesc && (
-              <span className={`block text-xs sm:text-sm ${secondaryTextColor} font-medium`}>
+              <span className="block text-xs text-slate-500 font-medium">
                 {priceDesc}
               </span>
             )}
 
-            <div className={`space-y-1 text-[11px] sm:text-xs ${secondaryTextColor}`}>
+            <div className="space-y-1.5 text-xs text-slate-500 pt-2 border-t border-slate-100">
               <div className="flex items-center gap-1.5">
-                <HiStar className="w-4 h-4 text-accent" />
-                <span className="font-semibold">5.0</span>
-                <span>• {featureCount}+ fitur</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <HiMapPin className="w-4 h-4 text-accent" />
-                <span className="truncate">NexCube Digital</span>
+                <HiStar className="w-4 h-4 text-[#FBA41C]" />
+                <span className="font-bold text-slate-700">5.0 Rating</span>
+                <span>• {featureCount}+ Fitur Unggulan</span>
               </div>
             </div>
           </div>
         </button>
 
-        <button
-          type="button"
-          onClick={() => {
-            if (!justAdded) {
-              handleAddToCart()
-            }
-            openCartDrawer()
-          }}
-          className={`mt-3 w-full py-2 rounded-lg text-sm sm:text-base font-bold transition-all duration-300 border ${
-            justAdded
-              ? 'bg-accent text-white border-accent'
-              : 'bg-white/80 text-accent border-accent/40 hover:bg-accent/5 hover:border-accent/70'
-          }`}
-        >
-          {justAdded ? 'Lihat Keranjang' : '+ Keranjang'}
-        </button>
+        {/* Buttons Row */}
+        <div className="mt-5 space-y-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (!justAdded) {
+                handleAddToCart()
+              }
+              openCartDrawer()
+            }}
+            className={`w-full py-3 rounded-2xl text-xs sm:text-sm font-extrabold transition-all duration-200 shadow-md cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap ${
+              justAdded
+                ? 'bg-emerald-600 text-white shadow-emerald-500/20'
+                : 'bg-gradient-to-r from-[#126EFE] to-blue-700 hover:from-[#0950be] hover:to-blue-800 text-white shadow-blue-500/20 hover:scale-102 active:scale-98'
+            }`}
+          >
+            <HiShoppingCart className="w-4 h-4 shrink-0" />
+            <span>{justAdded ? 'Lihat di Keranjang' : 'Tambah Ke Keranjang'}</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={openFeaturesModal}
-          className="mt-1.5 text-[11px] sm:text-xs font-semibold text-slate-600 hover:text-primary transition-colors"
-        >
-          {`Lihat Semua Fitur (${featureCount})`}
-        </button>
+          <button
+            type="button"
+            onClick={openFeaturesModal}
+            className="w-full py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-[#126EFE] hover:bg-blue-50/60 border border-slate-200 transition-colors cursor-pointer"
+          >
+            {`Lihat Detail Fitur (${featureCount})`}
+          </button>
+        </div>
       </div>
 
       {showFeaturesModal && typeof document !== 'undefined' && createPortal(

@@ -358,14 +358,6 @@ export const PaketDetail: React.FC = () => {
         </Helmet>
 
         <div className="container">
-          <Link to="/paket/website" className={`inline-flex items-center text-accent mb-6 sm:mb-8 hover:underline transition-all group text-sm sm:text-base ${!isLoaded ? 'opacity-0' : 'animate-fadeInLeft'}`}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 group-hover:-translate-x-1 transition-transform">
-              <line x1="19" y1="12" x2="5" y2="12"></line>
-              <polyline points="12 19 5 12 12 5"></polyline>
-            </svg>
-            Kembali ke Daftar Paket
-          </Link>
-
           <div className={`rounded-xl shadow-premium p-6 sm:p-8 md:p-12 ${paket.color} ${!isLoaded ? 'opacity-0' : 'animate-scaleIn delay-200'}`}>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 mb-8 sm:mb-12 pb-6 sm:pb-8 border-b border-slate-200/30">
               <div>

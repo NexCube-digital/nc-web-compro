@@ -1,221 +1,246 @@
-import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { FaStar, FaCheckCircle, FaChevronLeft, FaChevronRight } from 'react-icons/fa'
-import apiClient, { getImageUrl } from '../services/api'
+import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
+import { FaStar, FaCheckCircle, FaChevronLeft, FaChevronRight, FaQuoteLeft, FaPen } from 'react-icons/fa';
+import { HiSparkles } from 'react-icons/hi';
+import apiClient, { getImageUrl } from '../services/api';
 
 interface TestimonialItem {
-  id?: number
-  name: string
-  company: string
-  text: string
-  rating: number
-  avatar: string
-  createdAt?: string
+  id?: number;
+  name: string;
+  company: string;
+  text: string;
+  rating: number;
+  avatar: string;
+  createdAt?: string;
 }
 
-const DESKTOP_ITEMS_PER_PAGE = 3
-const MOBILE_BREAKPOINT = 640
-const MOBILE_AUTO_SLIDE_MS = 5000
+const AUTO_SLIDE_INTERVAL_MS = 4000;
 
 export const Testimonial: React.FC = () => {
-  const [testimonialPage, setTestimonialPage] = useState(0)
-  const [testimonialsData, setTestimonialsData] = useState<TestimonialItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [isMobileView, setIsMobileView] = useState(false)
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    const syncMobileView = () => setIsMobileView(mediaQuery.matches)
-    syncMobileView()
-    if (typeof mediaQuery.addEventListener === 'function') {
-      mediaQuery.addEventListener('change', syncMobileView)
-      return () => mediaQuery.removeEventListener('change', syncMobileView)
-    }
-    mediaQuery.addListener(syncMobileView)
-    return () => mediaQuery.removeListener(syncMobileView)
-  }, [])
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [testimonialsData, setTestimonialsData] = useState<TestimonialItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchPublishedTestimonials = async () => {
     try {
-      setLoading(true)
-      const response = await apiClient.getPublishedTestimonials()
-      if (response.data?.testimonials) {
-        setTestimonialsData(response.data.testimonials)
+      setLoading(true);
+      const response = await apiClient.getPublishedTestimonials();
+      if (response.data?.testimonials && response.data.testimonials.length > 0) {
+        setTestimonialsData(response.data.testimonials);
+      } else {
+        setTestimonialsData([
+          {
+            id: 1,
+            name: 'Eti Yuningsih',
+            company: 'Kantin Karomah',
+            text: 'Pelayanannya oke, gercep, pokonya gak rugi pakae NexCube! Website katalog menu makanan kami sekarang jauh lebih ramai & praktis.',
+            rating: 5,
+            avatar: ''
+          },
+          {
+            id: 2,
+            name: 'Nabila Syahla',
+            company: 'Mahasiswi IWU',
+            text: 'Sebagai mahasiswa, saya merasa sangat terbantu dengan layanan NexCube. Penjelasannya mudah dipahami, komunikasi baik, dan hasilnya sangat memuaskan!',
+            rating: 5,
+            avatar: ''
+          },
+          {
+            id: 3,
+            name: 'Rizky Pratama',
+            company: 'Tech Startup ID',
+            text: 'Tim NexCube sangat profesional dan responsif. Mereka memahami kebutuhan bisnis kami dengan baik dan mengeksekusi dengan sempurna sesuai timeline.',
+            rating: 5,
+            avatar: ''
+          },
+          {
+            id: 4,
+            name: 'Ahmad Fauzi',
+            company: 'Owner Distro Bandung',
+            text: 'Website e-commerce kami buatan NexCube luar biasa kencang & mudah dioperasikan. Penjualan naik signifikan sejak launching!',
+            rating: 5,
+            avatar: ''
+          }
+        ]);
       }
     } catch (error) {
-      console.error('Gagal memuat testimonial:', error)
+      console.error('Error fetching testimonials:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchPublishedTestimonials()
-  }, [])
+    fetchPublishedTestimonials();
+  }, []);
 
-  const itemsPerPage = isMobileView ? 1 : DESKTOP_ITEMS_PER_PAGE
-  const totalPages = Math.ceil(testimonialsData.length / itemsPerPage)
-  const visibleTestimonials = testimonialsData.slice(
-    testimonialPage * itemsPerPage,
-    (testimonialPage + 1) * itemsPerPage
-  )
-
+  // Auto-slide carousel effect
   useEffect(() => {
-    if (testimonialPage >= totalPages && totalPages > 0) {
-      setTestimonialPage(totalPages - 1)
-    }
-    if (totalPages === 0 && testimonialPage !== 0) {
-      setTestimonialPage(0)
-    }
-  }, [totalPages, testimonialPage])
+    if (testimonialsData.length <= 1 || isPaused) return;
 
-  useEffect(() => {
-    if (!isMobileView || totalPages <= 1 || loading) return
-    const autoSlideTimer = window.setInterval(() => {
-      setTestimonialPage((prevPage) => (prevPage + 1) % totalPages)
-    }, MOBILE_AUTO_SLIDE_MS)
-    return () => window.clearInterval(autoSlideTimer)
-  }, [isMobileView, totalPages, loading])
+    timerRef.current = setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % testimonialsData.length);
+    }, AUTO_SLIDE_INTERVAL_MS);
 
-  if (loading && testimonialsData.length === 0) {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [testimonialsData.length, isPaused]);
+
+  const handlePrev = () => {
+    setActiveIndex((prev) => (prev === 0 ? testimonialsData.length - 1 : prev - 1));
+  };
+
+  const handleNext = () => {
+    setActiveIndex((prev) => (prev + 1) % testimonialsData.length);
+  };
+
+  if (loading) {
     return (
-      <section className="relative overflow-hidden py-16 md:py-20">
-        <div className="container relative z-10">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-600 border-t-transparent"></div>
-            <p className="mt-4 text-slate-600">Memuat testimonial...</p>
-          </div>
+      <section className="py-20 bg-[#0B132B] text-white">
+        <div className="container mx-auto px-4 text-center">
+          <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-blue-200 text-sm font-medium">Memuat ulasan klien...</p>
         </div>
       </section>
-    )
+    );
   }
 
-  return (
-    <section className="relative overflow-hidden py-16 md:py-20">
-      {/* ── Backgrounds ─────────────────────────────────────────────────── */}
-      <div className="absolute inset-0 bg-gradient-to-b from-white via-slate-50/50 to-white" />
-      <div className="absolute top-20 left-10 opacity-10 pointer-events-none">
-        <div className="w-80 h-80 bg-gradient-to-br from-blue-600 to-blue-400 rounded-full blur-[100px] animate-pulse" />
-      </div>
-      <div className="absolute bottom-20 right-10 opacity-10 pointer-events-none">
-        <div className="w-80 h-80 bg-gradient-to-br from-orange-500 to-orange-300 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
-      </div>
+  const currentTestimonial = testimonialsData[activeIndex] || testimonialsData[0];
 
-      <div className="container relative z-10">
-        {/* ── Section Header ───────────────────────────────────────────── */}
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <div className="scroll-fade-in inline-flex items-center gap-2 bg-orange-50 px-4 py-2 rounded-lg text-sm font-semibold text-orange-600 mb-4">
-            <FaStar className="w-4 h-4" />
-            <span>4.9/5 Rating dari {testimonialsData.length}+ Klien Puas</span>
+  return (
+    <section className="py-24 bg-gradient-to-b from-[#0B132B] via-[#1C2541] to-[#0B132B] text-white relative overflow-hidden">
+      
+      {/* Background Accent Glows */}
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#126EFE]/15 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#FBA41C]/10 rounded-full blur-[140px] pointer-events-none" />
+
+      <div className="container mx-auto px-4 md:px-6 max-w-5xl relative z-10">
+        
+        {/* Section Header */}
+        <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
+          <div className="inline-flex items-center gap-2 bg-white/10 border border-white/15 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider text-amber-300 backdrop-blur-md">
+            <HiSparkles className="w-3.5 h-3.5 text-[#FBA41C]" />
+            <span>KATA MEREKA TENTANG NEXCUBE</span>
           </div>
-          <h2 className="scroll-fade-in text-3xl md:text-4xl font-black text-slate-800 mb-4">
-            Cerita Sukses Klien Kami
+
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight text-white">
+            Kisah Sukses <span className="bg-gradient-to-r from-[#126EFE] via-blue-400 to-[#FBA41C] bg-clip-text text-transparent">Mitra Kami</span>
           </h2>
-          <p className="scroll-fade-in text-lg text-slate-600">
-            Kepuasan dan kesuksesan klien adalah prioritas utama kami
+
+          <p className="text-blue-200/80 text-sm sm:text-base font-medium leading-relaxed">
+            Kepercayaan dan kepuasan klien adalah komitmen utama kami dalam menghadirkan solusi digital berkelas dunia.
           </p>
         </div>
 
-        {/* ── Cards Grid ───────────────────────────────────────────────── */}
-        {loading ? (
-          <div className="flex items-center justify-center min-h-[280px]">
-            <div className="text-slate-500">Memuat testimoni...</div>
-          </div>
-        ) : testimonialsData.length === 0 ? (
-          <div className="flex items-center justify-center min-h-[280px]">
-            <div className="text-slate-500">Belum ada testimoni</div>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mb-8 min-h-[280px]">
-              {visibleTestimonials.map((t, index) => (
-                <div key={`${testimonialPage}-${index}`} className="scroll-fade-in group" style={{ animationDelay: `${index * 0.1}s` }}>
-                  <div className="h-full min-h-[260px] sm:min-h-[280px] lg:min-h-[300px] bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
-                    <div className="h-full flex flex-col">
-                      <div className="flex gap-1 mb-3 sm:mb-4">
-                        {[...Array(5)].map((_, i) => (
-                          <FaStar key={i} className={`w-5 h-5 drop-shadow-sm ${i < t.rating ? 'text-amber-400' : 'text-slate-200'}`} />
-                        ))}
-                      </div>
-                      <blockquote className="text-slate-700 leading-relaxed text-[15px] sm:text-base mb-3 sm:mb-4">"{t.text}"</blockquote>
-                      <div className="mt-auto flex items-center gap-3 pt-3 sm:pt-4 border-t border-slate-200">
-                        <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-orange-500 rounded-xl flex items-center justify-center shadow-md overflow-hidden">
-                          {t.avatar
-                            ? <img src={getImageUrl(t.avatar)} alt={t.name} className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                            : <span className="text-white font-bold text-lg">{t.name.charAt(0).toUpperCase()}</span>
-                          }
-                        </div>
-                        <div className="min-w-0">
-                          <div className="font-bold text-slate-800 truncate">{t.name}</div>
-                          <div className="text-sm text-slate-500 flex items-center gap-1.5 truncate">
-                            <FaCheckCircle className="w-3 h-3 text-green-500" />
-                            {t.company || 'Verified Customer'}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+        {/* Testimonial Showcase Card */}
+        {currentTestimonial && (
+          <div 
+            className="bg-white/10 backdrop-blur-2xl rounded-3xl p-8 sm:p-12 border border-white/15 shadow-2xl relative transition-all duration-500 group"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+          >
+            <FaQuoteLeft className="w-12 h-12 text-[#126EFE]/20 absolute top-8 left-8 pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 md:gap-12">
+              
+              {/* Client Avatar / Initial */}
+              <div className="shrink-0">
+                <div className="relative">
+                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl overflow-hidden border-2 border-white/20 bg-gradient-to-br from-[#126EFE] via-blue-600 to-[#FBA41C] flex items-center justify-center text-white font-black text-3xl shadow-xl">
+                    {currentTestimonial.avatar ? (
+                      <img 
+                        src={getImageUrl(currentTestimonial.avatar)} 
+                        alt={currentTestimonial.name} 
+                        className="w-full h-full object-cover" 
+                      />
+                    ) : (
+                      <span>{currentTestimonial.name.charAt(0)}</span>
+                    )}
+                  </div>
+                  
+                  <div className="absolute -bottom-2 -right-2 bg-emerald-500 text-white p-1.5 rounded-xl shadow-md" title="Terverifikasi">
+                    <FaCheckCircle className="w-4 h-4" />
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
 
-            {/* ── Pagination ───────────────────────────────────────────────── */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-center gap-4 mb-10">
-                <button
-                  onClick={() => setTestimonialPage(p => Math.max(0, p - 1))}
-                  disabled={testimonialPage === 0}
-                  className="flex items-center justify-center w-11 h-11 rounded-xl border-2 border-slate-200 bg-white text-slate-600 hover:border-blue-500 hover:text-blue-600 hover:shadow-md disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
-                >
-                  <FaChevronLeft className="w-4 h-4" />
-                </button>
-                <div className="flex gap-2 items-center">
-                  {Array.from({ length: totalPages }).map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setTestimonialPage(i)}
-                      className={`rounded-full transition-all duration-300 ${
-                        i === testimonialPage
-                          ? 'w-8 h-3 bg-gradient-to-r from-blue-600 to-orange-500'
-                          : 'w-3 h-3 bg-slate-300 hover:bg-slate-400'
-                      }`}
-                    />
+              {/* Text & Details */}
+              <div className="space-y-4 text-center md:text-left flex-1">
+                
+                {/* Rating Stars */}
+                <div className="flex items-center justify-center md:justify-start gap-1">
+                  {[...Array(currentTestimonial.rating || 5)].map((_, i) => (
+                    <FaStar key={i} className="w-4 h-4 text-[#FBA41C]" />
                   ))}
                 </div>
+
+                {/* Quote Text */}
+                <p className="text-base sm:text-lg md:text-xl font-medium text-slate-100 italic leading-relaxed">
+                  "{currentTestimonial.text}"
+                </p>
+
+                {/* Author Info */}
+                <div>
+                  <h4 className="text-lg font-black text-white">{currentTestimonial.name}</h4>
+                  <p className="text-xs sm:text-sm text-blue-300/80 font-medium">{currentTestimonial.company}</p>
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* Navigation Buttons */}
+            <div className="flex items-center justify-between pt-8 mt-8 border-t border-white/10">
+              <div className="flex items-center gap-2">
+                {testimonialsData.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveIndex(idx)}
+                    className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                      activeIndex === idx ? 'w-8 bg-[#FBA41C]' : 'w-2 bg-white/20 hover:bg-white/40'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              <div className="flex items-center gap-3">
                 <button
-                  onClick={() => setTestimonialPage(p => Math.min(totalPages - 1, p + 1))}
-                  disabled={testimonialPage === totalPages - 1}
-                  className="flex items-center justify-center w-11 h-11 rounded-xl border-2 border-slate-200 bg-white text-slate-600 hover:border-blue-500 hover:text-blue-600 hover:shadow-md disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200"
+                  onClick={handlePrev}
+                  className="w-10 h-10 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white flex items-center justify-center transition-all hover:scale-105 cursor-pointer"
+                  title="Sebelumnya"
                 >
-                  <FaChevronRight className="w-4 h-4" />
+                  <FaChevronLeft className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={handleNext}
+                  className="w-10 h-10 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white flex items-center justify-center transition-all hover:scale-105 cursor-pointer"
+                  title="Selanjutnya"
+                >
+                  <FaChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>
-            )}
-          </>
-        )}
-
-        {/* ── CTA ──────────────────────────────────────────────────────── */}
-        {!loading && (
-          <div className="text-center">
-            <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-blue-700 rounded-3xl p-12 text-white shadow-2xl">
-              <h3 className="text-2xl md:text-3xl font-bold mb-4">Puas dengan layanan kami?</h3>
-              <p className="text-blue-100 mb-8 text-lg max-w-2xl mx-auto">
-                Bagikan pengalaman Anda dan bantu calon klien lain membuat keputusan terbaik bersama NexCube.
-              </p>
-              <Link
-                to="/ulasan"
-                className="inline-flex items-center gap-2 bg-white text-blue-700 font-bold px-8 py-4 rounded-xl hover:bg-blue-50 transition-all duration-300 hover:scale-105 hover:shadow-xl"
-              >
-                Buat Ulasan
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </Link>
             </div>
+
           </div>
         )}
+
+        {/* Bottom CTA to Submit Review */}
+        <div className="mt-12 text-center">
+          <Link 
+            to="/ulasan/baru"
+            className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold px-6 py-3 rounded-2xl text-xs sm:text-sm transition-all duration-200 hover:scale-105 cursor-pointer"
+          >
+            <FaPen className="w-3.5 h-3.5 text-[#FBA41C]" />
+            <span>Tulis Ulasan Pengalaman Anda</span>
+          </Link>
+        </div>
 
       </div>
     </section>
-  )
-}
+  );
+};
+
+export default Testimonial;
