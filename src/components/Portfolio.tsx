@@ -101,14 +101,14 @@ export const Portfolio: React.FC = () => {
 
   // ── Render: Loading ─────────────────────────────────────────────────────────
   const renderLoading = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8 mb-8 sm:mb-12">
+    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-8 mb-8 sm:mb-12">
       {[...Array(6)].map((_, i) => (
-        <div key={i} className="rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs bg-white border border-slate-100 animate-pulse">
+        <div key={i} className="rounded-xl sm:rounded-3xl overflow-hidden shadow-xs bg-white border border-slate-100 animate-pulse">
           <div className="aspect-video bg-slate-200" />
-          <div className="p-4 sm:p-6 space-y-2.5">
-            <div className="h-4 bg-slate-200 rounded w-3/4" />
-            <div className="h-3 bg-slate-200 rounded w-full" />
-            <div className="h-3 bg-slate-200 rounded w-2/3" />
+          <div className="p-3 sm:p-6 space-y-2">
+            <div className="h-3 sm:h-4 bg-slate-200 rounded w-3/4" />
+            <div className="h-2.5 sm:h-3 bg-slate-200 rounded w-full" />
+            <div className="h-2.5 sm:h-3 bg-slate-200 rounded w-2/3" />
           </div>
         </div>
       ))}
@@ -124,7 +124,7 @@ export const Portfolio: React.FC = () => {
       <p className="text-slate-600 text-xs sm:text-base mb-4 sm:mb-6 font-medium">{error}</p>
       <button
         onClick={() => window.location.reload()}
-        className="bg-[#126EFE] hover:bg-[#0950be] text-white px-5 py-2 rounded-xl font-bold text-xs sm:text-sm shadow-md transition-colors"
+        className="bg-[#126EFE] hover:bg-[#0950be] text-white px-5 py-2 rounded-xl font-bold text-xs sm:text-sm shadow-md transition-colors cursor-pointer"
       >
         Coba Lagi
       </button>
@@ -145,9 +145,9 @@ export const Portfolio: React.FC = () => {
     </div>
   );
 
-  // ── Render: Grid ────────────────────────────────────────────────────────────
+  // ── Render: Grid (2 Columns / 2 Banjar on Mobile) ───────────────────────────
   const renderGrid = () => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12">
+    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-6 lg:gap-8 mb-8 sm:mb-12">
       {filteredItems.map((item, index) => {
         const techList: string[] = item.technologies
           ? item.technologies.split(',').map((t) => t.trim())
@@ -163,7 +163,7 @@ export const Portfolio: React.FC = () => {
             target={item.link ? '_blank' : '_self'}
             rel="noopener noreferrer"
             style={{ animationDelay: `${400 + index * 100}ms` }}
-            className={`group relative overflow-hidden rounded-2xl sm:rounded-3xl shadow-xs hover:shadow-2xl transition-all duration-500 bg-white border border-slate-200/90 hover:border-blue-300 hover:-translate-y-1.5 flex flex-col justify-between ${
+            className={`group relative overflow-hidden rounded-xl sm:rounded-3xl shadow-xs hover:shadow-2xl transition-all duration-500 bg-white border border-slate-200/90 hover:border-blue-300 hover:-translate-y-1.5 flex flex-col justify-between ${
               !isLoaded ? 'opacity-0' : 'animate-fadeInUp'
             }`}
           >
@@ -184,58 +184,58 @@ export const Portfolio: React.FC = () => {
               )}
 
               {/* Hover overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-4 sm:p-6">
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/30 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-end p-3 sm:p-6">
                 <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                  <div className="flex flex-wrap gap-1.5 mb-2.5">
+                  <div className="flex flex-wrap gap-1 mb-2">
                     {techList.slice(0, 3).map((tech, idx) => (
                       <span
                         key={idx}
-                        className="text-[10px] sm:text-[11px] bg-white/20 backdrop-blur-md text-white px-2 py-0.5 rounded-full font-semibold border border-white/20"
+                        className="text-[9px] sm:text-[11px] bg-white/20 backdrop-blur-md text-white px-1.5 py-0.5 rounded-full font-semibold border border-white/20"
                       >
                         {tech}
                       </span>
                     ))}
                   </div>
-                  <div className="inline-flex items-center gap-2 text-white font-bold px-3.5 py-1.5 rounded-xl bg-[#126EFE] text-xs shadow-md">
+                  <div className="inline-flex items-center gap-1.5 text-white font-bold px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-lg sm:rounded-xl bg-[#126EFE] text-[10px] sm:text-xs shadow-md">
                     <span>Lihat Proyek Live</span>
-                    <FaExternalLinkAlt className="w-3 h-3" />
+                    <FaExternalLinkAlt className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                   </div>
                 </div>
               </div>
 
               {/* Category badge */}
-              <div className={`absolute top-3 left-3 bg-gradient-to-r ${gradient} text-white px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-bold shadow-md flex items-center gap-1.5`}>
+              <div className={`absolute top-2 left-2 sm:top-3 sm:left-3 bg-gradient-to-r ${gradient} text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[8px] sm:text-xs font-bold shadow-md flex items-center gap-1 truncate max-w-[80%]`}>
                 <CategoryIcon category={item.category} />
-                <span>{categoryLabel}</span>
+                <span className="truncate">{categoryLabel}</span>
               </div>
 
               {/* Featured badge */}
               {item.featured && (
-                <div className="absolute top-3 right-3 bg-[#FBA41C] text-slate-900 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-xs font-extrabold shadow-md flex items-center gap-1">
-                  <FaStar className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-900" />
+                <div className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-[#FBA41C] text-slate-900 px-1.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[8px] sm:text-xs font-extrabold shadow-md flex items-center gap-1">
+                  <FaStar className="w-2 h-2 sm:w-3 sm:h-3 text-amber-900" />
                   <span>Featured</span>
                 </div>
               )}
             </div>
 
             {/* Content */}
-            <div className="p-4 sm:p-6 space-y-2.5 sm:space-y-3 flex-1 flex flex-col justify-between">
+            <div className="p-3 sm:p-6 space-y-1.5 sm:space-y-3 flex-1 flex flex-col justify-between">
               <div>
-                <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-1 group-hover:text-[#126EFE] transition-colors line-clamp-1 sm:line-clamp-2">
+                <h3 className="text-xs sm:text-lg font-bold text-slate-900 mb-0.5 sm:mb-1 group-hover:text-[#126EFE] transition-colors truncate">
                   {item.title}
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 leading-relaxed">
+                <p className="text-[11px] sm:text-sm text-slate-600 leading-snug">
                   {item.description}
                 </p>
               </div>
 
-              <div className="flex items-center justify-between pt-2.5 sm:pt-3 border-t border-slate-100">
-                <span className="text-[10px] sm:text-xs font-bold text-[#126EFE] bg-blue-50 border border-blue-100 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full">
+              <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-slate-100">
+                <span className="text-[9px] sm:text-xs font-bold text-[#126EFE] bg-blue-50 border border-blue-100 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full truncate max-w-[65%]">
                   {item.client || 'Klien NexCube'}
                 </span>
-                <div className="flex items-center gap-1 text-slate-400 group-hover:text-[#126EFE] transition-colors text-xs font-semibold">
+                <div className="flex items-center gap-1 text-slate-400 group-hover:text-[#126EFE] transition-colors text-[10px] sm:text-xs font-semibold shrink-0">
                   <span>Detail</span>
-                  <FaArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                  <FaArrowRight className="w-2.5 h-2.5 sm:w-3 sm:h-3 group-hover:translate-x-1 transition-transform" />
                 </div>
               </div>
             </div>
