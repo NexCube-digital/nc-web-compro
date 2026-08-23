@@ -167,22 +167,6 @@ export const TestimonialTable: React.FC<TestimonialTableProps> = ({
                 {/* Aksi */}
                 <td className="px-6 py-4">
                   <div className="flex items-center justify-center gap-1.5">
-                    {/* Toggle Published/Hidden */}
-                    <button
-                      onClick={() => onToggleStatus(item.id)}
-                      title={item.status === 'published' ? 'Sembunyikan' : 'Publikasikan'}
-                      className={`p-2 rounded-lg transition-colors ${
-                        item.status === 'published'
-                          ? 'text-green-600 hover:bg-green-50 hover:text-green-800'
-                          : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
-                      }`}
-                    >
-                      {item.status === 'published' ? (
-                        <Eye className="w-4 h-4" />
-                      ) : (
-                        <EyeOff className="w-4 h-4" />
-                      )}
-                    </button>
 
                     {/* Edit */}
                     <button

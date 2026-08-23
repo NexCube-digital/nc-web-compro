@@ -170,21 +170,6 @@ export const FormTestimonial: React.FC<FormTestimonialProps> = ({
             </div>
           </div>
 
-          {/* Status */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-            <select
-              name="status"
-              value={formData.status}
-              onChange={onChange}
-              disabled={loading}
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow text-sm"
-            >
-              <option value="published">✅ Published — Tampil di halaman publik</option>
-              <option value="pending">⏳ Pending — Menunggu review</option>
-              <option value="hidden">🙈 Hidden — Disembunyikan</option>
-            </select>
-          </div>
         </div>
 
         {/* ── RIGHT COLUMN ─────────────────────────────────────────────────── */}

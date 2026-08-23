@@ -3,6 +3,7 @@ import { Invoice } from '../../../services/api'
 import { ConfirmDialog } from '../../../components/ConfirmDialog'
 import { Toast, ToastType } from '../../../components/Toast'
 import { InvoicePDFModal } from '../../../components/InvoicePDFModal'
+import { KwitansiPreview } from '../../../components/KwitansiPreview'
 
 interface InvoiceTableProps {
   invoices: Invoice[];
@@ -243,165 +244,15 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
 
       {/* PDF Modal */}
       {selectedInvoice && (
-        <>
-          <div className="hidden invoice-pdf-content">
-            <div className="max-w-2xl mx-auto bg-white border border-slate-300 rounded-lg p-8 text-slate-900">
-              {/* Header Logo & Title */}
-              <div className="flex justify-between items-start mb-8">
-                <div>
-                  <h1 className="text-3xl font-bold text-blue-600">NEXCUBE</h1>
-                  <p className="text-xs text-slate-600 mt-1">nexcubedigital@gmail.com</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-slate-700">KWITANSI</p>
-                  <p className="text-xs text-slate-600 mt-1">No: {selectedInvoice.invoiceNumber}</p>
-                </div>
-              </div>
-
-              <hr className="my-6 border-slate-300" />
-
-              {/* Invoice To */}
-              <div className="mb-8">
-                <p className="text-xs font-bold text-slate-700 mb-2">Ditujukan kepada:</p>
-                <p className="font-bold text-slate-900">{selectedInvoice.clientName}</p>
-                <p className="text-sm text-slate-600">{selectedInvoice.clientEmail}</p>
-              </div>
-
-              {/* Dates */}
-              <div className="grid grid-cols-2 gap-4 mb-8 text-sm">
-                <div>
-                  <p className="font-bold text-slate-700">Tanggal Invoice</p>
-                  <p className="text-slate-600">{new Date(selectedInvoice.issueDate).toLocaleDateString('id-ID')}</p>
-                </div>
-                <div>
-                  <p className="font-bold text-slate-700">Jatuh Tempo</p>
-                  <p className="text-slate-600">{new Date(selectedInvoice.dueDate).toLocaleDateString('id-ID')}</p>
-                </div>
-              </div>
-
-              {/* Details Table */}
-              <div className="mb-8">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-blue-600 text-white">
-                      <th className="px-4 py-3 text-left font-bold">No</th>
-                      <th className="px-4 py-3 text-left font-bold">Deskripsi</th>
-                      <th className="px-4 py-3 text-center font-bold">Jumlah</th>
-                      <th className="px-4 py-3 text-right font-bold">Harga</th>
-                      <th className="px-4 py-3 text-right font-bold">Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(() => {
-                      let breakdown: any[] = []
-                      if (selectedInvoice.priceBreakdown) {
-                        try {
-                          const parsed = JSON.parse(selectedInvoice.priceBreakdown)
-                          if (Array.isArray(parsed)) {
-                            breakdown = parsed
-                          }
-                        } catch (err) {
-                          console.warn('Failed to parse price breakdown:', err)
-                        }
-                      }
-                      if (breakdown.length === 0 && selectedInvoice.amount) {
-                        breakdown = [
-                          {
-                            id: 'fallback',
-                            description: selectedInvoice.description || selectedInvoice.service || 'Item',
-                            price: selectedInvoice.amount,
-                          },
-                        ]
-                      }
-                      return Array.isArray(breakdown) && breakdown.length > 0 ? (
-                        breakdown.map((item, index) => (
-                          <tr key={item.id || index} className="border-b border-slate-200 hover:bg-slate-50">
-                            <td className="px-4 py-3 text-slate-900">{index + 1}</td>
-                            <td className="px-4 py-3 text-slate-900">{item.description || '-'}</td>
-                            <td className="px-4 py-3 text-center text-slate-600">1</td>
-                            <td className="px-4 py-3 text-right text-slate-600">
-                              Rp {Math.round(item.price || 0).toLocaleString('id-ID')}
-                            </td>
-                            <td className="px-4 py-3 text-right font-semibold text-slate-900">
-                              Rp {Math.round(item.price || 0).toLocaleString('id-ID')}
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr className="border-b border-slate-200">
-                          <td colSpan={5} className="px-4 py-3 text-center text-slate-600">
-                            No price breakdown available
-                          </td>
-                        </tr>
-                      )
-                    })()}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Totals */}
-              <div className="flex justify-end mb-8">
-                <div className="w-64">
-                  <div className="flex justify-between mb-2 text-sm">
-                    <span className="text-slate-700">Sub Total:</span>
-                    <span className="font-semibold">Rp {Math.round(selectedInvoice.amount).toLocaleString('id-ID')}</span>
-                  </div>
-                  <div className="flex justify-between mb-4 text-sm pb-2 border-b border-slate-300">
-                    <span className="text-slate-700">PPN 10%:</span>
-                    <span className="font-semibold">Rp 0</span>
-                  </div>
-                  <div className="flex justify-between bg-blue-100 px-4 py-2 rounded font-bold text-lg">
-                    <span>TOTAL KESELURUHAN:</span>
-                    <span>Rp {Math.round(selectedInvoice.amount).toLocaleString('id-ID')}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Payment Method */}
-              <div className="mb-8 pb-8 border-b border-slate-300">
-                <p className="font-bold text-slate-700 mb-3">METODE PEMBAYARAN:</p>
-                <div className="text-sm text-slate-600">
-                  <p className="mb-1"><strong>Bank Name:</strong> BCA - a.n Aslam Mushtafa Karim</p>
-                  <p><strong>Account Number:</strong> 8320476420</p>
-                </div>
-              </div>
-
-              {/* Footer */}
-              <div className="text-xs text-slate-600">
-                <p className="mb-4">
-                  <strong>Syarat dan Ketentuan:</strong><br />
-                  Silakan lakukan pembayaran dalam waktu 30 hari setelah menerima invoice ini. Akan dikenakan bunga 10% per bulan untuk keterlambatan pembayaran.
-                </p>
-                <div className="grid grid-cols-2 gap-8 mt-8">
-                  <div>
-                    <p className="mb-8">Terimakasih telah berbisnis dengan kami!</p>
-                    <div>
-                      <p className="font-bold text-slate-900">Bela Amelia Nuralfiani</p>
-                      <p className="font-bold text-slate-900">Administrator</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-slate-500">
-                      🏢 Jln. Bukit Jarian dm Vl.30, kel.<br />
-                      Hegarmanah, Kec. Cidolog, Kota<br />
-                      Bandung, Jawa Barat
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <InvoicePDFModal
-            invoice={selectedInvoice}
-            isOpen={showPDFModal}
-            onClose={() => {
-              setShowPDFModal(false)
-              setSelectedInvoice(null)
-            }}
-            onDownload={handleDownloadPDF}
-          />
-        </>
+        <InvoicePDFModal
+          invoice={selectedInvoice}
+          isOpen={showPDFModal}
+          onClose={() => {
+            setShowPDFModal(false)
+            setSelectedInvoice(null)
+          }}
+          onDownload={handleDownloadPDF}
+        />
       )}
 
       {/* Toast Notification */}

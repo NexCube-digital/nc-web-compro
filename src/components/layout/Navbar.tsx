@@ -24,6 +24,7 @@ export const Navbar: React.FC = () => {
   const navigate = useNavigate()
   const profileRef = useRef<HTMLDivElement>(null)
   const paketRef = useRef<HTMLDivElement>(null)
+  const mobilePaketRef = useRef<HTMLDivElement>(null)
 
   const navLinks: NavLinkItem[] = [
     {
@@ -116,10 +117,13 @@ export const Navbar: React.FC = () => {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+      const target = event.target as Node
+      if (profileRef.current && !profileRef.current.contains(target)) {
         setIsProfileOpen(false)
       }
-      if (paketRef.current && !paketRef.current.contains(event.target as Node)) {
+      const isInsideDesktop = paketRef.current && paketRef.current.contains(target)
+      const isInsideMobile = mobilePaketRef.current && mobilePaketRef.current.contains(target)
+      if (!isInsideDesktop && !isInsideMobile) {
         setIsPaketOpen(false)
       }
     }
@@ -258,8 +262,11 @@ export const Navbar: React.FC = () => {
                               <Link
                                 key={paket.name}
                                 to={paket.href}
-                                onClick={() => setIsPaketOpen(false)}
-                                className={`flex items-center gap-3.5 rounded-2xl p-3 transition-all duration-200 border ${
+                                onClick={() => {
+                                  setIsPaketOpen(false)
+                                  setIsMenuOpen(false)
+                                }}
+                                className={`flex items-center gap-3.5 w-full text-left rounded-2xl p-3 transition-all duration-200 border cursor-pointer ${
                                   active 
                                     ? 'bg-blue-50/90 border-blue-100 text-[#126EFE] shadow-xs' 
                                     : 'border-transparent text-slate-700 hover:bg-slate-50 hover:border-slate-100'
@@ -397,19 +404,19 @@ export const Navbar: React.FC = () => {
 
         <div
           className={`lg:hidden overflow-hidden border-t border-white/10 transition-all duration-200 ${
-            isMenuOpen ? 'max-h-[34rem] opacity-100' : 'max-h-0 opacity-0'
+            isMenuOpen ? 'max-h-[85vh] overflow-y-auto opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
           <div className="space-y-2 px-3 py-3">
             {navLinks.map((link) => {
               if (link.name === 'Paket') {
                 return (
-                  <div key={link.name} className="rounded-3xl border border-white/10 bg-white/5 p-2">
+                  <div key={link.name} ref={mobilePaketRef} className="rounded-3xl border border-slate-100 bg-white/60 p-2 shadow-2xs">
                     <button
                       type="button"
                       onClick={() => setIsPaketOpen((current) => !current)}
                       className={`flex w-full items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium transition-colors ${
-                        isActive('/paket') ? 'bg-emerald-50 text-slate-950' : 'text-slate-700 hover:bg-emerald-50 hover:text-slate-950'
+                        isActive('/paket') ? 'bg-blue-50 text-[#126EFE]' : 'text-slate-700 hover:bg-slate-50 hover:text-slate-950'
                       }`}
                     >
                       <span className="flex items-center gap-2">
@@ -421,23 +428,37 @@ export const Navbar: React.FC = () => {
                       </svg>
                     </button>
 
-                    <div className={`grid gap-2 overflow-hidden transition-all duration-200 ${isPaketOpen ? 'mt-2 max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                    <div className={`grid gap-2 overflow-hidden transition-all duration-200 ${isPaketOpen ? 'mt-2 max-h-[30rem] opacity-100' : 'max-h-0 opacity-0'}`}>
                       {paketItems.map((paket) => (
                         <Link
                           key={paket.name}
                           to={paket.href}
-                          onClick={() => setIsMenuOpen(false)}
-                          className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white p-3 text-sm text-slate-700 transition-colors hover:bg-blue-50/50"
+                          onClick={() => {
+                            setIsPaketOpen(false)
+                            setIsMenuOpen(false)
+                          }}
+                          className="flex items-center gap-3 w-full text-left rounded-2xl border border-slate-100 bg-white p-3 text-sm text-slate-700 transition-colors hover:bg-blue-50/50 cursor-pointer"
                         >
                           <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl ${paket.badgeBg} ${paket.iconColor}`}>
                             {paket.icon}
                           </div>
-                          <div>
+                          <div className="min-w-0 flex-1">
                             <div className="font-bold text-slate-900 leading-tight">{paket.name}</div>
-                            <div className="mt-0.5 text-xs text-slate-500 font-medium">{paket.desc}</div>
+                            <div className="mt-0.5 text-xs text-slate-500 font-medium truncate">{paket.desc}</div>
                           </div>
                         </Link>
                       ))}
+
+                      <Link
+                        to="/paket"
+                        onClick={() => {
+                          setIsPaketOpen(false)
+                          setIsMenuOpen(false)
+                        }}
+                        className="w-full text-center py-2.5 text-xs font-black text-[#126EFE] bg-blue-50/80 rounded-xl hover:bg-blue-100/80 transition-colors block cursor-pointer"
+                      >
+                        Lihat Semua Paket Digital →
+                      </Link>
                     </div>
                   </div>
                 )

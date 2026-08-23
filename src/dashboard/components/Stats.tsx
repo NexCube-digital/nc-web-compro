@@ -212,10 +212,34 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ userRole = 'admi
   useEffect(() => {
     let mounted = true
 
-    const fetchAll = async () => {
+    const getYearMonth = (dateVal: any) => {
+      if (!dateVal) return null
+      const str = String(dateVal).trim()
+      if (!str) return null
+      const dateOnly = str.split('T')[0]
+      const parts = dateOnly.split(/[-/.]/)
+      if (parts.length >= 3) {
+        let year = parseInt(parts[0], 10)
+        let month = parseInt(parts[1], 10) - 1
+        if (parts[0].length === 2 && parts[2].length === 4) {
+          year = parseInt(parts[2], 10)
+          month = parseInt(parts[1], 10) - 1
+        }
+        if (!isNaN(year) && !isNaN(month) && month >= 0 && month <= 11) {
+          return { year, month }
+        }
+      }
+      const d = new Date(str)
+      if (!isNaN(d.getTime())) {
+        return { year: d.getFullYear(), month: d.getMonth() }
+      }
+      return null
+    }
+
+    const fetchAll = async (isInitial = false) => {
       if (!mounted) return
       try {
-        setLoading(true)
+        if (isInitial) setLoading(true)
 
         const contactsResponse = await apiClient.getContacts()
         const totalClients = (Array.isArray(contactsResponse.data) ? contactsResponse.data.length : 0) || 0
@@ -232,19 +256,22 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ userRole = 'admi
           ? financesResponse.value.data : []
 
         const totalInvoices = invoices.length
-        const overdueInvoices = invoices.filter(inv => inv.status === 'overdue').length
+        const overdueInvoices = invoices.filter(inv => String(inv.status).toLowerCase() === 'overdue').length
         const totalRevenue = invoices.reduce((sum, inv) => sum + Number(inv.amount || 0), 0)
 
         const totalPemasukan = invoices
-          .filter(inv => inv.status === 'paid')
+          .filter(inv => {
+            const st = String(inv.status || '').toLowerCase()
+            return st === 'paid' || st === 'lunas' || st === 'settlement'
+          })
           .reduce((sum, inv) => sum + Number(inv.amount || 0), 0)
 
-        const pemasukanLainnya = finances.reduce((sum, f: any) => sum + (f.type === 'income' ? Number(f.amount || 0) : 0), 0)
-        const totalPengeluaran = finances.reduce((sum, f: any) => sum + (f.type === 'expense' ? Number(f.amount || 0) : 0), 0)
+        const pemasukanLainnya = finances.reduce((sum, f: any) => sum + (String(f.type || '').toLowerCase() === 'income' ? Number(f.amount || 0) : 0), 0)
+        const totalPengeluaran = finances.reduce((sum, f: any) => sum + (String(f.type || '').toLowerCase() === 'expense' ? Number(f.amount || 0) : 0), 0)
         const saldo = totalPemasukan + pemasukanLainnya - totalPengeluaran
 
         const recentInvoices = invoices
-          .sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime())
+          .sort((a, b) => new Date(b.issueDate || b.dueDate).getTime() - new Date(a.issueDate || a.dueDate).getTime())
           .slice(0, 3)
 
         if (!mounted) return
@@ -253,28 +280,54 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ userRole = 'admi
         const now = new Date()
         const totals = Array.from({ length: 6 }, (_, i) => {
           const target = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1)
+          const targetYear = target.getFullYear()
+          const targetMonth = target.getMonth()
           const label = target.toLocaleString('id-ID', { month: 'short' })
-          const value = invoices.reduce((sum: number, inv: any) => {
-            if (inv.status !== 'paid') return sum
-            const issue = new Date(inv.issueDate)
-            if (issue.getFullYear() === target.getFullYear() && issue.getMonth() === target.getMonth()) {
+
+          const invoiceSum = invoices.reduce((sum: number, inv: any) => {
+            const st = String(inv.status || '').toLowerCase()
+            if (st !== 'paid' && st !== 'lunas' && st !== 'settlement') return sum
+            const dateInfo = getYearMonth(inv.paidAt || inv.issueDate || inv.createdAt)
+            if (dateInfo && dateInfo.year === targetYear && dateInfo.month === targetMonth) {
               return sum + Number(inv.amount || 0)
             }
             return sum
           }, 0)
-          return { label, value }
+
+          const financeSum = finances.reduce((sum: number, f: any) => {
+            if (String(f.type || '').toLowerCase() !== 'income') return sum
+            const dateInfo = getYearMonth(f.date || f.createdAt || f.issueDate)
+            if (dateInfo && dateInfo.year === targetYear && dateInfo.month === targetMonth) {
+              return sum + Number(f.amount || 0)
+            }
+            return sum
+          }, 0)
+
+          return { label, value: invoiceSum + financeSum }
         })
 
         setMonthlyData(totals)
       } catch (e) {
         console.error('Failed fetching dashboard data', e)
       } finally {
-        if (mounted) setLoading(false)
+        if (mounted && isInitial) setLoading(false)
       }
     }
 
-    fetchAll()
-    return () => { mounted = false }
+    fetchAll(true)
+
+    // Auto-refresh interval (tiap 10 detik) & event listener agar selalu up-to-date
+    const interval = setInterval(() => fetchAll(false), 10000)
+    const handleRefetch = () => fetchAll(false)
+    window.addEventListener('focus', handleRefetch)
+    window.addEventListener('invoiceUpdated', handleRefetch)
+
+    return () => {
+      mounted = false
+      clearInterval(interval)
+      window.removeEventListener('focus', handleRefetch)
+      window.removeEventListener('invoiceUpdated', handleRefetch)
+    }
   }, [])
 
   const latest = monthlyData[monthlyData.length - 1]?.value || 0
@@ -343,12 +396,18 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ userRole = 'admi
             </h2>
             <p className="text-xs text-slate-500 mt-1">Total: {formatRupiah(data.reduce((s, d) => s + d.value, 0))}</p>
           </div>
-          <div className={`text-[11px] sm:text-xs font-semibold px-2.5 py-1 rounded-full border flex items-center gap-1 ${monthChangePercent >= 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
-            {monthChangePercent >= 0
-              ? <ArrowUpRight className="w-3 h-3" />
-              : <ArrowDownLeft className="w-3 h-3" />
-            }
-            {monthChangePercent >= 0 ? '+' : ''}{monthChangePercent}% bulan ini
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] sm:text-[11px] font-semibold border border-emerald-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              Live Up to Date
+            </span>
+            <div className={`text-[11px] sm:text-xs font-semibold px-2.5 py-1 rounded-full border flex items-center gap-1 ${monthChangePercent >= 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}`}>
+              {monthChangePercent >= 0
+                ? <ArrowUpRight className="w-3 h-3" />
+                : <ArrowDownLeft className="w-3 h-3" />
+              }
+              {monthChangePercent >= 0 ? '+' : ''}{monthChangePercent}% bulan ini
+            </div>
           </div>
         </div>
 
@@ -375,10 +434,15 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ userRole = 'admi
 
               {tickValues.map((tick, i) => {
                 const y = padding.top + (i / ticks) * (height - padding.top - padding.bottom)
+                const formattedTick = tick >= 1000000
+                  ? `${(tick / 1000000).toFixed(tick % 1000000 === 0 ? 0 : 1)}M`
+                  : tick >= 1000
+                  ? `${Math.round(tick / 1000)}k`
+                  : `${tick}`
                 return (
                   <g key={i}>
                     <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4 6" />
-                    <text x={padding.left - 10} y={y + 5} textAnchor="end" fontSize="11" fill="#94a3b8">{(tick / 1000000).toFixed(1)}M</text>
+                    <text x={padding.left - 10} y={y + 5} textAnchor="end" fontSize="11" fill="#94a3b8">{formattedTick}</text>
                   </g>
                 )
               })}
@@ -439,7 +503,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ userRole = 'admi
   const statCards = [
     {
       label: 'Total Invoices',
-      sub: null,
+      sub: 'Semua Status',
       value: <CountUp end={stats.totalInvoices} duration={1.5} delay={0.2} />,
       prefix: null,
       icon: <Receipt className="w-4 h-4 sm:w-5 sm:h-5" />,
@@ -461,7 +525,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ userRole = 'admi
     },
     {
       label: 'Pemasukan Lainnya',
-      sub: null,
+      sub: 'Non-Invoice',
       value: <CountUp end={stats.pemasukanLainnya || 0} duration={1.5} delay={0.4} />,
       prefix: 'Rp ',
       icon: <ArrowDownLeft className="w-4 h-4 sm:w-5 sm:h-5" />,
@@ -472,7 +536,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ userRole = 'admi
     },
     {
       label: 'Total Pengeluaran',
-      sub: null,
+      sub: 'Operasional',
       value: <CountUp end={stats.totalPengeluaran || 0} duration={1.5} delay={0.5} />,
       prefix: 'Rp ',
       icon: <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5" />,
@@ -483,7 +547,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ userRole = 'admi
     },
     {
       label: 'Saldo',
-      sub: null,
+      sub: 'Kas Bersih',
       value: <CountUp end={Math.abs(stats.saldo || 0)} duration={1.5} delay={0.6} />,
       prefix: 'Rp ',
       icon: <MdOutlineAccountBalanceWallet className="w-4 h-4 sm:w-5 sm:h-5" />,
@@ -506,19 +570,28 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ userRole = 'admi
           {statCards.map((card, i) => (
             <div
               key={i}
-              className={`p-2 sm:p-3 ${card.color.bg} rounded-lg border ${card.color.border} ${card.span ? 'col-span-2 sm:col-span-2 lg:col-span-1' : ''}`}
+              className={`p-3 sm:p-3.5 ${card.color.bg} rounded-xl border ${card.color.border} ${
+                card.span ? 'col-span-2 sm:col-span-2 lg:col-span-1' : ''
+              } flex flex-col justify-between h-full min-h-[96px] shadow-xs hover:shadow-sm transition-all duration-200`}
             >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className={`text-xs ${card.color.text} font-semibold`}>{card.label}</p>
-                  {card.sub && <p className={`text-[10px] ${card.color.text} opacity-70 font-medium`}>{card.sub}</p>}
-                  <p className={`text-lg sm:text-xl font-bold ${card.color.val} mt-1`}>
-                    {card.prefix}{card.value}
+              {/* Header Card: Label & Sub (Kiri) + Icon (Kanan Top-Aligned) */}
+              <div className="flex items-start justify-between gap-1.5 min-h-[36px]">
+                <div className="min-w-0 flex-1">
+                  <p className={`text-xs ${card.color.text} font-bold leading-snug truncate`}>{card.label}</p>
+                  <p className={`text-[10px] ${card.color.text} opacity-75 font-medium mt-0.5 truncate`}>
+                    {card.sub || '‌'}
                   </p>
                 </div>
-                <div className={`p-1 sm:p-1.5 rounded-md ${card.color.iconBg}`}>
+                <div className={`p-1.5 rounded-lg ${card.color.iconBg} flex-shrink-0 mt-0.5`}>
                   {card.icon}
                 </div>
+              </div>
+
+              {/* Value Card: Baseline Konsisten di Bagian Bawah */}
+              <div className="mt-2 pt-1 border-t border-black/5 flex items-baseline">
+                <p className={`text-base sm:text-lg lg:text-xl font-extrabold ${card.color.val} tracking-tight truncate`}>
+                  {card.prefix}{card.value}
+                </p>
               </div>
             </div>
           ))}

@@ -14,10 +14,10 @@ export const Footer: React.FC = () => {
       { name: 'Portofolio Proyek', href: '/portfolio' }
     ],
     services: [
-      { name: 'Website Custom & SEO', href: '/paket' },
-      { name: 'Undangan Digital E-Invite', href: '/paket' },
-      { name: 'Desain Grafis & Branding', href: '/paket' },
-      { name: 'Katalog Digital & QR Menu', href: '/paket' },
+      { name: 'Website Custom & SEO', href: '/paket/website' },
+      { name: 'Undangan Digital', href: '/paket/undangan-digital' },
+      { name: 'Desain Grafis', href: '/paket/desain-grafis' },
+      { name: 'Katalog Digital', href: '/paket/menu-katalog' },
     ],
     support: [
       { name: 'Pusat Bantuan & FAQ', href: '/paket#faq', external: false },
@@ -54,73 +54,34 @@ export const Footer: React.FC = () => {
       <div className="absolute top-10 left-10 w-96 h-96 bg-blue-200/10 rounded-full blur-3xl pointer-events-none"></div>
       <div className="absolute bottom-10 right-10 w-96 h-96 bg-amber-200/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="container mx-auto px-4 md:px-6 py-12 md:py-16 relative z-10 space-y-12">
+      <div className="container mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-12 md:py-16 relative z-10">
         
-        {/* Floating Top Banner Card */}
-        <div className="bg-gradient-to-r from-[#126EFE] via-blue-600 to-[#126EFE] rounded-3xl p-8 md:p-10 text-white shadow-xl shadow-blue-500/10 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-60 h-60 bg-[#FBA41C]/20 rounded-full blur-2xl pointer-events-none"></div>
-
-          <div className="space-y-2 text-center md:text-left max-w-2xl relative z-10">
-            <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md px-3.5 py-1 rounded-full text-xs font-bold text-amber-300">
-              <HiSparkles className="w-3.5 h-3.5 text-[#FBA41C]" />
-              <span>SIAP MEMULAI PROYEK DIGITAL ANDA?</span>
-            </div>
-
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight">
-              Konsultasikan Kebutuhan Digital Anda Gratis!
-            </h3>
-
-            <p className="text-blue-100 text-xs sm:text-sm leading-relaxed">
-              Tim profesional NexCube siap merancang solusi website, desain, dan katalog terbaik sesuai anggaran Anda.
-            </p>
-          </div>
-
-          <a
-            href="https://wa.me/6285950313360?text=Halo%20NexCube%20Digital%2C%20saya%20ingin%20berkonsultasi%20tentang%20kebutuhan%20digital%20saya"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2.5 bg-[#FBA41C] hover:bg-[#e08d07] text-slate-900 font-extrabold px-6 py-3 rounded-2xl text-xs sm:text-sm shadow-lg transition-all duration-200 hover:scale-105 active:scale-98 shrink-0 cursor-pointer"
-          >
-            <FaWhatsapp className="w-4 h-4 text-slate-900" />
-            <span>Chat Via WhatsApp</span>
-          </a>
-        </div>
-
-        {/* Main Footer Links Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10 pt-4">
+        {/* Main Footer Links Grid (Responsive 2-column grid on mobile) */}
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-8 md:gap-10 pt-2 sm:pt-4">
           
-          {/* Column 1: Brand Info & Status */}
-          <div className="space-y-4">
+          {/* Column 1: Brand Info & Status (Full Width on Mobile) */}
+          <div className="col-span-2 md:col-span-1 space-y-3 sm:space-y-4">
             <Link to="/" className="inline-block">
               <img 
                 src="/images/NexCube-full.png" 
                 alt="NexCube Digital" 
-                className="h-10 w-auto object-contain"
+                className="h-8 sm:h-10 w-auto object-contain"
               />
             </Link>
 
             <p className="text-slate-600 leading-relaxed text-xs sm:text-sm">
               Studio kreatif digital premium yang menghadirkan solusi pembuatan website, desain grafis, undangan digital, dan katalog produk berstandar internasional.
             </p>
-
-            {/* System Status Pill */}
-            <div className="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200/80 px-3 py-1.5 rounded-full text-xs font-bold text-emerald-700 shadow-2xs">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <span>Layanan 24/7 Siap Melayani</span>
-            </div>
-
+            
             {/* Social Links */}
-            <div className="flex space-x-2.5 pt-1">
+            <div className="flex space-x-2 pt-1">
               {socialLinks.map((social) => (
                 <a
                   key={social.name}
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`p-2.5 bg-white border border-slate-200/90 text-slate-700 rounded-xl shadow-xs transition-all duration-200 hover:-translate-y-1 ${social.color} cursor-pointer`}
+                  className={`p-2 sm:p-2.5 bg-white border border-slate-200/90 text-slate-700 rounded-xl shadow-xs transition-all duration-200 hover:-translate-y-1 ${social.color} cursor-pointer`}
                   aria-label={social.name}
                 >
                   {social.icon}
@@ -129,100 +90,83 @@ export const Footer: React.FC = () => {
             </div>
           </div>
 
-          {/* Column 2: Company */}
-          <div>
-            <h3 className="font-extrabold text-slate-900 mb-4 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#126EFE]"></span>
-              <span>Perusahaan</span>
-            </h3>
-            <ul className="space-y-2.5">
-              {footerLinks.company.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    to={link.href}
-                    className="group text-slate-600 hover:text-[#126EFE] transition-colors duration-200 text-xs sm:text-sm font-medium inline-flex items-center gap-1.5"
-                  >
-                    <FaChevronRight className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition-all text-[#126EFE]" />
-                    <span>{link.name}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Column 3: Services */}
-          <div>
-            <h3 className="font-extrabold text-slate-900 mb-4 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#FBA41C]"></span>
-              <span>Layanan Utama</span>
-            </h3>
-            <ul className="space-y-2.5">
-              {footerLinks.services.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    to={link.href}
-                    className="group text-slate-600 hover:text-[#126EFE] transition-colors duration-200 text-xs sm:text-sm font-medium inline-flex items-center gap-1.5"
-                  >
-                    <FaChevronRight className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition-all text-[#126EFE]" />
-                    <span>{link.name}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Column 4: Support & Contact Info */}
-          <div>
-            <h3 className="font-extrabold text-slate-900 mb-4 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2">
+          {/* Column 4: Support & Contact Info (Full Width on Mobile) */}
+          <div className="col-span-2 md:col-span-1 space-y-2.5 sm:space-y-4">
+            <h3 className="font-extrabold text-slate-900 mb-2 sm:mb-4 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
               <span>Hubungi Kami</span>
             </h3>
             
-            <div className="space-y-3 text-xs font-semibold text-slate-700 mb-5">
-              <div className="flex items-center gap-2.5 bg-white border border-slate-200/90 px-3.5 py-2 rounded-xl shadow-2xs">
+            <div className="grid grid-cols-1 sm:grid-cols-1 gap-2 text-xs font-semibold text-slate-700">
+              <div className="flex items-center gap-2 bg-white border border-slate-200/90 px-3 py-1.5 sm:py-2 rounded-xl shadow-2xs">
                 <FaMapMarkerAlt className="text-[#126EFE] shrink-0 w-3.5 h-3.5" />
-                <span>Bandung, Indonesia</span>
+                <span>Jln. Bukit Jarian No. 30, Hegarmanah, Bandung, Jawa Barat, Indonesia</span>
               </div>
 
-              <div className="flex items-center gap-2.5 bg-white border border-slate-200/90 px-3.5 py-2 rounded-xl shadow-2xs">
+              <div className="flex items-center gap-2 bg-white border border-slate-200/90 px-3 py-1.5 sm:py-2 rounded-xl shadow-2xs">
                 <FaEnvelope className="text-[#126EFE] shrink-0 w-3.5 h-3.5" />
-                <a href="mailto:info@nexcube.digital" className="hover:text-[#126EFE] transition-colors truncate">
-                  info@nexcube.digital
+                <a href="mailto:nexcubedigital@gmail.com" className="hover:text-[#126EFE] transition-colors truncate">
+                  nexcubedigital@gmail.com
                 </a>
               </div>
-
-              <div className="flex items-center gap-2.5 bg-blue-50/80 border border-blue-100 px-3.5 py-2 rounded-xl text-[#126EFE]">
-                <FaClock className="shrink-0 w-3.5 h-3.5" />
-                <span>Respon Cepat &lt; 15 Menit</span>
-              </div>
             </div>
-
           </div>
 
+          {/* Column 2: Company (Col Span 1 on Mobile) */}
+          <div className="col-span-1">
+            <h3 className="font-extrabold text-slate-900 mb-2.5 sm:mb-4 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#126EFE]"></span>
+              <span>Perusahaan</span>
+            </h3>
+            <ul className="space-y-2 sm:space-y-2.5">
+              {footerLinks.company.map((link) => (
+                <li key={link.name}>
+                  <Link
+                    to={link.href}
+                    className="group text-slate-600 hover:text-[#126EFE] transition-colors duration-200 text-xs sm:text-sm font-medium inline-flex items-center gap-1"
+                  >
+                    <FaChevronRight className="w-2 h-2 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition-all text-[#126EFE]" />
+                    <span>{link.name}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Column 3: Services (Col Span 1 on Mobile) */}
+          <div className="col-span-1">
+            <h3 className="font-extrabold text-slate-900 mb-2.5 sm:mb-4 text-xs sm:text-sm uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FBA41C]"></span>
+              <span>Layanan Utama</span>
+            </h3>
+            <ul className="space-y-2 sm:space-y-2.5">
+              {footerLinks.services.map((link) => (
+                <li key={link.name}>
+                  <Link
+                    to={link.href}
+                    className="group text-slate-600 hover:text-[#126EFE] transition-colors duration-200 text-xs sm:text-sm font-medium inline-flex items-center gap-1"
+                  >
+                    <FaChevronRight className="w-2 h-2 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition-all text-[#126EFE]" />
+                    <span>{link.name}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
-        {/* Bottom Bar Footer */}
-        <div className="border-t border-slate-200/90 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+        {/* Bottom Bar Footer (Compact on Mobile) */}
+        <div className="border-t border-slate-200/90 pt-5 sm:pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-3 sm:gap-4">
             
             {/* Copyright */}
-            <div className="text-xs text-slate-500 font-medium text-center md:text-left">
-              © {currentYear} <span className="font-extrabold text-slate-800">NexCube Digital Indonesia</span>. Hak Cipta Dilindungi.
+            <div className="text-[11px] sm:text-xs text-slate-500 font-medium text-center md:text-left">
+              © {currentYear} <span className="font-extrabold text-slate-800">NexCube Digital</span>. Hak Cipta Dilindungi.
             </div>
 
             {/* Badges & Trust */}
-            <div className="flex flex-wrap justify-center items-center gap-4 text-xs font-semibold text-slate-500">
-              <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
-                <FaShieldAlt className="w-3 h-3" />
-                <span>SSL Encrypted</span>
-              </div>
-
-              <div className="flex items-center gap-1.5 text-[#126EFE] bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">
-                <FaRocket className="w-3 h-3" />
-                <span>React & Vite Tech</span>
-              </div>
-
-              <div className="flex items-center gap-4 pl-2 text-slate-400">
+            <div className="flex flex-wrap justify-center items-center gap-2.5 sm:gap-4 text-[11px] sm:text-xs font-semibold text-slate-500">
+              <div className="flex items-center gap-3 text-slate-400">
                 <Link to="/privacy" className="hover:text-[#126EFE] transition-colors">
                   Privasi
                 </Link>
@@ -232,10 +176,8 @@ export const Footer: React.FC = () => {
                 </Link>
               </div>
             </div>
-
           </div>
         </div>
-
       </div>
     </footer>
   );

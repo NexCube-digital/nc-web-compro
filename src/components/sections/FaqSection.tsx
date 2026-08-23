@@ -32,43 +32,43 @@ export const FaqSection: React.FC = () => {
   };
 
   return (
-    <section className="py-16 md:py-24 bg-slate-50/70 border-t border-slate-100">
-      <div className="container mx-auto px-4 md:px-6 max-w-4xl">
+    <section className="py-8 sm:py-16 md:py-24 bg-slate-50/70 border-t border-slate-100">
+      <div className="container mx-auto px-3 sm:px-4 md:px-6 max-w-4xl">
         
-        {/* Title */}
-        <div className="text-center mb-12 space-y-3">
-          <div className="inline-flex items-center gap-2 bg-blue-50 text-[#126EFE] px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
+        {/* Title (Compact on Mobile) */}
+        <div className="text-center mb-6 sm:mb-12 space-y-2 sm:space-y-3">
+          <div className="inline-flex items-center gap-1.5 bg-blue-50 text-[#126EFE] px-3.5 py-1 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider">
             <FaQuestionCircle /> Pertanyaan Umum (FAQ)
           </div>
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900">
+          <h2 className="text-xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
             Punya Pertanyaan Mengenai <span className="text-[#126EFE]">Layanan Kami?</span>
           </h2>
-          <p className="text-slate-600 text-base">
+          <p className="text-slate-600 text-xs sm:text-base max-w-xl mx-auto">
             Berikut adalah beberapa pertanyaan yang paling sering diajukan oleh calon klien kami.
           </p>
         </div>
 
-        {/* Accordion List */}
-        <div className="space-y-4">
+        {/* Accordion List (Compact on Mobile) */}
+        <div className="space-y-2.5 sm:space-y-4">
           {faqs.map((faq, idx) => {
             const isOpen = openIdx === idx;
             return (
               <div 
                 key={idx}
-                className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden transition-all duration-200"
+                className="bg-white rounded-xl sm:rounded-2xl border border-slate-200 shadow-2xs overflow-hidden transition-all duration-200"
               >
                 <button
                   onClick={() => toggleFaq(idx)}
-                  className="w-full p-5 text-left flex items-center justify-between gap-4 font-bold text-slate-800 hover:text-[#126EFE] transition-colors cursor-pointer"
+                  className="w-full p-3.5 sm:p-5 text-left flex items-center justify-between gap-3 font-bold text-slate-800 hover:text-[#126EFE] transition-colors cursor-pointer"
                 >
-                  <span className="text-base md:text-lg">{faq.q}</span>
+                  <span className="text-xs sm:text-base md:text-lg leading-snug">{faq.q}</span>
                   <FaChevronDown 
-                    className={`w-4 h-4 shrink-0 text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#126EFE]' : ''}`} 
+                    className={`w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0 text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180 text-[#126EFE]' : ''}`} 
                   />
                 </button>
 
                 {isOpen && (
-                  <div className="px-5 pb-5 text-sm md:text-base text-slate-600 leading-relaxed border-t border-slate-100 pt-3 animate-fadeInUp">
+                  <div className="px-3.5 pb-3.5 sm:px-5 sm:pb-5 text-xs sm:text-sm md:text-base text-slate-600 leading-relaxed border-t border-slate-100 pt-2.5 sm:pt-3 animate-fadeInUp">
                     {faq.a}
                   </div>
                 )}

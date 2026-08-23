@@ -3,6 +3,27 @@ import { createPortal } from 'react-dom'
 import { Helmet } from 'react-helmet-async'
 import apiClient from '../../services/api'
 import Toast from '../../components/Toast'
+import {
+  Users,
+  UserPlus,
+  Search,
+  Edit3,
+  Trash2,
+  ExternalLink,
+  Mail,
+  CreditCard,
+  Briefcase,
+  Award,
+  Sparkles,
+  CheckCircle2,
+  XCircle,
+  X,
+  Upload,
+  ArrowUpDown,
+  FileImage,
+  Building2,
+  Globe,
+} from 'lucide-react'
 
 interface TeamItem {
   id?: number
@@ -39,13 +60,15 @@ const TeamManagement: React.FC = () => {
         setTeams((res.data as any).teams)
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to load team')
+      setError(err.message || 'Gagal memuat data tim')
     } finally {
       setLoading(false)
     }
   }, [])
 
-  useEffect(() => { loadTeams() }, [loadTeams])
+  useEffect(() => {
+    loadTeams()
+  }, [loadTeams])
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -59,24 +82,27 @@ const TeamManagement: React.FC = () => {
     }
   }, [showForm])
 
-  const emptyForm = useMemo<TeamItem>(() => ({
-    name: '',
-    position: '',
-    image: '',
-    bio: '',
-    experience: '',
-    expertise: [],
-    portfolioUrl: '',
-    bank: '',
-    accountNumber: '',
-    email: '',
-    status: 'active'
-  }), [])
+  const emptyForm = useMemo<TeamItem>(
+    () => ({
+      name: '',
+      position: '',
+      image: '',
+      bio: '',
+      experience: '',
+      expertise: [],
+      portfolioUrl: '',
+      bank: '',
+      accountNumber: '',
+      email: '',
+      status: 'active',
+    }),
+    []
+  )
   const [form, setForm] = useState<TeamItem>({ ...emptyForm })
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [dragActive, setDragActive] = useState(false)
 
-  // Drag-and-drop handlers for image upload (stores base64 data URL in form.image)
+  // Drag & Drop image handler
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setDragActive(false)
@@ -118,10 +144,13 @@ const TeamManagement: React.FC = () => {
     setForm({ ...emptyForm })
     setShowForm(true)
   }, [emptyForm])
+
   const openEdit = useCallback((t: TeamItem) => {
     const normalizedExpertise = Array.isArray(t.expertise)
       ? t.expertise
-      : (t.expertise ? (t.expertise as any).toString().split(',').map((s: string) => s.trim()) : [])
+      : t.expertise
+      ? (t.expertise as any).toString().split(',').map((s: string) => s.trim())
+      : []
     setEditing(t)
     setForm({ ...t, expertise: normalizedExpertise, status: t.status || 'active' })
     setShowForm(true)
@@ -134,43 +163,53 @@ const TeamManagement: React.FC = () => {
       setError('')
       const expertisePayload = Array.isArray(form.expertise)
         ? form.expertise.join(', ')
-        : (typeof form.expertise === 'string' ? form.expertise : '')
+        : typeof form.expertise === 'string'
+        ? form.expertise
+        : ''
       const payload = { ...form, expertise: expertisePayload }
       if (editing && editing.id) {
         await apiClient.updateTeam(editing.id.toString(), payload)
-        setToast({ msg: 'Team updated', type: 'success' })
+        setToast({ msg: 'Anggota tim berhasil diperbarui', type: 'success' })
       } else {
         await apiClient.createTeam(payload)
-        setToast({ msg: 'Team created', type: 'success' })
+        setToast({ msg: 'Anggota tim berhasil ditambahkan', type: 'success' })
       }
       setShowForm(false)
       await loadTeams()
     } catch (err: any) {
-      setError(err.message || 'Failed to save')
-      setToast({ msg: err.message || 'Failed to save', type: 'error' })
-    } finally { setLoading(false) }
+      setError(err.message || 'Gagal menyimpan data')
+      setToast({ msg: err.message || 'Gagal menyimpan data', type: 'error' })
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleDelete = useCallback(async (id?: number) => {
-    if (!id) return
-    // keep original delete logic but extracted helper will call this
-    try {
-      setLoading(true)
-      await apiClient.deleteTeam(id.toString())
-      setToast({ msg: 'Team deleted', type: 'success' })
-      await loadTeams()
-    } catch (err: any) {
-      setToast({ msg: err.message || 'Failed to delete', type: 'error' })
-    } finally { setLoading(false) }
-  }, [loadTeams])
+  const handleDelete = useCallback(
+    async (id?: number) => {
+      if (!id) return
+      try {
+        setLoading(true)
+        await apiClient.deleteTeam(id.toString())
+        setToast({ msg: 'Anggota tim berhasil dihapus', type: 'success' })
+        await loadTeams()
+      } catch (err: any) {
+        setToast({ msg: err.message || 'Gagal menghapus anggota tim', type: 'error' })
+      } finally {
+        setLoading(false)
+      }
+    },
+    [loadTeams]
+  )
 
-  const handleDeleteWithConfirm = useCallback((id?: number) => {
-    if (!id) return
-    if (!confirm('Yakin ingin menghapus anggota tim ini?')) return
-    // optimistic UI removal for responsiveness
-    setTeams(prev => prev.filter(x => x.id !== id))
-    handleDelete(id)
-  }, [handleDelete])
+  const handleDeleteWithConfirm = useCallback(
+    (id?: number) => {
+      if (!id) return
+      if (!confirm('Apakah Anda yakin ingin menghapus anggota tim ini?')) return
+      setTeams(prev => prev.filter(x => x.id !== id))
+      handleDelete(id)
+    },
+    [handleDelete]
+  )
 
   const filteredTeams = useMemo(() => {
     if (!Array.isArray(teams)) return [] as TeamItem[]
@@ -178,7 +217,11 @@ const TeamManagement: React.FC = () => {
     return teams
       .filter(t => {
         if (!q) return true
-        return (t.name || '').toLowerCase().includes(q) || (t.position || '').toLowerCase().includes(q) || (t.expertise || []).join(' ').toLowerCase().includes(q)
+        return (
+          (t.name || '').toLowerCase().includes(q) ||
+          (t.position || '').toLowerCase().includes(q) ||
+          (t.expertise || []).join(' ').toLowerCase().includes(q)
+        )
       })
       .sort((a, b) => {
         if (sort === 'name') return (a.name || '').localeCompare(b.name || '')
@@ -187,316 +230,563 @@ const TeamManagement: React.FC = () => {
       })
   }, [teams, query, sort])
 
-  const teamCards = useMemo(() => (
-    filteredTeams.map(t => {
-      const imageUrl = t.image
-        ? (typeof t.image === 'string' && t.image.startsWith('/uploads') ? `${API_MEDIA_BASE}${t.image}` : t.image)
-        : '/images/team/team-1.jpg'
-
-      return (
-        <div key={t.id} className="group relative p-3 sm:p-4 rounded-xl bg-gradient-to-br from-white to-slate-50/50 border border-slate-200/50 shadow-sm hover:shadow-xl hover:border-blue-200/50 transform hover:-translate-y-1 transition-all duration-300 backdrop-blur-sm">
-          <div className="flex gap-3 items-start">
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 ring-2 ring-slate-200/50 group-hover:ring-blue-500/50 transition-all">
-              <img src={imageUrl} alt={t.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-sm sm:text-base text-slate-900 truncate">{t.name}</h3>
-                  <p className="text-xs text-slate-600 truncate">{t.position}</p>
-                  {t.email && <p className="text-xs text-slate-500 truncate mt-0.5">{t.email}</p>}
-                </div>
-                {t.portfolioUrl && (
-                  <a href={t.portfolioUrl} target="_blank" rel="noreferrer" className="flex-shrink-0 px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md text-[10px] font-medium transition-colors">
-                    Portfolio
-                  </a>
-                )}
-              </div>
-              <p className="mt-2 text-xs text-slate-600 line-clamp-2">{t.bio}</p>
-              {(t.bank || t.accountNumber) && (
-                <div className="mt-2 text-[10px] text-slate-500 bg-slate-50 rounded px-2 py-1">
-                  <strong className="text-slate-700">Rekening:</strong> {t.bank || '-'} {t.accountNumber ? `• ${t.accountNumber}` : ''}
-                </div>
-              )}
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {Array.isArray(t.expertise)
-                  ? t.expertise.map((e: string, i: number) => (
-                      e.trim() ? <span key={i} className="text-[10px] bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200/50 font-medium transition-transform hover:scale-105">{e.trim()}</span> : null
-                    ))
-                  : (t.expertise || '').toString().split(',').map((e: string, i: number) => (
-                      e.trim() ? <span key={i} className="text-[10px] bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200/50 font-medium transition-transform hover:scale-105">{e.trim()}</span> : null
-                    ))
-                }
-              </div>
-
-              <div className="mt-2 flex items-center gap-2">
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${t.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'}`}>
-                  {t.status === 'active' ? 'Active' : 'In-active'}
-                </span>
-                <span className="text-[10px] text-slate-400">Tampil publik: {t.status === 'active' ? 'Ya' : 'Tidak'}</span>
-              </div>
-
-              <div className="mt-3 pt-3 border-t border-slate-200/50 flex items-center justify-between">
-                <div className="flex gap-1.5">
-                  <button onClick={() => openEdit(t)} className="px-2.5 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg hover:shadow-blue-500/30 transition-all text-xs font-medium">Edit</button>
-                  <button onClick={() => handleDeleteWithConfirm(t.id)} className="px-2.5 py-1.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:shadow-lg hover:shadow-red-500/30 transition-all text-xs font-medium">Hapus</button>
-                  
-                </div>
-                <div className="text-[10px] text-slate-400 font-medium">ID #{t.id}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )
-    })
-  ), [filteredTeams, API_MEDIA_BASE, openEdit, handleDeleteWithConfirm])
+  // Overview Stats
+  const activeCount = useMemo(() => teams.filter(t => (t.status || 'active') === 'active').length, [teams])
 
   return (
-    <div>
-      <Helmet><title>Manajemen Tim - NexCube Dashboard</title></Helmet>
+    <div className="space-y-6">
+      <Helmet>
+        <title>Manajemen Tim - NexCube Dashboard</title>
+      </Helmet>
 
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-3">
-        <div className="flex-1">
-          <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">Manajemen Tim</h1>
-          <p className="text-slate-500 mt-0.5 text-xs sm:text-sm">Kelola konten 'Tim Ahli Kami' yang tampil di halaman About</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-lg px-3 py-2 shadow-sm hover:shadow-md transition-shadow">
-            <svg className="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none"><path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            <input placeholder="Cari..." value={query} onChange={(e) => setQuery(e.target.value)} className="bg-transparent outline-none text-sm w-28 placeholder:text-slate-400" />
+      {/* ── HEADER TITLE & CONTROLS ── */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+              <Users className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+                Manajemen Tim
+              </h1>
+              <p className="text-slate-500 text-xs sm:text-sm mt-0.5">
+                Kelola profil & posisi anggota tim ahli NexCube yang tampil pada publik
+              </p>
+            </div>
           </div>
-          <select value={sort} onChange={(e) => setSort(e.target.value as any)} className="border border-slate-200 rounded-lg px-3 py-2 text-xs sm:text-sm bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md transition-shadow outline-none focus:ring-2 focus:ring-blue-500/20">
-            <option value="newest">Terbaru</option>
-            <option value="name">Nama (A-Z)</option>
-          </select>
-          <button onClick={openCreate} className="bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white px-3 py-2 rounded-lg shadow-lg shadow-blue-500/30 hover:scale-105 transition-transform text-xs sm:text-sm font-medium whitespace-nowrap">+ Tambah</button>
+        </div>
+
+        {/* Action Controls */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          {/* Search Bar */}
+          <div className="relative flex-1 sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Cari nama, posisi, keahlian..."
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Sort Selector */}
+          <div className="relative">
+            <select
+              value={sort}
+              onChange={e => setSort(e.target.value as any)}
+              className="appearance-none bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-8 py-2 text-xs sm:text-sm text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer font-medium"
+            >
+              <option value="id_asc">ID Terlama</option>
+              <option value="newest">Terbaru</option>
+              <option value="name">Nama (A - Z)</option>
+            </select>
+            <ArrowUpDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
+          </div>
+
+          {/* Add Button */}
+          <button
+            onClick={openCreate}
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md shadow-blue-500/25 hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>Tambah Anggota</span>
+          </button>
         </div>
       </div>
 
-      <div className="relative bg-white/50 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-slate-200/50 shadow-sm">
+      {/* ── METRIC CARDS ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs flex items-center gap-3.5">
+          <div className="p-3 rounded-xl bg-blue-50 text-blue-600 flex-shrink-0">
+            <Users className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 font-semibold">Total Anggota</p>
+            <p className="text-xl font-black text-slate-900 mt-0.5">{teams.length}</p>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs flex items-center gap-3.5">
+          <div className="p-3 rounded-xl bg-emerald-50 text-emerald-600 flex-shrink-0">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 font-semibold">Status Aktif</p>
+            <p className="text-xl font-black text-slate-900 mt-0.5">{activeCount}</p>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs flex items-center gap-3.5">
+          <div className="p-3 rounded-xl bg-indigo-50 text-indigo-600 flex-shrink-0">
+            <Sparkles className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-xs text-slate-500 font-semibold">Tampil di Halaman Publik</p>
+            <p className="text-xl font-black text-slate-900 mt-0.5">{activeCount} Tim</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── TEAM GRID DISPLAY ── */}
+      <div className="relative min-h-[250px]">
         {loading && (
-          <div className="absolute inset-0 z-40">
-            <div className="absolute inset-0 bg-white/60 backdrop-blur-sm" />
-            <div className="relative z-50 flex items-center justify-center h-full">
-              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600" />
-            </div>
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/70 backdrop-blur-xs rounded-2xl">
+            <div className="animate-spin rounded-full h-9 w-9 border-b-2 border-blue-600" />
           </div>
         )}
-        {error && <p className="text-red-500">{error}</p>}
 
-        {filteredTeams.length === 0 ? (
-          <div className="py-16 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-100 mb-4">
-              <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
+        {error && (
+          <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-medium">
+            {error}
+          </div>
+        )}
+
+        {filteredTeams.length === 0 && !loading ? (
+          <div className="bg-white rounded-2xl p-12 text-center border border-slate-200/80 shadow-xs">
+            <div className="w-16 h-16 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center mb-3">
+              <Users className="w-8 h-8" />
             </div>
-            <p className="text-slate-500 text-sm mb-3">Belum ada anggota tim</p>
-            <button onClick={openCreate} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg text-sm shadow-lg shadow-blue-500/30 hover:scale-105 transition-transform">+ Tambah Anggota</button>
+            <h3 className="text-base font-bold text-slate-800">Belum Ada Anggota Tim</h3>
+            <p className="text-slate-500 text-xs sm:text-sm mt-1 max-w-sm mx-auto">
+              {query ? 'Tidak ada anggota tim yang cocok dengan pencarian Anda.' : 'Tambahkan anggota tim baru untuk ditampilkan di halaman publik.'}
+            </p>
+            <button
+              onClick={openCreate}
+              className="mt-4 inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-bold shadow-md hover:bg-blue-700 transition-colors"
+            >
+              <UserPlus className="w-4 h-4" />
+              <span>Tambah Anggota Sekarang</span>
+            </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {teamCards}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {filteredTeams.map(t => {
+              const imageUrl = t.image
+                ? typeof t.image === 'string' && t.image.startsWith('/uploads')
+                  ? `${API_MEDIA_BASE}${t.image}`
+                  : t.image
+                : '/images/team/team-1.jpg'
+
+              const isActive = (t.status || 'active') === 'active'
+
+              return (
+                <div
+                  key={t.id}
+                  className="group bg-white rounded-xl border border-slate-200/70 shadow-2xs hover:shadow-md hover:border-slate-300 transition-all duration-200 flex flex-col overflow-hidden"
+                >
+                  {/* Top Header Banner - Lightweight & Clean */}
+                  <div className="bg-slate-50/70 border-b border-slate-100 p-3.5">
+                    <div className="flex items-center justify-between gap-3">
+                      {/* Avatar & Name Block */}
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-xl overflow-hidden border border-slate-200 shadow-2xs flex-shrink-0 bg-slate-100 group-hover:scale-105 transition-transform duration-200">
+                          <img
+                            src={imageUrl}
+                            alt={t.name}
+                            className="w-full h-full object-cover"
+                            onError={e => {
+                              ;(e.target as HTMLImageElement).src = '/images/team/team-1.jpg'
+                            }}
+                          />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-bold text-sm sm:text-base text-slate-900 truncate leading-tight group-hover:text-blue-600 transition-colors">
+                            {t.name}
+                          </h3>
+                          <span className="inline-block text-[11px] font-semibold text-blue-600 bg-blue-50/80 border border-blue-100 px-2 py-0.5 rounded-md mt-0.5 truncate">
+                            {t.position}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Status & ID Badge */}
+                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                        <span
+                          className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
+                            isActive
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200/60'
+                              : 'bg-slate-100 text-slate-500 border-slate-200/60'
+                          }`}
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                          {isActive ? 'Aktif' : 'Non-aktif'}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          #{t.id}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Profile Body Block */}
+                  <div className="p-4 flex-1 flex flex-col">
+
+                    {/* Info Metadata (Email, Experience, Portfolio) */}
+                    <div className="space-y-1.5 text-xs text-slate-600 mb-3">
+                      {t.email && (
+                        <div className="flex items-center gap-2 truncate">
+                          <Mail className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                          <span className="truncate">{t.email}</span>
+                        </div>
+                      )}
+                      {t.experience && (
+                        <div className="flex items-center gap-2">
+                          <Award className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+                          <span className="font-medium text-slate-700">{t.experience} Pengalaman</span>
+                        </div>
+                      )}
+                      {t.portfolioUrl && (
+                        <div className="flex items-center gap-2">
+                          <Globe className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" />
+                          <a
+                            href={t.portfolioUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-blue-600 font-semibold hover:underline flex items-center gap-1 text-xs truncate"
+                          >
+                            <span>Portfolio Web</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bio */}
+                    {t.bio && (
+                      <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-3 italic bg-slate-50/80 p-2 rounded-lg border border-slate-100">
+                        "{t.bio}"
+                      </p>
+                    )}
+
+                    {/* Expertise Skill Tags */}
+                    {t.expertise && (Array.isArray(t.expertise) ? t.expertise.length > 0 : true) && (
+                      <div className="mt-auto pt-2">
+                        <p className="text-[10px] uppercase font-bold text-slate-400 tracking-wider mb-1.5">
+                          Keahlian:
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {(Array.isArray(t.expertise)
+                            ? t.expertise
+                            : String(t.expertise || '').split(',')
+                          ).map((e: string, i: number) => {
+                            const tag = e.trim()
+                            if (!tag) return null
+                            return (
+                              <span
+                                key={i}
+                                className="text-[10px] font-semibold bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 px-2 py-0.5 rounded-md border border-slate-200/60 transition-colors"
+                              >
+                                {tag}
+                              </span>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Bank Info */}
+                    {(t.bank || t.accountNumber) && (
+                      <div className="mt-3 text-[11px] text-slate-600 bg-slate-50 border border-slate-200/70 rounded-lg px-2.5 py-1.5 flex items-center gap-2">
+                        <CreditCard className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                        <span className="font-semibold text-slate-800">{t.bank || 'Bank'}</span>
+                        <span className="text-slate-400">•</span>
+                        <span className="font-mono text-slate-700">{t.accountNumber || '-'}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Card Actions Footer */}
+                  <div className="px-5 py-3 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => openEdit(t)}
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:border-blue-300 text-slate-700 hover:text-blue-600 rounded-xl text-xs font-bold transition-all shadow-2xs hover:shadow-xs"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteWithConfirm(t.id)}
+                      className="inline-flex items-center justify-center p-1.5 bg-white border border-slate-200 hover:border-rose-300 text-slate-400 hover:text-rose-600 rounded-xl text-xs font-bold transition-all shadow-2xs hover:shadow-xs"
+                      title="Hapus Anggota"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
 
-      {/* Form Modal - Fixed Position ICD */}
-      {showForm && typeof document !== 'undefined' && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowForm(false)} />
-          {/** compute avatar URL to support uploads, full URLs, and data URIs */}
-          {(() => {
-            let avatarUrl = '/images/team/team-1.jpg'
-            if (form.image && typeof form.image === 'string') {
-              if (form.image.startsWith('/uploads')) avatarUrl = `${API_MEDIA_BASE}${form.image}`
-              else if (form.image.startsWith('http') || form.image.startsWith('data:')) avatarUrl = form.image
-              else avatarUrl = form.image
-            }
-            return (
-              <form onSubmit={handleSubmit} className="relative z-10 bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl border border-slate-200">
-                {/* Modal Header - Fixed */}
-                <div className="flex-shrink-0 p-4 sm:p-6 pb-3 border-b border-slate-200">
-                  <div className="flex items-start gap-3 sm:gap-4">
-                    <div className="flex-shrink-0">
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden border-2 border-slate-200 shadow-md">
-                        <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
-                      </div>
-                      <div className="mt-2 text-center">
-                        <button type="button" onClick={() => fileInputRef.current?.click()} className="text-xs text-blue-600 hover:text-blue-700 font-medium">
-                          Ubah Foto
-                        </button>
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-base sm:text-lg font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                          {editing ? 'Edit Anggota' : 'Tambah Anggota'}
-                        </h3>
-                        <button type="button" onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </div>
-                      <p className="text-xs text-slate-500 mt-1">Isi informasi anggota tim dengan lengkap</p>
-                    </div>
-                  </div>
-                </div>
+      {/* ── FORM MODAL ── */}
+      {showForm &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+            <div
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+              onClick={() => setShowForm(false)}
+            />
 
-                {/* Modal Content - Scrollable */}
-                <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 gap-3">
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Nama Lengkap *</label>
-                        <input 
-                          autoFocus 
-                          required
-                          className="w-full border border-slate-300 px-3 py-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" 
-                          value={form.name} 
-                          onChange={(e) => setForm({...form, name: e.target.value})} 
-                          placeholder="Masukkan nama lengkap"
-                        />
+            {(() => {
+              let avatarUrl = '/images/team/team-1.jpg'
+              if (form.image && typeof form.image === 'string') {
+                if (form.image.startsWith('/uploads')) avatarUrl = `${API_MEDIA_BASE}${form.image}`
+                else if (form.image.startsWith('http') || form.image.startsWith('data:')) avatarUrl = form.image
+                else avatarUrl = form.image
+              }
+
+              return (
+                <form
+                  onSubmit={handleSubmit}
+                  className="relative z-10 bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 my-auto overflow-hidden"
+                >
+                  {/* Modal Header */}
+                  <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-xl bg-blue-100 text-blue-700 font-bold">
+                        {editing ? <Edit3 className="w-5 h-5" /> : <UserPlus className="w-5 h-5" />}
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Posisi / Jabatan *</label>
-                        <input 
+                        <h3 className="text-base sm:text-lg font-extrabold text-slate-900">
+                          {editing ? 'Edit Anggota Tim' : 'Tambah Anggota Tim'}
+                        </h3>
+                        <p className="text-xs text-slate-500">Lengkapi profil anggota tim NexCube</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowForm(false)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Modal Body Scrollable */}
+                  <div className="p-6 overflow-y-auto space-y-5 flex-1">
+                    {/* Avatar Upload Dropzone */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-2">Foto Profil</label>
+                      <div
+                        onDrop={handleDrop}
+                        onDragOver={handleDragOver}
+                        onDragEnter={handleDragEnter}
+                        onDragLeave={handleDragLeave}
+                        className={`border-2 border-dashed rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4 transition-all ${
+                          dragActive ? 'border-blue-500 bg-blue-50/50' : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-white shadow-md bg-slate-200 flex-shrink-0 relative group">
+                          <img src={avatarUrl} alt="Preview" className="w-full h-full object-cover" />
+                        </div>
+
+                        <div className="flex-1 text-center sm:text-left">
+                          <p className="text-xs font-bold text-slate-800">
+                            Seret & lepaskan foto di sini, atau pilih dari komputer
+                          </p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">
+                            Format yang didukung: JPG, PNG, WEBP (Maksimal 2MB)
+                          </p>
+                          <div className="flex items-center justify-center sm:justify-start gap-2 mt-3">
+                            <button
+                              type="button"
+                              onClick={() => fileInputRef.current?.click()}
+                              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-colors inline-flex items-center gap-1.5"
+                            >
+                              <Upload className="w-3.5 h-3.5" />
+                              <span>Pilih File</span>
+                            </button>
+                            {form.image && (
+                              <button
+                                type="button"
+                                onClick={() => setForm(prev => ({ ...prev, image: '' }))}
+                                className="px-3 py-1.5 border border-slate-200 hover:bg-rose-50 hover:text-rose-600 text-slate-600 rounded-lg text-xs font-semibold transition-colors"
+                              >
+                                Hapus Foto
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* 2-Column Fields Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">Nama Lengkap *</label>
+                        <input
+                          autoFocus
                           required
-                          className="w-full border border-slate-300 px-3 py-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" 
-                          value={form.position} 
-                          onChange={(e) => setForm({...form, position: e.target.value})} 
-                          placeholder="Contoh: Senior Developer"
+                          type="text"
+                          placeholder="Contoh: Budi Santoso"
+                          value={form.name}
+                          onChange={e => setForm({ ...form, name: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-800"
                         />
                       </div>
+
                       <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Status Tim</label>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">Posisi / Jabatan *</label>
+                        <input
+                          required
+                          type="text"
+                          placeholder="Contoh: Senior Fullstack Engineer"
+                          value={form.position}
+                          onChange={e => setForm({ ...form, position: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-800"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">Email</label>
+                        <input
+                          type="email"
+                          placeholder="budi@nexcube.id"
+                          value={form.email || ''}
+                          onChange={e => setForm({ ...form, email: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-800"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">Pengalaman</label>
+                        <input
+                          type="text"
+                          placeholder="Contoh: 5 tahun"
+                          value={form.experience || ''}
+                          onChange={e => setForm({ ...form, experience: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-800"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">Portfolio URL</label>
+                        <input
+                          type="url"
+                          placeholder="https://portfolio.com"
+                          value={form.portfolioUrl || ''}
+                          onChange={e => setForm({ ...form, portfolioUrl: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-800"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">Bank</label>
                         <select
-                          className="w-full border border-slate-300 px-3 py-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm bg-white"
-                          value={form.status || 'active'}
-                          onChange={(e) => setForm({ ...form, status: e.target.value as 'active' | 'in-active' })}
+                          value={form.bank || ''}
+                          onChange={e => setForm({ ...form, bank: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-800 cursor-pointer"
                         >
-                          <option value="active">Active (tampil di publik)</option>
-                          <option value="in-active">In-active (disembunyikan)</option>
+                          <option value="">Pilih Bank</option>
+                          <option value="BCA">BCA</option>
+                          <option value="Mandiri">Mandiri</option>
+                          <option value="BNI">BNI</option>
+                          <option value="BRI">BRI</option>
+                          <option value="CIMB">CIMB Niaga</option>
+                          <option value="SeaBank">SeaBank</option>
                         </select>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-700 mb-1.5">Email</label>
-                          <input 
-                            type="email"
-                            className="w-full border border-slate-300 px-3 py-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" 
-                            value={(form as any).email || ''} 
-                            onChange={(e) => setForm({...form, email: e.target.value})} 
-                            placeholder="email@example.com"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-700 mb-1.5">Pengalaman</label>
-                          <input 
-                            className="w-full border border-slate-300 px-3 py-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" 
-                            value={form.experience} 
-                            onChange={(e) => setForm({...form, experience: e.target.value})} 
-                            placeholder="Contoh: 5 tahun"
-                          />
-                        </div>
-                      </div>
+
                       <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Portfolio URL</label>
-                        <input 
-                          type="url"
-                          className="w-full border border-slate-300 px-3 py-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" 
-                          value={form.portfolioUrl} 
-                          onChange={(e) => setForm({...form, portfolioUrl: e.target.value})} 
-                          placeholder="https://portfolio.com"
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">No. Rekening</label>
+                        <input
+                          type="text"
+                          placeholder="1234567890"
+                          value={form.accountNumber || ''}
+                          onChange={e => setForm({ ...form, accountNumber: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-800"
                         />
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-700 mb-1.5">Bank</label>
-                          <select 
-                            className="w-full border border-slate-300 px-3 py-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm bg-white" 
-                            value={(form as any).bank || ''} 
-                            onChange={(e) => setForm({...form, bank: e.target.value})}
-                          >
-                            <option value="">Pilih Bank</option>
-                            <option value="BCA">BCA</option>
-                            <option value="Mandiri">Mandiri</option>
-                            <option value="BNI">BNI</option>
-                            <option value="BRI">BRI</option>
-                            <option value="CIMB">CIMB Niaga</option>
-                            <option value="SB">SEABANK</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-700 mb-1.5">No. Rekening</label>
-                          <input 
-                            className="w-full border border-slate-300 px-3 py-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" 
-                            value={(form as any).accountNumber || ''} 
-                            onChange={(e) => setForm({...form, accountNumber: e.target.value})} 
-                            placeholder="1234567890"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Keahlian</label>
-                        <input 
-                          className="w-full border border-slate-300 px-3 py-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm" 
-                          value={Array.isArray(form.expertise) ? form.expertise.join(', ') : (form.expertise as any) || ''} 
-                          onChange={(e) => setForm({...form, expertise: e.target.value.split(',').map(s => s.trim())})} 
-                          placeholder="React, Node.js, TypeScript"
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">Keahlian / Skill</label>
+                        <input
+                          type="text"
+                          placeholder="React, TypeScript, Node.js, UI/UX"
+                          value={Array.isArray(form.expertise) ? form.expertise.join(', ') : (form.expertise as any) || ''}
+                          onChange={e => setForm({ ...form, expertise: e.target.value.split(',').map(s => s.trim()) })}
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-800"
                         />
-                        <p className="text-xs text-slate-500 mt-1">Pisahkan dengan koma untuk multiple keahlian</p>
+                        <p className="text-[11px] text-slate-400 mt-1">Pisahkan dengan koma untuk memasukkan beberapa keahlian</p>
                       </div>
+
                       <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">Bio / Deskripsi</label>
-                        <textarea 
-                          rows={4} 
-                          className="w-full border border-slate-300 px-3 py-2.5 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-all text-sm resize-none" 
-                          value={form.bio} 
-                          onChange={(e) => setForm({...form, bio: e.target.value})} 
-                          placeholder="Ceritakan sedikit tentang anggota tim ini..."
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">Status Tampilan</label>
+                        <select
+                          value={form.status || 'active'}
+                          onChange={e => setForm({ ...form, status: e.target.value as 'active' | 'in-active' })}
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-800 cursor-pointer"
+                        >
+                          <option value="active">Active (Tampil di halaman publik)</option>
+                          <option value="in-active">In-active (Disembunyikan)</option>
+                        </select>
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5">Bio / Deskripsi Singkat</label>
+                        <textarea
+                          rows={3}
+                          placeholder="Ceritakan singkat latar belakang atau peran anggota tim..."
+                          value={form.bio || ''}
+                          onChange={e => setForm({ ...form, bio: e.target.value })}
+                          className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium text-slate-800 resize-none"
                         />
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Modal Footer - Fixed */}
-                <div className="flex-shrink-0 p-4 sm:p-6 pt-3 border-t border-slate-200 bg-slate-50">
-                  <div className="flex items-center justify-end gap-2">
-                    <button 
-                      type="button" 
-                      onClick={() => setShowForm(false)} 
-                      className="px-4 py-2.5 border border-slate-300 rounded-lg bg-white hover:bg-slate-50 transition-colors text-sm font-medium"
+                  {/* Modal Footer */}
+                  <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setShowForm(false)}
+                      className="px-5 py-2.5 border border-slate-300 text-slate-700 rounded-xl font-bold text-xs sm:text-sm hover:bg-slate-100 transition-colors"
                     >
                       Batal
                     </button>
-                    <button 
-                      type="submit" 
-                      disabled={loading} 
-                      className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg flex items-center gap-2 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold text-xs sm:text-sm shadow-md hover:shadow-lg hover:scale-[1.01] transition-all disabled:opacity-50 flex items-center gap-2"
                     >
-                      {loading && (
-                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                        </svg>
-                      )}
-                      <span>{editing ? 'Update Anggota' : 'Tambah Anggota'}</span>
+                      {loading && <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />}
+                      <span>{editing ? 'Update Anggota' : 'Simpan Anggota'}</span>
                     </button>
                   </div>
-                </div>
 
-                <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileChange(e.target.files && e.target.files[0])} />
-              </form>
-            )
-          })()}
-        </div>,
-        document.body
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={e => handleFileChange(e.target.files && e.target.files[0])}
+                  />
+                </form>
+              )
+            })()}
+          </div>,
+          document.body
+        )}
+
+      {toast && (
+        <Toast
+          message={toast.msg}
+          type={toast.type === 'success' ? 'success' : 'error'}
+          onClose={() => setToast(null)}
+        />
       )}
-
-      {toast && <Toast message={toast.msg} type={toast.type === 'success' ? 'success' : 'error'} onClose={() => setToast(null)} />}
     </div>
   )
 }

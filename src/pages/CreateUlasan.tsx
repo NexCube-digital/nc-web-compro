@@ -149,7 +149,7 @@ export const CreateUlasan: React.FC = () => {
     if (Object.keys(errs).length) { setErrors(errs); return }
     try {
       setSubmitting(true)
-      const payload: any = { name:form.name, company:form.company, text:form.text, rating:form.rating, status:'pending' }
+      const payload: any = { name:form.name, company:form.company, text:form.text, rating:form.rating, status:'published' }
       if (avatarFile) payload.avatar = await toBase64(avatarFile)
       const res = await apiClient.createPublicTestimonial(payload)
       if (res.data?.testimonial) {

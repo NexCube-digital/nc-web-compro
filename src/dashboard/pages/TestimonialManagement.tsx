@@ -192,7 +192,7 @@ const TestimonialManagement: React.FC = () => {
         company: formData.company,
         text: formData.text,
         rating: formData.rating,
-        status: formData.status,
+        status: 'published',
       }
 
       // Handle avatar
@@ -252,7 +252,7 @@ const TestimonialManagement: React.FC = () => {
       rating: item.rating,
       avatarFile: null,
       avatarPreview: item.avatar || '',
-      status: item.status,
+      status: 'published',
     })
     navigate('/dashboard/testimonials/formtestimonial')
   }

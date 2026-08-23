@@ -99,8 +99,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExploreClick }) => {
 
           </div>
 
-          {/* Right Column: Bright Informative Showcase Card */}
-          <div className="lg:col-span-5 relative flex items-center justify-center">
+          {/* Right Column: Bright Informative Showcase Card (Hidden on Mobile) */}
+          <div className="hidden lg:flex lg:col-span-5 relative items-center justify-center">
             
             {/* Background Soft Glow */}
             <div className="absolute inset-0 bg-gradient-to-tr from-blue-400/20 via-amber-300/20 to-blue-200/30 rounded-3xl blur-2xl transform rotate-2 scale-95 pointer-events-none"></div>

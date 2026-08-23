@@ -114,8 +114,8 @@ export const Website: React.FC = () => {
             </p>
           </div>
 
-          {/* Pricing Grid - Spacious 3 Columns Grid */}
-          <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-200'}`}>
+          {/* Pricing Grid - 2 Columns (2 Banjar) on Mobile */}
+          <div className={`grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8 mb-16 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-200'}`}>
             {websitePricing.map((tier, index) => {
               const isBackendPkg = !!tier.id && !!tier.title;
               const title = tier.title || tier.name || `Paket ${index + 1}`;

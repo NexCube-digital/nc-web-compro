@@ -150,55 +150,55 @@ export const Paket: React.FC = () => {
 
           </div>
 
-          {/* 4 Category Hub Cards Grid */}
-          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 mb-20">
+          {/* 4 Category Hub Cards Grid - 2 Columns (2 Banjar) on Mobile */}
+          <div className="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-8 mb-20">
             {categoryHub.map((cat) => (
               <div 
                 key={cat.id}
-                className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/90 shadow-xl shadow-blue-500/5 hover:shadow-2xl hover:border-blue-300 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden"
+                className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-8 border border-slate-200/90 shadow-xl shadow-blue-500/5 hover:shadow-2xl hover:border-blue-300 transition-all duration-300 flex flex-col justify-between group relative overflow-hidden"
               >
                 {/* Top Accent Gradient Line */}
                 <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${cat.gradient}`}></div>
 
                 <div>
                   {/* Card Badge & Icon */}
-                  <div className="flex items-center justify-between gap-4 mb-5">
-                    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${cat.gradient} flex items-center justify-center shadow-md`}>
+                  <div className="flex items-start justify-between gap-2 mb-3 sm:mb-5">
+                    <div className={`w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br ${cat.gradient} flex items-center justify-center shadow-md shrink-0`}>
                       {cat.icon}
                     </div>
-                    <span className={`text-[11px] font-black uppercase tracking-wider px-3 py-1 rounded-full border ${cat.badgeColor}`}>
+                    <span className={`text-[9px] sm:text-[11px] font-black uppercase tracking-wider px-2 py-0.5 sm:px-3 sm:py-1 rounded-full border ${cat.badgeColor} shrink-0 truncate`}>
                       {cat.badge}
                     </span>
                   </div>
 
                   {/* Title & Subtitle */}
-                  <h2 className="text-2xl font-black text-slate-900 mb-2 group-hover:text-[#126EFE] transition-colors">
+                  <h2 className="text-base sm:text-2xl font-black text-slate-900 mb-1 sm:mb-2 group-hover:text-[#126EFE] transition-colors leading-snug">
                     {cat.title}
                   </h2>
-                  <p className="text-slate-600 text-xs sm:text-sm leading-relaxed mb-6 font-medium">
+                  <p className="text-slate-600 text-[11px] sm:text-sm leading-relaxed mb-3 sm:mb-6 font-medium">
                     {cat.subtitle}
                   </p>
 
                   {/* Price & Tier Count */}
-                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 mb-6 flex flex-wrap items-center justify-between gap-2">
+                  <div className="bg-slate-50 rounded-xl sm:rounded-2xl p-2.5 sm:p-4 border border-slate-100 mb-3 sm:mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2">
                     <div>
-                      <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Harga Mulai Dari</div>
-                      <div className="text-xl font-black bg-gradient-to-r from-[#126EFE] to-blue-700 bg-clip-text text-transparent">
+                      <div className="text-[9px] sm:text-[11px] font-bold text-slate-400 uppercase tracking-wider">Mulai Dari</div>
+                      <div className="text-sm sm:text-xl font-black bg-gradient-to-r from-[#126EFE] to-blue-700 bg-clip-text text-transparent">
                         {cat.startingPrice}
                       </div>
                     </div>
-                    <div className="text-xs font-extrabold text-slate-600 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-2xs">
+                    <div className="text-[10px] sm:text-xs font-extrabold text-slate-600 bg-white border border-slate-200 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl shadow-2xs truncate">
                       {cat.tierCount}
                     </div>
                   </div>
 
                   {/* Features List */}
-                  <div className="space-y-2.5 mb-8">
-                    <div className="text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-3">Fitur Utama Kategori:</div>
-                    {cat.features.map((feat, fIdx) => (
-                      <div key={fIdx} className="flex items-center gap-2.5 text-xs text-slate-700 font-semibold">
-                        <HiCheckCircle className="text-emerald-500 w-4 h-4 shrink-0" />
-                        <span>{feat}</span>
+                  <div className="space-y-1.5 sm:space-y-2.5 mb-4 sm:mb-8">
+                    <div className="text-[10px] sm:text-xs font-extrabold text-slate-800 uppercase tracking-wider mb-2">Fitur Utama:</div>
+                    {cat.features.slice(0, 3).map((feat, fIdx) => (
+                      <div key={fIdx} className="flex items-center gap-1.5 sm:gap-2.5 text-[10px] sm:text-xs text-slate-700 font-semibold">
+                        <HiCheckCircle className="text-emerald-500 w-3 h-3 sm:w-4 sm:h-4 shrink-0" />
+                        <span className="truncate">{feat}</span>
                       </div>
                     ))}
                   </div>
@@ -207,10 +207,10 @@ export const Paket: React.FC = () => {
                 {/* CTA Action Button */}
                 <Link
                   to={cat.route}
-                  className={`w-full py-3.5 rounded-2xl text-xs sm:text-sm font-extrabold text-white bg-gradient-to-r ${cat.gradient} shadow-md flex items-center justify-center gap-2 hover:scale-102 active:scale-98 transition-all cursor-pointer`}
+                  className={`w-full py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl text-[11px] sm:text-sm font-extrabold text-white bg-gradient-to-r ${cat.gradient} shadow-md flex items-center justify-center gap-1.5 sm:gap-2 hover:scale-102 transition-all cursor-pointer`}
                 >
-                  <span>{cat.ctaText}</span>
-                  <FaArrowRight className="w-3.5 h-3.5" />
+                  <span className="truncate">{cat.ctaText}</span>
+                  <FaArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
                 </Link>
 
               </div>

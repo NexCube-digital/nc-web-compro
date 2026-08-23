@@ -116,10 +116,14 @@ export interface Invoice {
   clientId?: number;
   clientName?: string;
   clientEmail?: string;
+  clientPhone?: string;
+  clientAddress?: string;
   client?: {
     id: number;
     name: string;
     email?: string;
+    phone?: string;
+    address?: string;
     company?: string;
   };
   amount: number;

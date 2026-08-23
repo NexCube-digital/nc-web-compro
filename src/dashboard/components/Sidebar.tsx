@@ -176,57 +176,55 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
     })
   }
 
-  const btnActive = 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
-  const btnDefault = 'text-slate-400 hover:text-white hover:bg-white/5 hover:scale-[1.01] hover:translate-x-0.5'
-  const subBtnActive = 'bg-gradient-to-r from-blue-600/90 via-blue-500/90 to-indigo-600/90 text-white shadow-md shadow-blue-500/20 scale-[1.01]'
-  const subBtnDefault = 'text-slate-500 hover:text-white hover:bg-white/5 hover:scale-[1.01] hover:translate-x-1'
+  const btnActive = 'bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 text-white shadow-md shadow-blue-500/25 scale-[1.02] font-semibold'
+  const btnDefault = 'text-slate-600 hover:text-blue-600 hover:bg-blue-50/80 hover:scale-[1.01] hover:translate-x-0.5 font-medium'
+  const subBtnActive = 'bg-blue-600 text-white shadow-sm shadow-blue-500/20 font-medium'
+  const subBtnDefault = 'text-slate-500 hover:text-blue-600 hover:bg-blue-50/60 hover:scale-[1.01] hover:translate-x-1'
 
   return (
     <>
       {/* Mobile Overlay */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/50 lg:hidden z-30"
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm lg:hidden z-30"
           onClick={() => setOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <div className={`fixed lg:static inset-y-0 left-0 z-40 ${theme === 'compact' ? 'w-52' : 'w-60'} ${
-        theme === 'minimal' ? 'bg-slate-950' : 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950'
-      } text-white transform transition-all duration-300 ease-out shadow-2xl ${
+      <div className={`fixed lg:static inset-y-0 left-0 z-40 ${theme === 'compact' ? 'w-52' : 'w-60'} bg-white border-r border-slate-200/80 text-slate-800 transform transition-all duration-300 ease-out shadow-xl lg:shadow-none ${
         open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
       }`}>
-        <div className="h-full flex flex-col bg-gradient-to-br from-slate-950/50 to-transparent backdrop-blur-xl">
+        <div className="h-full flex flex-col bg-slate-50/40">
 
           {/* Logo */}
-          <div className="px-4 py-5 border-b border-white/5 flex-shrink-0">
+          <div className="px-5 py-5 border-b border-slate-100 flex-shrink-0">
             <Link to="/" className="flex items-center gap-2.5 group">
               <img
                 src="/images/NexCube-full.png"
                 alt="NexCube"
                 className="h-8 w-auto transition-transform duration-300 group-hover:scale-105"
               />
-              <span className="font-bold text-base tracking-tight bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+              <span className="font-bold text-lg tracking-tight text-slate-900">
                 NexCube
               </span>
             </Link>
           </div>
 
           {/* Role Badge */}
-          <div className="px-4 pt-3 pb-1 flex-shrink-0">
+          <div className="px-5 pt-3 pb-1 flex-shrink-0">
             <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full ${
               isAdmin
-                ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-                : 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30'
+                ? 'bg-blue-50 text-blue-700 border border-blue-200/60'
+                : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
             }`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${isAdmin ? 'bg-blue-400' : 'bg-emerald-400'}`} />
+              <span className={`w-1.5 h-1.5 rounded-full ${isAdmin ? 'bg-blue-500' : 'bg-emerald-500'}`} />
               {isAdmin ? 'Administrator' : 'User'}
             </span>
           </div>
 
           {/* Nav */}
-          <nav className="flex-1 px-3 py-4 space-y-3 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-700/50 scrollbar-track-transparent hover:scrollbar-thumb-slate-600 scroll-smooth">
+          <nav className="flex-1 px-3 py-4 space-y-3 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent hover:scrollbar-thumb-slate-400 scroll-smooth">
 
             {/* Overview — semua role */}
             <button
@@ -314,7 +312,7 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
                 </button>
 
                 {pkgOpen && (
-                  <div className="pl-4 space-y-1 mt-1 border-l-2 border-slate-800/50 ml-3">
+                  <div className="pl-4 space-y-1 mt-1 border-l-2 border-slate-200 ml-3">
                     {packageItems.map(item => (
                       <NavButton
                         key={item.id}
@@ -354,7 +352,7 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
                 </button>
 
                 {affiliateOpen && (
-                  <div className="pl-4 space-y-1 mt-1 border-l-2 border-slate-800/50 ml-3">
+                  <div className="pl-4 space-y-1 mt-1 border-l-2 border-slate-200 ml-3">
                     {affiliateItems.map(item => (
                       <NavButton
                         key={item.id}
@@ -375,8 +373,8 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
           </nav>
 
           {/* Footer */}
-          <div className="px-4 py-3 border-t border-white/5 text-center flex-shrink-0">
-            <p className="text-slate-500 text-[10px] font-medium tracking-wide">© 2025 NexCube</p>
+          <div className="px-4 py-3 border-t border-slate-100 text-center flex-shrink-0">
+            <p className="text-slate-400 text-[10px] font-medium tracking-wide">© 2025 NexCube</p>
           </div>
 
         </div>
@@ -388,8 +386,8 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
 // ===== SUB-COMPONENTS =====
 
 const SectionLabel: React.FC<{ label: string }> = ({ label }) => (
-  <div className="text-[10px] text-slate-500 uppercase font-bold tracking-wider px-3 mb-2 mt-1 flex items-center gap-2">
-    <div className="h-px flex-1 bg-gradient-to-r from-slate-700 to-transparent"></div>
+  <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider px-3 mb-2 mt-2 flex items-center gap-2">
+    <div className="h-px flex-1 bg-slate-200"></div>
     <span>{label}</span>
   </div>
 )
