@@ -4,8 +4,20 @@ import { Helmet } from 'react-helmet-async'
 import { toast } from 'react-hot-toast'
 import apiClient, { User } from '../../services/api'
 import { UserTable } from './user/UserTable'
-import { FormUser } from './user/FormUser'
+import { FormUser, TeamFormData } from './user/FormUser'
 import { Search, Plus, RefreshCw, AlertCircle } from 'lucide-react'
+
+const emptyTeamData: TeamFormData = {
+  position: '',
+  bio: '',
+  experience: '',
+  expertise: '',
+  portfolioUrl: '',
+  bank: '',
+  accountNumber: '',
+  status: 'active',
+  image: '',
+}
 
 export const UserManagement: React.FC = () => {
   const navigate = useNavigate()
@@ -19,7 +31,7 @@ export const UserManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [deleteLoading, setDeleteLoading] = useState<number | null>(null)
 
-  // Photo state for admin editing
+  // Photo state for admin editing (foto akun User)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [currentEditingPhoto, setCurrentEditingPhoto] = useState<string | undefined>(undefined)
@@ -32,6 +44,9 @@ export const UserManagement: React.FC = () => {
     password: '',
     role: ''
   })
+
+  // State khusus data profil tim — cuma dipakai kalau role === 'team'
+  const [teamData, setTeamData] = useState<TeamFormData>({ ...emptyTeamData })
 
   // Load users
   const loadUsers = async (showToast = false) => {
@@ -77,6 +92,22 @@ export const UserManagement: React.FC = () => {
     }))
   }
 
+  // Handler khusus input data profil tim (position, bio, expertise, dll)
+  const handleTeamInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target
+    setTeamData(prev => ({ ...prev, [name]: value }))
+  }
+
+  // Handler upload foto profil tim → dikonversi ke base64 (dikirim sebagai data URL ke BE)
+  const handleTeamImageChange = (file: File | null) => {
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => setTeamData(prev => ({ ...prev, image: reader.result as string }))
+    reader.readAsDataURL(file)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -100,14 +131,27 @@ export const UserManagement: React.FC = () => {
       return
     }
 
+    // Validasi tambahan buat role team
+    if (formData.role === 'team' && !teamData.position.trim()) {
+      toast.error('Posisi/jabatan wajib diisi untuk role team')
+      return
+    }
+
     try {
       setLoading(true)
       setError('')
 
+      // Payload team cuma disertakan kalau role-nya team
+      const teamPayload = formData.role === 'team' ? { ...teamData } : undefined
+
       if (editingId) {
         // Tidak kirim password saat update — backend updateUser tidak menerimanya
         const { password, ...updatePayload } = formData
-        const res = await apiClient.updateUser(editingId.toString(), { ...updatePayload, photoFile })
+        const res = await apiClient.updateUser(editingId.toString(), {
+          ...updatePayload,
+          team: teamPayload,
+          photoFile,
+        })
         if (res.success) {
           toast.success('User berhasil diupdate')
           // Update local users state immediately from returned data
@@ -125,7 +169,7 @@ export const UserManagement: React.FC = () => {
           throw new Error(res.message || 'Gagal mengupdate user')
         }
       } else {
-        const res = await apiClient.createUser(formData)
+        const res = await apiClient.createUser({ ...formData, team: teamPayload })
         if (res.success) {
           toast.success('User berhasil ditambahkan')
         } else {
@@ -139,6 +183,7 @@ export const UserManagement: React.FC = () => {
       // Reset form
       setEditingId(null)
       setFormData({ name: '', email: '', password: '', role: '' })
+      setTeamData({ ...emptyTeamData })
       // Reset photo
       setPhotoFile(null)
       if (photoPreview && photoPreview.startsWith('blob:')) URL.revokeObjectURL(photoPreview)
@@ -160,6 +205,18 @@ export const UserManagement: React.FC = () => {
       email: user.email,
       password: '',          // tidak digunakan saat edit
       role: user.role ?? ''
+    })
+    // Isi ulang data profil tim kalau user ini role team & punya teamProfile
+    setTeamData({
+      position: user.teamProfile?.position || '',
+      bio: user.teamProfile?.bio || '',
+      experience: user.teamProfile?.experience || '',
+      expertise: user.teamProfile?.expertise || '',
+      portfolioUrl: user.teamProfile?.portfolioUrl || '',
+      bank: user.teamProfile?.bank || '',
+      accountNumber: user.teamProfile?.accountNumber || '',
+      status: user.teamProfile?.status || 'active',
+      image: user.teamProfile?.image || '',
     })
     setCurrentEditingPhoto(user.photo)
     setPhotoFile(null)
@@ -193,6 +250,7 @@ export const UserManagement: React.FC = () => {
     navigate('/dashboard/users')
     setEditingId(null)
     setFormData({ name: '', email: '', password: '', role: '' })
+    setTeamData({ ...emptyTeamData })
     setPhotoFile(null)
     if (photoPreview && photoPreview.startsWith('blob:')) URL.revokeObjectURL(photoPreview)
     setPhotoPreview(null)
@@ -297,6 +355,9 @@ export const UserManagement: React.FC = () => {
             }}
             onSubmit={handleSubmit}
             onCancel={handleCancel}
+            teamData={teamData}
+            onTeamChange={handleTeamInputChange}
+            onTeamImageChange={handleTeamImageChange}
           />
         </div>
       ) : (

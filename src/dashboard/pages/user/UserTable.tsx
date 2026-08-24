@@ -1,6 +1,6 @@
 import React from 'react'
 import { User, getImageUrl } from '../../../services/api'
-import { Edit2, Trash2, Loader, Shield, ShieldCheck } from 'lucide-react'
+import { Edit2, Trash2, Loader, Shield, ShieldCheck, Users } from 'lucide-react'
 
 interface UserTableProps {
   users: User[]
@@ -25,6 +25,12 @@ export const UserTable: React.FC<UserTableProps> = ({
         icon: <ShieldCheck className="w-3.5 h-3.5 mr-1" />,
         label: 'Admin'
       },
+      team: {
+        bg: 'bg-indigo-100',
+        text: 'text-indigo-800',
+        icon: <Users className="w-3.5 h-3.5 mr-1" />,
+        label: 'Team'
+      },
       user: {
         bg: 'bg-blue-100',
         text: 'text-blue-800',
@@ -34,7 +40,7 @@ export const UserTable: React.FC<UserTableProps> = ({
     }
 
     const roleConfig = roles[role as keyof typeof roles] || roles.user
-    
+
     return (
       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${roleConfig.bg} ${roleConfig.text}`}>
         {roleConfig.icon}
@@ -42,6 +48,14 @@ export const UserTable: React.FC<UserTableProps> = ({
       </span>
     )
   }
+
+
+  const resolveAvatar = (user: User) => {
+  if (user.role === 'team') {
+    return user.teamProfile?.image || user.photo || null
+  }
+  return user.photo || null
+}
 
   if (loading) {
     return (
@@ -51,7 +65,6 @@ export const UserTable: React.FC<UserTableProps> = ({
       </div>
     )
   }
-
 
   return (
     <div className="overflow-x-auto">
@@ -73,71 +86,85 @@ export const UserTable: React.FC<UserTableProps> = ({
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
-          {users.map((user, index) => (
-            <tr 
-              key={user.id} 
-              className={`hover:bg-gray-50 transition-colors ${
-                index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
-              }`}
-            >
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex items-center">
-                  <div className={`flex-shrink-0 h-10 w-10 rounded-full overflow-hidden flex items-center justify-center ${
-                    user.role === 'admin' ? 'bg-purple-100' : 'bg-blue-100'
-                  }`}>
-                    {user.photo ? (
-                      <img
-                        src={getImageUrl(user.photo)}
-                        alt={user.name}
-                        className="h-10 w-10 object-cover rounded-full"
-                      />
-                    ) : (
-                      <span className={`font-medium text-sm ${
-                        user.role === 'admin' ? 'text-purple-600' : 'text-blue-600'
-                      }`}>
-                        {user.name.charAt(0).toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <div className="ml-4">
-                    <div className="text-sm font-medium text-gray-900">
-                      {user.name}
+          {users.map((user, index) => {
+            const avatarPath = resolveAvatar(user)
+            return (
+              <tr
+                key={user.id}
+                className={`hover:bg-gray-50 transition-colors ${
+                  index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
+                }`}
+              >
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center">
+                    <div className={`flex-shrink-0 h-10 w-10 rounded-full overflow-hidden flex items-center justify-center ${
+                      user.role === 'admin'
+                        ? 'bg-purple-100'
+                        : user.role === 'team'
+                        ? 'bg-indigo-100'
+                        : 'bg-blue-100'
+                    }`}>
+                      {avatarPath ? (
+                        <img
+                          src={getImageUrl(avatarPath)}
+                          alt={user.name}
+                          className="h-10 w-10 object-cover rounded-full"
+                          onError={e => {
+                            ;(e.target as HTMLImageElement).style.display = 'none'
+                          }}
+                        />
+                      ) : (
+                        <span className={`font-medium text-sm ${
+                          user.role === 'admin'
+                            ? 'text-purple-600'
+                            : user.role === 'team'
+                            ? 'text-indigo-600'
+                            : 'text-blue-600'
+                        }`}>
+                          {user.name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div className="ml-4">
+                      <div className="text-sm font-medium text-gray-900">
+                        {user.name}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-600">{user.email}</div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                {getRoleBadge(user.role)}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-center">
-                <div className="flex items-center justify-center gap-3">
-                  <button
-                    onClick={() => onEdit(user)}
-                    className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-lg transition-colors"
-                    title="Edit user"
-                    disabled={deleteLoading === user.id}
-                  >
-                    <Edit2 className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => onDelete(user.id)}
-                    disabled={deleteLoading === user.id}
-                    className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Hapus user"
-                  >
-                    {deleteLoading === user.id ? (
-                      <Loader className="w-5 h-5 animate-spin" />
-                    ) : (
-                      <Trash2 className="w-5 h-5" />
-                    )}
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-600">{user.email}</div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {getRoleBadge(user.role)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-center">
+                  <div className="flex items-center justify-center gap-3">
+                    <button
+                      onClick={() => onEdit(user)}
+                      className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-lg transition-colors"
+                      title="Edit user"
+                      disabled={deleteLoading === user.id}
+                    >
+                      <Edit2 className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => onDelete(user.id)}
+                      disabled={deleteLoading === user.id}
+                      className="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Hapus user"
+                    >
+                      {deleteLoading === user.id ? (
+                        <Loader className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            )
+          })}
         </tbody>
       </table>
     </div>
