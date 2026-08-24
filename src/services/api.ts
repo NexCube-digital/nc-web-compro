@@ -48,7 +48,7 @@ export interface IUser {
   email: string;
   password?: string;
   name: string;
-  role?: 'admin' | 'user';
+  role?: 'admin' | 'user' | 'team';
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -63,14 +63,30 @@ export interface User {
   id: number
   name: string
   email: string
-  role: 'admin' | 'user'
+  role: 'admin' | 'user' | 'team' // sebelumnya cuma 'admin' | 'user'
   password?: string
   isActive?: boolean
   photo?: string
   bio?: string
   phone?: string
+  teamProfile?: TeamProfile // ikut kebawa dari BE (include: teamProfile) kalau role === 'team'
   createdAt?: string
   updatedAt?: string
+}
+
+
+export interface TeamProfile {
+  id?: number
+  userId?: number
+  position: string
+  image?: string
+  bio?: string
+  experience?: string
+  expertise?: string
+  portfolioUrl?: string
+  bank?: string
+  accountNumber?: string
+  status?: 'active' | 'in-active'
 }
 
 export interface Contact {
@@ -574,15 +590,36 @@ class ApiClient {
     return this.request<User>('/users', 'POST', data);
   }
 
-  async updateUser(id: string, data: { name: string; email: string; password?: string; role: string; photoFile?: File | null }): Promise<ApiResponse<User>> {
+  async updateUser(
+    id: string,
+    data: {
+      name: string
+      email: string
+      password?: string
+      role: string
+      photoFile?: File | null
+      team?: {
+        position?: string
+        image?: string // base64 dataURL atau path lama
+        bio?: string
+        experience?: string
+        expertise?: string
+        portfolioUrl?: string
+        bank?: string
+        accountNumber?: string
+        status?: 'active' | 'in-active'
+      }
+    }
+  ): Promise<ApiResponse<User>> {
     if (data.photoFile) {
       const formData = new FormData();
       formData.append('name', data.name);
       formData.append('email', data.email);
       formData.append('role', data.role);
       formData.append('photo', data.photoFile);
-      // Set Content-Type to undefined so Axios removes the default 'application/json',
-      // letting the browser set the correct 'multipart/form-data; boundary=...' automatically
+      if (data.team) {
+        formData.append('team', JSON.stringify(data.team));
+      }
       const response = await this.axiosInstance.put(`/users/${id}`, formData, {
         headers: { 'Content-Type': undefined },
       });
