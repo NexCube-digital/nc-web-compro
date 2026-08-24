@@ -78,25 +78,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExploreClick }) => {
                 <span>Konsultasi WA Gratis</span>
               </Link>
             </div>
-
-            {/* Social Trust Proof */}
-            <div className="pt-2 flex items-center justify-center lg:justify-start gap-3">
-              <div className="flex -space-x-2">
-                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover shadow-xs" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&q=80" alt="Klien 1" />
-                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover shadow-xs" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80" alt="Klien 2" />
-                <img className="inline-block h-8 w-8 rounded-full ring-2 ring-white object-cover shadow-xs" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80" alt="Klien 3" />
-              </div>
-              <div className="text-xs text-slate-600 text-left">
-                <div className="flex items-center gap-1 text-amber-500 font-bold">
-                  {[...Array(5)].map((_, i) => (
-                    <FaStar key={i} className="w-3.5 h-3.5" />
-                  ))}
-                  <span className="text-slate-800 ml-1 font-bold">4.9/5.0</span>
-                </div>
-                <span className="text-[11px] text-slate-500">Dipercaya 50+ UMKM & Klien Puas</span>
-              </div>
-            </div>
-
           </div>
 
           {/* Right Column: Bright Informative Showcase Card (Hidden on Mobile) */}
@@ -200,15 +181,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExploreClick }) => {
                       <div className="text-[10px] text-blue-100">Siap pengerjaan cepat & revisi ramah</div>
                     </div>
                   </div>
-                  <HiSparkles className="w-4 h-4 text-amber-300 animate-pulse" />
                 </div>
-
               </div>
-
             </div>
-
           </div>
-
         </div>
       </div>
     </section>

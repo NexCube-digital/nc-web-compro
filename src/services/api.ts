@@ -182,8 +182,18 @@ export interface CheckoutPayload {
 }
 
 export interface PaymentLinkResponse {
-  token: string;
-  paymentUrl: string;
+  token?: string;
+  paymentUrl?: string;
+  orderId?: string;
+  grossAmount?: number;
+  paymentType?: string;
+  vaNumber?: string;
+  bank?: string;
+  billerCode?: string;
+  billKey?: string;
+  qrCodeUrl?: string;
+  qrString?: string;
+  deeplinkUrl?: string;
 }
 
 
@@ -233,6 +243,7 @@ export interface PackageSnapTokenPayload {
   name: string;
   email: string;
   phone?: string;
+  paymentMethod?: string;
 }
 
 export interface PackageSnapTokenResponse {
@@ -506,16 +517,17 @@ class ApiClient {
    * STEP 2: Generate Midtrans payment link dari invoice yang sudah dibuat.
    * Route POST /invoices/:id/payment-link pakai optionalAuthMiddleware di backend.
    */
-  async checkoutGeneratePaymentLink(invoiceId: number | string): Promise<ApiResponse<PaymentLinkResponse>> {
-  const isLoggedIn = !!this.token;
+  async checkoutGeneratePaymentLink(invoiceId: number | string, paymentMethod?: string): Promise<ApiResponse<PaymentLinkResponse>> {
+    const isLoggedIn = !!this.token;
 
-  return this.request<PaymentLinkResponse>(
-    isLoggedIn
-      ? `/invoices/${invoiceId}/payment-link`
-      : `/invoices/noLogin/${invoiceId}/payment-link`,
-    'POST'
-  );
-}
+    return this.request<PaymentLinkResponse>(
+      isLoggedIn
+        ? `/invoices/${invoiceId}/payment-link`
+        : `/invoices/noLogin/${invoiceId}/payment-link`,
+      'POST',
+      paymentMethod ? { paymentMethod } : {}
+    );
+  }
 
 
 

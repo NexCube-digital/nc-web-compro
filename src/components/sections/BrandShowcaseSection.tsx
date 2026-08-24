@@ -68,25 +68,20 @@ export const BrandShowcaseSection: React.FC = () => {
               <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${item.accentColor}`}></div>
 
               <div className="space-y-3 sm:space-y-4">
-                {/* Header Row: Icon + Title & Subtitle Samping Icon */}
+                {/* Header Row: Icon + Title & Subtitle beside Icon */}
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className={`w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl border ${item.bgIcon} flex items-center justify-center group-hover:scale-105 transition-all duration-300 shadow-2xs shrink-0`}>
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl border ${item.bgIcon} flex items-center justify-center group-hover:scale-105 transition-all duration-300 shadow-2xs shrink-0`}>
                     {item.icon}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-base sm:text-xl font-bold text-slate-900 group-hover:text-[#126EFE] transition-colors leading-snug truncate">
+                    <h3 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-[#126EFE] transition-colors leading-snug">
                       {item.title}
                     </h3>
-                    <div className="text-[11px] sm:text-xs font-semibold text-slate-500 truncate">
+                    <div className="text-[10px] sm:text-xs font-medium text-slate-500 mt-0.5">
                       {item.subtitle}
                     </div>
                   </div>
                 </div>
-
-                {/* Description */}
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed pt-0.5">
-                  {item.desc}
-                </p>
 
                 {/* Feature Bullet List */}
                 <ul className="space-y-1.5 sm:space-y-2 pt-2.5 sm:pt-3 border-t border-slate-100">

@@ -49,7 +49,7 @@ export const Home: React.FC = () => {
 
       {/* 7. Portfolio Gallery */}
       <section id="portfolio" className="py-8 bg-white">
-        <Portfolio />
+        <Portfolio limit={9} showViewMore={true} />
       </section>
 
       {/* 8. Testimonials & Reviews */}

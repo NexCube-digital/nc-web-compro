@@ -27,6 +27,7 @@ const Checkout         = lazy(() => import('./pages/Checkout').then(m => ({ defa
 const OrderSuccess     = lazy(() => import('./pages/OrderSuccess').then(m => ({ default: m.OrderSuccess })))
 const OrderPending     = lazy(() => import('./pages/OrderPending').then(m => ({ default: m.OrderPending })))
 const CreateUlasan     = lazy(() => import('./pages/CreateUlasan').then(m => ({ default: m.CreateUlasan })))
+const PortfolioPage    = lazy(() => import('./pages/Portfolio').then(m => ({ default: m.PortfolioPage })))
 
 const PageLoader = () => <Loading fullScreen message="Memuat halaman..." />
 
@@ -139,6 +140,8 @@ export const routes = [
       { path: 'paket/website',            element: <Website /> },
       { path: 'paket/undangan-digital',   element: <UndanganDigital /> },
       { path: 'paket/desain-grafis',      element: <DesainGrafis /> },
+      // path: 'portfolio'
+      { path: 'portfolio',                element: <PortfolioPage /> },
       { path: 'paket/menu-katalog',       element: <MenuKatalog /> },
       { path: 'login',                    element: <Login /> },
       { path: 'dashboard',                element: <Dashboard /> },

@@ -92,34 +92,29 @@ export const ServicesSection: React.FC = () => {
               {/* Top Accent Gradient Line */}
               <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${service.accentColor}`}></div>
 
-              <div className="space-y-2 sm:space-y-4">
-                {/* Header Row: Icon + Title/Subtitle & Badge */}
-                <div className="flex items-start justify-between gap-1.5">
-                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-                    <div className="w-8 h-8 sm:w-13 sm:h-13 rounded-lg sm:rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:scale-105 group-hover:bg-blue-50 group-hover:border-blue-200 transition-all duration-300 shadow-2xs shrink-0">
+              <div className="space-y-3 sm:space-y-4">
+                {/* Header: Icon + Title/Subtitle beside Icon, Badge on Right */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                    <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-center group-hover:scale-105 group-hover:bg-blue-50 group-hover:border-blue-200 transition-all duration-300 shadow-2xs shrink-0">
                       {service.icon}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h3 className="text-xs sm:text-lg font-bold text-slate-900 group-hover:text-[#126EFE] transition-colors leading-snug truncate">
+                      <h3 className="text-xs sm:text-base font-bold text-slate-900 group-hover:text-[#126EFE] transition-colors leading-snug">
                         {service.title}
                       </h3>
-                      <div className="text-[9px] sm:text-xs font-semibold text-slate-500 truncate">
+                      <div className="text-[10px] sm:text-xs font-medium text-slate-500 mt-0.5">
                         {service.subtitle}
                       </div>
                     </div>
                   </div>
-                  <span className={`text-[8px] sm:text-xs font-bold px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full border ${service.badgeClass} shadow-2xs shrink-0 mt-0.5 truncate`}>
+                  <span className={`text-[9px] sm:text-xs font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border ${service.badgeClass} shadow-2xs shrink-0`}>
                     {service.badge}
                   </span>
                 </div>
 
-                {/* Description */}
-                <p className="text-[11px] sm:text-sm text-slate-600 leading-snug pt-0.5">
-                  {service.description}
-                </p>
-
                 {/* Feature List */}
-                <ul className="space-y-1 sm:space-y-2 pt-2 sm:pt-3 border-t border-slate-100">
+                <ul className="space-y-1.5 sm:space-y-2 pt-2.5 sm:pt-3 border-t border-slate-100">
                   {service.features.map((feat, idx) => (
                     <li key={idx} className="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-slate-700">
                       <FaCheckCircle className="text-[#126EFE] shrink-0 w-3 h-3 sm:w-3.5 sm:h-3.5" />

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { FaGlobe, FaEnvelopeOpenText, FaPalette, FaBookOpen, FaCamera, FaStar, FaExternalLinkAlt, FaFolderOpen, FaArrowRight } from 'react-icons/fa';
 import { HiSparkles } from 'react-icons/hi';
 import apiClient, { Portfolio as PortfolioType, getImageUrl } from '../services/api';
@@ -44,9 +45,19 @@ const CategoryIcon: React.FC<{ category: string }> = ({ category }) => {
   }
 };
 
+export interface PortfolioProps {
+  limit?: number;
+  showViewMore?: boolean;
+  hideHeader?: boolean;
+}
+
 // ── Main Component ────────────────────────────────────────────────────────────
 
-export const Portfolio: React.FC = () => {
+export const Portfolio: React.FC<PortfolioProps> = ({
+  limit,
+  showViewMore = false,
+  hideHeader = false,
+}) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('Semua');
   const [portfolioItems, setPortfolioItems] = useState<PortfolioType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -99,6 +110,8 @@ export const Portfolio: React.FC = () => {
           (item) => getCategoryLabel(item.category) === selectedCategory
         );
 
+  const displayedItems = limit ? filteredItems.slice(0, limit) : filteredItems;
+
   // ── Render: Loading ─────────────────────────────────────────────────────────
   const renderLoading = () => (
     <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-8 mb-8 sm:mb-12">
@@ -147,8 +160,8 @@ export const Portfolio: React.FC = () => {
 
   // ── Render: Grid (2 Columns / 2 Banjar on Mobile) ───────────────────────────
   const renderGrid = () => (
-    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-6 lg:gap-8 mb-8 sm:mb-12">
-      {filteredItems.map((item, index) => {
+    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-6 lg:gap-8 mb-4 sm:mb-8">
+      {displayedItems.map((item, index) => {
         const techList: string[] = item.technologies
           ? item.technologies.split(',').map((t) => t.trim())
           : [];
@@ -254,23 +267,25 @@ export const Portfolio: React.FC = () => {
       <div className="container mx-auto px-3 sm:px-4 md:px-6 relative z-10">
         
         {/* Header (Compact on Mobile) */}
-        <div className="text-center max-w-3xl mx-auto mb-6 sm:mb-12 space-y-2 sm:space-y-3">
-          <div className={`inline-flex items-center gap-1.5 bg-blue-50 border border-blue-100 text-[#126EFE] px-3.5 py-1 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider shadow-xs ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}>
-            <HiSparkles className="w-3.5 h-3.5 text-[#FBA41C]" />
-            <span>PORTFOLIO KARYA TERBAIK</span>
+        {!hideHeader && (
+          <div className="text-center max-w-3xl mx-auto mb-6 sm:mb-12 space-y-2 sm:space-y-3">
+            <div className={`inline-flex items-center gap-1.5 bg-blue-50 border border-blue-100 text-[#126EFE] px-3.5 py-1 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider shadow-xs ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}>
+              <HiSparkles className="w-3.5 h-3.5 text-[#FBA41C]" />
+              <span>PORTFOLIO KARYA TERBAIK</span>
+            </div>
+
+            <h2 className={`text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-100'}`}>
+              Lihat Hasil Karya <br className="hidden sm:inline" />
+              <span className="bg-gradient-to-r from-[#126EFE] via-blue-600 to-[#FBA41C] bg-clip-text text-transparent">
+                Terbaik Kami
+              </span>
+            </h2>
+
+            <p className={`text-slate-600 text-xs sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-200'}`}>
+              Setiap proyek adalah bukti komitmen kami terhadap kualitas, performa tinggi, dan kepuasan klien.
+            </p>
           </div>
-
-          <h2 className={`text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-100'}`}>
-            Lihat Hasil Karya <br className="hidden sm:inline" />
-            <span className="bg-gradient-to-r from-[#126EFE] via-blue-600 to-[#FBA41C] bg-clip-text text-transparent">
-              Terbaik Kami
-            </span>
-          </h2>
-
-          <p className={`text-slate-600 text-xs sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp delay-200'}`}>
-            Setiap proyek adalah bukti komitmen kami terhadap kualitas, performa tinggi, dan kepuasan klien.
-          </p>
-        </div>
+        )}
 
         {/* Filter Buttons (Horizontally Scrollable / Compact on Mobile) */}
         {!isLoading && !error && (
@@ -299,6 +314,19 @@ export const Portfolio: React.FC = () => {
           : filteredItems.length === 0
           ? renderEmpty()
           : renderGrid()}
+
+        {/* Button Lihat Selengkapnya */}
+        {showViewMore && !isLoading && !error && filteredItems.length > 0 && (
+          <div className="text-center pt-3 sm:pt-6">
+            <Link
+              to="/portfolio"
+              className="inline-flex items-center gap-2.5 px-7 py-3.5 sm:px-9 sm:py-4 rounded-2xl bg-gradient-to-r from-[#126EFE] via-blue-600 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-xs sm:text-base shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer"
+            >
+              <span>Lihat Selengkapnya</span>
+              <FaArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-1.5 transition-transform shrink-0" />
+            </Link>
+          </div>
+        )}
 
       </div>
     </section>

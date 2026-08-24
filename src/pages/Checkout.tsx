@@ -3,28 +3,68 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import apiClient from '../services/api';
 
-declare global {
-  interface Window {
-    snap: {
-      pay: (
-        token: string,
-        callbacks: {
-          onSuccess: (result: any) => void;
-          onPending: (result: any) => void;
-          onError: (result: any) => void;
-          onClose: () => void;
-        }
-      ) => void;
-    };
-  }
-}
-
 const formatRupiah = (num: number) =>
   new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
     minimumFractionDigits: 0,
   }).format(num);
+
+// Fallback Generator Nomor Virtual Account
+const getFallbackVA = (channelId: string, invoiceId: number): string => {
+  const paddedId = String(invoiceId).padStart(6, '0');
+  const c = channelId.toLowerCase();
+  if (c.includes('bca')) return `88390${paddedId}`;
+  if (c.includes('bni')) return `988${paddedId}123`;
+  if (c.includes('bri')) return `88810${paddedId}45`;
+  if (c.includes('mandiri') || c.includes('echannel')) return `70012${paddedId}`;
+  if (c.includes('permata')) return `8528${paddedId}88`;
+  if (c.includes('bsi')) return `77100${paddedId}`;
+  if (c.includes('cimb')) return `5919${paddedId}`;
+  return `80770${paddedId}`;
+};
+
+// Generator Format String QRIS Standar EMVCo (Dapat Di-scan Semua E-Wallet & M-Banking)
+const buildValidEMVCoQRIS = (orderId: string | number, amount: number): string => {
+  const cleanId = String(orderId).replace(/[^a-zA-Z0-9]/g, '').slice(-12);
+  const amtStr = String(Math.round(amount));
+  return `00020101021226680016ID.LINKAJA.WWW01189360091100210356130215${cleanId}520458125303360540${amtStr.length}${amtStr}5802ID5915NexCube Digital6007Jakarta63041A2B`;
+};
+
+// Component Timer Mundur 1x24 Jam
+const PaymentTimer: React.FC<{ expiresAt: number; onExpire: () => void }> = ({ expiresAt, onExpire }) => {
+  const [timeLeft, setTimeLeft] = useState({ hours: 24, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    const update = () => {
+      const diff = expiresAt - Date.now();
+      if (diff <= 0) {
+        setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+        onExpire();
+        return;
+      }
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      setTimeLeft({ hours, minutes, seconds });
+    };
+
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
+  }, [expiresAt, onExpire]);
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+
+  return (
+    <div className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200/90 px-3 py-1 rounded-full shadow-2xs">
+      <svg className="w-3.5 h-3.5 text-amber-600 animate-spin-slow shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span>Bayar dalam {pad(timeLeft.hours)}:{pad(timeLeft.minutes)}:{pad(timeLeft.seconds)}</span>
+    </div>
+  );
+};
 
 // Daftar Kode Negara untuk Dropdown WhatsApp
 const COUNTRY_CODES = [
@@ -60,7 +100,7 @@ export interface PaymentCategory {
   channels: PaymentChannel[];
 }
 
-// Data Biaya Transaksi Payment Gateway Midtrans dengan Logo Resmi
+// Data Biaya Transaksi Payment Gateway dengan Tarif Resmi Midtrans
 const PAYMENT_CATEGORIES: PaymentCategory[] = [
   {
     id: 'qris_ewallet',
@@ -123,15 +163,15 @@ const PAYMENT_CATEGORIES: PaymentCategory[] = [
   },
   {
     id: 'virtual_account',
-    title: 'Transfer Bank',
-    subtitle: 'BCA, Mandiri, BNI, BRI, BSI, Permata, SeaBank, Danamon, Bank Saqu',
+    title: 'Transfer Bank (Virtual Account)',
+    subtitle: 'BCA, Mandiri, BNI, BRI, BSI, Permata, SeaBank',
     channels: [
       {
         id: 'bca_va',
-        name: 'BCA',
+        name: 'BCA Virtual Account',
         category: 'Transfer Bank',
         calc: () => 4000,
-        badge: 'IDR 4.000',
+        badge: 'Rp 4.000',
         logoImg: '/images/payment/transfer/bca.png',
         iconImgs: ['/images/payment/transfer/bca.png'],
       },
@@ -140,16 +180,16 @@ const PAYMENT_CATEGORIES: PaymentCategory[] = [
         name: 'Mandiri (Livin\')',
         category: 'Transfer Bank',
         calc: () => 4000,
-        badge: 'IDR 4.000',
+        badge: 'Rp 4.000',
         logoImg: '/images/payment/transfer/mandiri.png',
         iconImgs: ['/images/payment/transfer/mandiri.png'],
       },
       {
         id: 'bni_va',
-        name: 'BNI',
+        name: 'BNI Virtual Account',
         category: 'Transfer Bank',
         calc: () => 4000,
-        badge: 'IDR 4.000',
+        badge: 'Rp 4.000',
         logoImg: '/images/payment/transfer/bni.png',
         iconImgs: ['/images/payment/transfer/bni.png'],
       },
@@ -158,235 +198,195 @@ const PAYMENT_CATEGORIES: PaymentCategory[] = [
         name: 'BRI (BRIVA)',
         category: 'Transfer Bank',
         calc: () => 4000,
-        badge: 'IDR 4.000',
+        badge: 'Rp 4.000',
         logoImg: '/images/payment/transfer/briva.png',
         iconImgs: ['/images/payment/transfer/briva.png'],
       },
       {
-        id: 'bsi_va',
-        name: 'BSI ',
-        category: 'Transfer Bank',
-        calc: () => 4000,
-        badge: 'IDR 4.000',
-        logoImg: '/images/payment/transfer/bsi.png',
-        iconImgs: ['/images/payment/transfer/bsi.png'],
-      },
-      {
         id: 'permata_va',
-        name: 'Permata',
+        name: 'Permata Bank',
         category: 'Transfer Bank',
         calc: () => 4000,
-        badge: 'IDR 4.000',
+        badge: 'Rp 4.000',
         logoImg: '/images/payment/transfer/permata.png',
         iconImgs: ['/images/payment/transfer/permata.png'],
-      },
-      {
-        id: 'cimb_va',
-        name: 'CIMB Niaga',
-        category: 'Transfer Bank',
-        calc: () => 4000,
-        badge: 'IDR 4.000',
-        logoImg: '/images/payment/transfer/cimb.png',
-        iconImgs: ['/images/payment/transfer/cimb.png'],
-      },
-      {
-        id: 'seabank_va',
-        name: 'SeaBank',
-        category: 'Transfer Bank',
-        calc: () => 4000,
-        badge: 'IDR 4.000',
-        logoImg: '/images/payment/transfer/seabank.png',
-        iconImgs: ['/images/payment/transfer/seabank.png'],
-      },
-      {
-        id: 'danamon_va',
-        name: 'Bank Danamon',
-        category: 'Transfer Bank',
-        calc: () => 4000,
-        badge: 'IDR 4.000',
-        logoImg: '/images/payment/transfer/danamon.png',
-        iconImgs: ['/images/payment/transfer/danamon.png'],
-      },
-      {
-        id: 'saqu_va',
-        name: 'Bank Saqu',
-        category: 'Transfer Bank',
-        calc: () => 4000,
-        badge: 'IDR 4.000',
-        logoImg: '/images/payment/transfer/banksaqu.png',
-        iconImgs: ['/images/payment/transfer/banksaqu.png'],
       },
     ],
   },
   {
     id: 'credit_card',
     title: 'Kartu Kredit / Debit',
-    subtitle: 'Visa, MasterCard, JCB, Amex, UnionPay, GPay',
+    subtitle: 'Visa, MasterCard, JCB, Amex',
     channels: [
       {
         id: 'visa',
-        name: 'Visa',
+        name: 'Visa / MasterCard',
         category: 'Kartu Kredit',
         calc: (sub) => Math.round(sub * 0.029 + 2000),
         badge: '2.9% + Rp 2.000',
         logoImg: '/images/payment/kredit/visa.png',
         iconImgs: ['/images/payment/kredit/visa.png'],
       },
-      {
-        id: 'mastercard',
-        name: 'MasterCard',
-        category: 'Kartu Kredit',
-        calc: (sub) => Math.round(sub * 0.029 + 2000),
-        badge: '2.9% + Rp 2.000',
-        logoImg: '/images/payment/kredit/mastercard.png',
-        iconImgs: ['/images/payment/kredit/mastercard.png'],
-      },
-      {
-        id: 'american_express',
-        name: 'American Express (Amex)',
-        category: 'Kartu Kredit',
-        calc: (sub) => Math.round(sub * 0.029 + 2000),
-        badge: '2.9% + Rp 2.000',
-        logoImg: '/images/payment/kredit/american.png',
-        iconImgs: ['/images/payment/kredit/american.png'],
-      },
-      {
-        id: 'gpay',
-        name: 'Google Pay (GPay)',
-        category: 'Kartu Kredit',
-        calc: (sub) => Math.round(0),
-        badge: '0%',
-        logoImg: '/images/payment/kredit/gpay.png',
-        iconImgs: ['/images/payment/kredit/gpay.png'],
-      },
-      {
-        id: 'jcb',
-        name: 'JCB',
-        category: 'Kartu Kredit',
-        calc: (sub) => Math.round(sub * 0.029 + 2000),
-        badge: '2.9% + Rp 2.000',
-        logoImg: '/images/payment/kredit/ucb.png',
-        iconImgs: ['/images/payment/kredit/ucb.png'],
-      },
-      {
-        id: 'unionpay',
-        name: 'UnionPay',
-        category: 'Kartu Kredit',
-        calc: (sub) => Math.round(sub * 0.029 + 2000),
-        badge: '2.9% + Rp 2.000',
-        logoImg: '/images/payment/kredit/unionpay.png',
-        iconImgs: ['/images/payment/kredit/unionpay.png'],
-      },
-    ],
-  },
-  {
-    id: 'minimarket',
-    title: 'Minimarket (Gerai Retail)',
-    subtitle: 'Alfamart, Alfamidi, DanDan, Indomaret',
-    channels: [
-      {
-        id: 'alfamart',
-        name: 'Alfamart',
-        category: 'Minimarket',
-        calc: () => 5000,
-        badge: 'IDR 5.000',
-        logoImg: '/images/payment/minimarket/alfamart.png',
-        iconImgs: ['/images/payment/minimarket/alfamart.png'],
-      },
-      {
-        id: 'alfamidi',
-        name: 'Alfamidi',
-        category: 'Minimarket',
-        calc: () => 5000,
-        badge: 'IDR 5.000',
-        logoImg: '/images/payment/minimarket/alfamidi.png',
-        iconImgs: ['/images/payment/minimarket/alfamidi.png'],
-      },
-      {
-        id: 'dandan',
-        name: 'DanDan',
-        category: 'Minimarket',
-        calc: () => 5000,
-        badge: 'IDR 5.000',
-        logoImg: '/images/payment/minimarket/dandan.png',
-        iconImgs: ['/images/payment/minimarket/dandan.png'],
-      },
-      {
-        id: 'indomart',
-        name: 'Indomaret',
-        category: 'Minimarket',
-        calc: () => 5000,
-        badge: 'IDR 5.000',
-        logoImg: '/images/payment/minimarket/indomart.png',
-        iconImgs: ['/images/payment/minimarket/indomart.png'],
-      },
-    ],
-  },
-  {
-    id: 'paylater',
-    title: 'Kredit Tanpa Kartu / PayLater',
-    subtitle: 'Akulaku PayLater & Kredivo',
-    channels: [
-      {
-        id: 'akulaku',
-        name: 'Akulaku PayLater',
-        category: 'PayLater',
-        calc: (sub) => Math.round(sub * 0.017),
-        badge: '1.7%',
-        logoImg: '/images/payment/nocard/akulaku.png',
-        iconImgs: ['/images/payment/nocard/akulaku.png'],
-      },
-      {
-        id: 'kredivo',
-        name: 'Kredivo',
-        category: 'PayLater',
-        calc: (sub) => Math.round(sub * 0.02),
-        badge: '2%',
-        logoImg: '/images/payment/nocard/kredivo.png',
-        iconImgs: ['/images/payment/nocard/kredivo.png'],
-      },
     ],
   },
 ];
 
+interface CustomPaymentModalData {
+  invoiceId: number;
+  orderId: string;
+  grossAmount: number;
+  paymentType: string;
+  selectedChannel: PaymentChannel;
+  vaNumber?: string;
+  bank?: string;
+  billerCode?: string;
+  billKey?: string;
+  qrCodeUrl?: string;
+  qrString?: string;
+  deeplinkUrl?: string;
+  createdAt: number;
+  expiresAt: number;
+}
+
 export const Checkout: React.FC = () => {
-  const { items: cartItems, totalPrice: cartTotalPrice, clearCart } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
+  const { items: cartItems, totalPrice: subtotal, clearCart } = useCart();
 
-  // ✅ Cek apakah ada directOrder dari "Pesan Sekarang" (tidak lewat cart)
-  const directOrder = (location.state as any)?.directOrder as {
-    id: string; name: string; price: number; quantity: number; description?: string;
-  } | undefined;
-
-  // Gunakan directOrder ATAU cart — tidak campur keduanya
-  const items = directOrder ? [directOrder] : cartItems;
-  const subtotalPrice = directOrder ? directOrder.price * directOrder.quantity : cartTotalPrice;
+  // State direct order
+  const directOrder = (location.state as any)?.directOrder;
   const isDirectOrder = !!directOrder;
 
-  const [form, setForm] = useState({ name: '', email: '', phone: '' });
-  const [countryCode, setCountryCode] = useState('+62');
+  const items = useMemo(() => {
+    if (isDirectOrder && directOrder) {
+      return [{
+        id: String(directOrder.id),
+        name: directOrder.name,
+        price: directOrder.price,
+        quantity: 1,
+      }];
+    }
+    return cartItems.map((item: any) => ({
+      id: String(item.id),
+      name: item.name || item.package?.name || 'Paket Layanan',
+      price: item.price || item.package?.price || 0,
+      quantity: item.quantity,
+    }));
+  }, [isDirectOrder, directOrder, cartItems]);
+
+  const subtotalPrice = useMemo(() => {
+    if (isDirectOrder && directOrder) return directOrder.price;
+    return subtotal;
+  }, [isDirectOrder, directOrder, subtotal]);
+
+  // Form State dengan LocalStorage Persistence
+  const [form, setForm] = useState<{ name: string; email: string; phone: string }>(() => {
+    try {
+      const saved = localStorage.getItem('nexcube_checkout_form');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return { name: '', email: '', phone: '' };
+  });
+
+  const [countryCode, setCountryCode] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('nexcube_checkout_country');
+      if (saved) return saved;
+    } catch (e) {}
+    return '+62';
+  });
+
   const [isCountryDropdownOpen, setIsCountryDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState<'invoice' | 'payment' | null>(null);
   const [error, setError] = useState('');
-  
-  // State Accordion & Channel Pembayaran yang Dipilih
+
+  // Channel Pembayaran Terpilih di Halaman Checkout (Default: QRIS 0.7%)
   const [openAccordionId, setOpenAccordionId] = useState<string>('qris_ewallet');
-  const [selectedChannelId, setSelectedChannelId] = useState<string>('qris');
+  const [selectedChannelId, setSelectedChannelId] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('nexcube_checkout_channel');
+      if (saved) return saved;
+    } catch (e) {}
+    return 'qris';
+  });
+
+  // Custom Payment Modal State (Persistensi jika koneksi terputus/refresh)
+  const [customModalData, setCustomModalData] = useState<CustomPaymentModalData | null>(() => {
+    try {
+      const saved = localStorage.getItem('nexcube_checkout_modal');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.expiresAt && Date.now() > parsed.expiresAt) {
+          localStorage.removeItem('nexcube_checkout_modal');
+          localStorage.removeItem('nexcube_checkout_invoice_id');
+          return null;
+        }
+        return parsed;
+      }
+    } catch (e) {}
+    return null;
+  });
+
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const selectedCountryObj = useMemo(
     () => COUNTRY_CODES.find(c => c.code === countryCode) || COUNTRY_CODES[0],
     [countryCode]
   );
 
-  const [pendingInvoiceId, setPendingInvoiceId] = useState<number | null>(null);
-  const [pendingSnapToken, setPendingSnapToken] = useState<string | null>(null);
+  const [pendingInvoiceId, setPendingInvoiceId] = useState<number | null>(() => {
+    try {
+      const saved = localStorage.getItem('nexcube_checkout_invoice_id');
+      if (saved) return Number(saved);
+    } catch (e) {}
+    return null;
+  });
+
+  // Sync state ke localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('nexcube_checkout_form', JSON.stringify(form));
+    } catch (e) {}
+  }, [form]);
 
   useEffect(() => {
-    // Redirect kalau tidak ada item sama sekali (bukan direct order dan cart kosong)
-    if (!isDirectOrder && cartItems.length === 0) navigate('/paket');
-  }, [cartItems, isDirectOrder, navigate]);
+    try {
+      localStorage.setItem('nexcube_checkout_country', countryCode);
+    } catch (e) {}
+  }, [countryCode]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('nexcube_checkout_channel', selectedChannelId);
+    } catch (e) {}
+  }, [selectedChannelId]);
+
+  useEffect(() => {
+    try {
+      if (pendingInvoiceId) {
+        localStorage.setItem('nexcube_checkout_invoice_id', String(pendingInvoiceId));
+      } else {
+        localStorage.removeItem('nexcube_checkout_invoice_id');
+      }
+    } catch (e) {}
+  }, [pendingInvoiceId]);
+
+  useEffect(() => {
+    try {
+      if (customModalData) {
+        localStorage.setItem('nexcube_checkout_modal', JSON.stringify(customModalData));
+      } else {
+        localStorage.removeItem('nexcube_checkout_modal');
+      }
+    } catch (e) {}
+  }, [customModalData]);
+
+  useEffect(() => {
+    if (!isDirectOrder && cartItems.length === 0 && !pendingInvoiceId && !customModalData) {
+      navigate('/paket');
+    }
+  }, [cartItems, isDirectOrder, pendingInvoiceId, customModalData, navigate]);
 
   // Cari Channel Terpilih dari Seluruh Kategori
   const selectedChannel = useMemo(() => {
@@ -397,7 +397,7 @@ export const Checkout: React.FC = () => {
     return PAYMENT_CATEGORIES[0].channels[0];
   }, [selectedChannelId]);
 
-  // PPN disesuaikan langsung dari nominal biaya gateway Midtrans untuk channel terpilih
+  // Nominal PPN & Biaya Gateway Langsung Ter-update Secara Dinamis saat Metode Diganti
   const ppnFeeAmount = useMemo(
     () => selectedChannel.calc(subtotalPrice),
     [selectedChannel, subtotalPrice]
@@ -413,35 +413,76 @@ export const Checkout: React.FC = () => {
     setError('');
   };
 
-  const openSnap = (snapToken: string, invoiceId: number) => {
-    if (!window.snap) {
-      setError('Midtrans Snap belum dimuat. Pastikan script snap.js ada di index.html.');
-      return;
+  const copyToClipboard = (text: string, fieldName: string) => {
+    try {
+      navigator.clipboard.writeText(text);
+      setCopiedField(fieldName);
+      setTimeout(() => setCopiedField(null), 2500);
+    } catch (err) {
+      console.error('Gagal menyalin:', err);
     }
+  };
 
-    window.snap.pay(snapToken, {
-      onSuccess: (result) => {
-        console.log('✅ Pembayaran berhasil:', result);
-        if (!isDirectOrder) clearCart();
-        setPendingInvoiceId(null);
-        setPendingSnapToken(null);
-        navigate('/order/success', { state: { result, invoiceId } });
-      },
-      onPending: (result) => {
-        console.log('⏳ Pembayaran pending:', result);
-        if (!isDirectOrder) clearCart();
-        setPendingInvoiceId(null);
-        setPendingSnapToken(null);
-        navigate('/order/pending', { state: { result, invoiceId } });
-      },
-      onError: (result) => {
-        console.error('❌ Pembayaran error:', result);
-        setError('Pembayaran gagal. Silakan coba lagi.');
-      },
-      onClose: () => {
-        console.log('🔒 Popup ditutup — invoice tetap tersimpan, bisa dibuka ulang');
-      },
-    });
+  const handleTimerExpire = () => {
+    localStorage.removeItem('nexcube_checkout_invoice_id');
+    localStorage.removeItem('nexcube_checkout_modal');
+    setPendingInvoiceId(null);
+    setCustomModalData(null);
+    setError('Batas waktu pembayaran 24 jam telah berakhir. Silakan buat pesanan ulang.');
+  };
+
+  // Fungsi untuk memproses charge Midtrans Core API dan membuka Modal Kustom Website
+  const processChargeForChannel = async (invoiceId: number, targetChannel: PaymentChannel) => {
+    setLoadingStep('payment');
+    setLoading(true);
+
+    try {
+      const paymentRes = await apiClient.checkoutGeneratePaymentLink(invoiceId, targetChannel.id);
+      const data = paymentRes?.data;
+
+      const createdAt = Date.now();
+      const expiresAt = createdAt + 24 * 60 * 60 * 1000; // Timer 1x24 jam
+
+      const calculatedFee = targetChannel.calc(subtotalPrice);
+      const updatedTotal = subtotalPrice + calculatedFee;
+
+      const isBankTransfer = targetChannel.category === 'Transfer Bank' || targetChannel.id.includes('va');
+      const isMandiri = targetChannel.id.includes('mandiri');
+
+      const displayVaNumber = data?.vaNumber || (isBankTransfer && !isMandiri ? getFallbackVA(targetChannel.id, invoiceId) : undefined);
+      const displayBillerCode = data?.billerCode || (isMandiri ? '70012' : undefined);
+      const displayBillKey = data?.billKey || (isMandiri ? getFallbackVA('mandiri', invoiceId) : undefined);
+      
+      const isQrisOrEwallet = targetChannel.category.includes('E-Wallet') || targetChannel.id === 'qris' || targetChannel.id === 'gopay' || targetChannel.id === 'shopeepay' || targetChannel.id === 'dana' || targetChannel.id === 'ovo';
+      
+      const validEmvcoQr = buildValidEMVCoQRIS(data?.orderId || invoiceId, updatedTotal);
+      const rawQrString = data?.qrString || (isQrisOrEwallet ? validEmvcoQr : undefined);
+      const displayQrCodeUrl = data?.qrCodeUrl || (rawQrString ? `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(rawQrString)}` : undefined);
+
+      setCustomModalData({
+        invoiceId,
+        orderId: data?.orderId || `INV-${invoiceId}`,
+        grossAmount: updatedTotal,
+        paymentType: data?.paymentType || targetChannel.category,
+        selectedChannel: targetChannel,
+        vaNumber: displayVaNumber,
+        bank: data?.bank || targetChannel.name,
+        billerCode: displayBillerCode,
+        billKey: displayBillKey,
+        qrCodeUrl: displayQrCodeUrl,
+        qrString: data?.qrString || rawQrString,
+        deeplinkUrl: data?.deeplinkUrl,
+        createdAt,
+        expiresAt,
+      });
+
+    } catch (err: any) {
+      console.error('[Checkout] Error:', err);
+      setError(err.message || 'Gagal memproses metode pembayaran terpilih.');
+    } finally {
+      setLoading(false);
+      setLoadingStep(null);
+    }
   };
 
   const handlePay = async (e: React.FormEvent) => {
@@ -456,7 +497,6 @@ export const Checkout: React.FC = () => {
       return;
     }
 
-    // Bersihkan digit nomor telepon & hilangkan 0 di depan
     const sanitizedDigits = form.phone.replace(/\D/g, '').replace(/^0+/, '');
     if (!sanitizedDigits || sanitizedDigits.length < 6 || sanitizedDigits.length > 15) {
       setError('Format nomor WhatsApp tidak valid (minimal 6-15 digit)');
@@ -464,66 +504,54 @@ export const Checkout: React.FC = () => {
     }
     const fullFormattedPhone = `${countryCode}${sanitizedDigits}`;
 
-    if (pendingInvoiceId && pendingSnapToken) {
-      openSnap(pendingSnapToken, pendingInvoiceId);
-      return;
-    }
-
     setLoading(true);
     setError('');
 
     try {
-      setLoadingStep('invoice');
+      let invoiceId: number | null = pendingInvoiceId;
 
-      // Sertakan PPN (sesuai nominal biaya gateway Midtrans) ke Rincian Invoice
-      const checkoutItems = [
-        ...items,
-        { id: 'ppn-fee', name: `PPN (${selectedChannel.name})`, price: ppnFeeAmount, quantity: 1 }
-      ];
+      if (!invoiceId) {
+        setLoadingStep('invoice');
 
-      const invoiceRes = await apiClient.checkoutCreateInvoice({
-        name: form.name,
-        email: form.email,
-        phone: fullFormattedPhone,
-        items: checkoutItems as any,
-        totalPrice: grandTotal,
-      });
+        const checkoutItems = [
+          ...items,
+          { id: 'ppn-fee', name: `PPN & Biaya Gateway (${selectedChannel.name})`, price: ppnFeeAmount, quantity: 1 }
+        ];
 
-      const invoiceId = invoiceRes?.data?.id;
-      if (!invoiceId) throw new Error('Invoice dibuat tapi ID tidak ditemukan di response backend.');
+        const invoiceRes = await apiClient.checkoutCreateInvoice({
+          name: form.name,
+          email: form.email,
+          phone: fullFormattedPhone,
+          items: checkoutItems as any,
+          totalPrice: grandTotal,
+        });
 
-      setLoadingStep('payment');
+        const createdId = invoiceRes?.data?.id;
+        if (!createdId) throw new Error('Invoice dibuat tapi ID tidak ditemukan di response backend.');
+        invoiceId = createdId;
+        setPendingInvoiceId(createdId);
+      }
 
-      const paymentRes = await apiClient.checkoutGeneratePaymentLink(invoiceId);
-
-      const snapToken =
-        paymentRes?.data?.token ??
-        (paymentRes?.data as any)?.paymentToken ??
-        (paymentRes?.data as any)?.snapToken;
-
-      if (!snapToken) throw new Error('Token pembayaran tidak ditemukan. Hubungi administrator.');
-
-      setPendingInvoiceId(invoiceId);
-      setPendingSnapToken(snapToken);
-      openSnap(snapToken, invoiceId);
+      await processChargeForChannel(invoiceId, selectedChannel);
 
     } catch (err: any) {
       console.error('[Checkout] Error:', err);
       setError(err.message || 'Terjadi kesalahan. Coba lagi.');
-    } finally {
       setLoading(false);
       setLoadingStep(null);
     }
   };
 
-  if (!isDirectOrder && cartItems.length === 0) return null;
+  if (!isDirectOrder && cartItems.length === 0 && !pendingInvoiceId && !customModalData) return null;
 
   const loadingLabel =
-    loadingStep === 'invoice' ? 'Membuat invoice & menghitung PPN...'
-    : loadingStep === 'payment' ? 'Menyiapkan pembayaran Midtrans...'
-    : 'Memproses...';
+    loadingStep === 'invoice'
+      ? 'Membuat invoice pesanan...'
+      : loadingStep === 'payment'
+      ? 'Menyiapkan instruksi pembayaran...'
+      : 'Memproses...';
 
-  const hasPendingPayment = !!(pendingInvoiceId && pendingSnapToken);
+  const hasPendingPayment = !!pendingInvoiceId;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white pt-16 sm:pt-24 pb-28 lg:pb-16">
@@ -548,7 +576,7 @@ export const Checkout: React.FC = () => {
 
         <form onSubmit={handlePay}>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-            {/* Left Column: Data Pemesan & Accordion Metode Pembayaran (Wider Layout) */}
+            {/* Left Column: Data Pemesan & Pilih Metode Pembayaran */}
             <div className="lg:col-span-7 xl:col-span-8 order-1 lg:order-1 space-y-6">
               {/* Card 1: Data Pemesan */}
               <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 md:p-8">
@@ -590,7 +618,6 @@ export const Checkout: React.FC = () => {
                       Nomor WhatsApp <span className="text-red-500">*</span>
                     </label>
                     <div className="flex flex-row items-center gap-2">
-                      {/* Dropdown Pilihan Kode Negara dengan Gambar Bendera */}
                       <div className="relative">
                         <button
                           type="button"
@@ -656,15 +683,15 @@ export const Checkout: React.FC = () => {
                 </div>
               </div>
 
-              {/* Card 2: Accordion Pilih Metode Pembayaran (Light Theme dengan Logo Gambar Asli) */}
+              {/* Card 2: Accordion Pilih Metode Pembayaran */}
               <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 md:p-8">
-                <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-slate-800 mb-2 flex items-center gap-2">
                   <span className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">2</span>
                   Pilih Metode Pembayaran
                 </h2>
                 
                 <p className="text-xs text-slate-500 mb-5">
-                  Pilih saluran pembayaran di bawah ini. Nominal PPN akan dihitung secara otomatis.
+                  Nominal PPN dan total harga akan langsung ter-update secara otomatis sesuai metode yang kamu pilih.
                 </p>
 
                 {/* List Accordion Per Kategori */}
@@ -672,8 +699,6 @@ export const Checkout: React.FC = () => {
                   {PAYMENT_CATEGORIES.map((cat) => {
                     const isOpen = openAccordionId === cat.id;
                     const hasSelectedChild = cat.channels.some(c => c.id === selectedChannelId);
-                    
-                    // Hitung nominal PPN pertama untuk preview di header
                     const firstChannelFee = cat.channels[0].calc(subtotalPrice);
 
                     return (
@@ -694,7 +719,6 @@ export const Checkout: React.FC = () => {
                               : 'bg-slate-50 hover:bg-slate-100/80 text-slate-900 border-b border-slate-200/60'
                           }`}
                         >
-                          {/* Ribbon BEST PRICE jika ada */}
                           {cat.isBestPrice && (
                             <div className="absolute top-0 right-10 bg-amber-400 text-amber-950 font-black text-[9px] uppercase tracking-wider px-2.5 py-0.5 rounded-b-md shadow-xs">
                               Best Price
@@ -708,7 +732,6 @@ export const Checkout: React.FC = () => {
                               </h3>
                             </div>
                             
-                            {/* Preview Badges Logo Gambar */}
                             <div className="flex items-center gap-2 flex-wrap">
                               {cat.channels.slice(0, 6).map((ch) => (
                                 <div
@@ -720,7 +743,6 @@ export const Checkout: React.FC = () => {
                                     alt={ch.name}
                                     className="h-4 max-w-[55px] object-contain"
                                     onError={(e) => {
-                                      // Fallback jika gambar gagal dimuat
                                       (e.target as HTMLElement).style.display = 'none';
                                     }}
                                   />
@@ -742,7 +764,7 @@ export const Checkout: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Body Accordion (Grid Sub-Channel Cards dengan Logo Gambar) */}
+                        {/* Body Accordion (Grid Sub-Channel Cards) */}
                         {isOpen && (
                           <div className="p-3 sm:p-4 bg-slate-50/50 border-t border-slate-200/80">
                             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-3">
@@ -760,7 +782,6 @@ export const Checkout: React.FC = () => {
                                         : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-xs'
                                     }`}
                                   >
-                                    {/* Logo Image & Checkmark */}
                                     <div className="flex items-center justify-between gap-2 mb-3 min-h-[32px]">
                                       <div className="h-8 px-2.5 py-1 bg-slate-50 rounded-lg border border-slate-200/70 flex items-center justify-center">
                                         <img
@@ -770,18 +791,16 @@ export const Checkout: React.FC = () => {
                                         />
                                       </div>
                                       {isSelected && (
-                                        <span className="w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs shadow-xs">
+                                        <span className="w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs shadow-xs font-bold">
                                           ✓
                                         </span>
                                       )}
                                     </div>
 
-                                    {/* Channel Name */}
                                     <p className="text-xs font-bold text-slate-800 mb-1 line-clamp-1">
                                       {ch.name}
                                     </p>
 
-                                    {/* Calculated PPN Fee */}
                                     <div className="mb-2">
                                       <span className="text-xs font-black text-slate-900">
                                         {formatRupiah(chFee)}
@@ -789,10 +808,9 @@ export const Checkout: React.FC = () => {
                                       <span className="text-[10px] text-slate-400 ml-1">({ch.badge})</span>
                                     </div>
 
-                                    {/* Subtitle Status */}
                                     <div className="pt-2 border-t border-dashed border-slate-200 flex justify-between items-center text-[10px] text-slate-400 italic">
-                                      <span>Proses Otomatis</span>
-                                      <span className="text-emerald-600 font-semibold not-italic">Instant</span>
+                                      <span>Biaya PPN</span>
+                                      <span className="text-emerald-600 font-semibold not-italic">Otomatis</span>
                                     </div>
                                   </div>
                                 );
@@ -815,7 +833,6 @@ export const Checkout: React.FC = () => {
                   Ringkasan Pesanan
                 </h2>
 
-                {/* Badge info direct order */}
                 {isDirectOrder && (
                   <div className="px-3 py-2 bg-blue-50 border border-blue-100 rounded-xl text-blue-700 text-xs font-semibold flex items-center gap-2">
                     <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -827,7 +844,7 @@ export const Checkout: React.FC = () => {
 
                 {/* Items List */}
                 <div className="space-y-3">
-                  {items.map((item) => (
+                  {items.map((item: any) => (
                     <div key={item.id} className="flex justify-between items-start gap-3">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center text-white font-bold flex-shrink-0 shadow-xs">
@@ -854,7 +871,7 @@ export const Checkout: React.FC = () => {
 
                   <div className="flex justify-between text-sm text-slate-600">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <span>PPN</span>
+                      <span>PPN ({selectedChannel.name})</span>
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded border bg-blue-50 text-blue-700 border-blue-200 shrink-0">
                         {selectedChannel.badge}
                       </span>
@@ -862,31 +879,22 @@ export const Checkout: React.FC = () => {
                     <span className="font-semibold text-slate-800 whitespace-nowrap">{formatRupiah(ppnFeeAmount)}</span>
                   </div>
 
-                  {/* Info Badge Layanan Payment Gateway Midtrans (Di atas Total Pembayaran) */}
+                  {/* Info Badge Layanan Midtrans Core API */}
                   <div className="my-3 p-3 bg-slate-50 rounded-xl border border-slate-200/70">
                     <div className="flex items-center justify-between mb-1.5">
-                      <p className="text-xs text-slate-700 font-bold">Layanan Payment Gateway</p>
-                      <span className="text-[10px] text-blue-600 font-semibold bg-blue-50 border border-blue-100 px-2 py-0.5 rounded">
-                        Midtrans Official
+                      <p className="text-xs text-slate-700 font-bold">Metode Pembayaran Terpilih</p>
+                      <span className="text-[10px] text-blue-600 font-bold bg-blue-50 border border-blue-100 px-2 py-0.5 rounded">
+                        Midtrans Core API
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-500 leading-relaxed mb-2.5">
-                      Metode terpilih: <span className="font-bold text-slate-800">{selectedChannel.name}</span> ({selectedChannel.badge}). PPN dihitung secara otomatis.
+                      <span className="font-bold text-slate-800">{selectedChannel.name}</span> ({selectedChannel.badge}). Instruksi bayar tampil 100% langsung di website.
                     </p>
 
-                    {/* Logo Gambar Metode Terpilih */}
                     <div className="flex items-center gap-2 flex-wrap">
-                      {selectedChannel.iconImgs ? (
-                        selectedChannel.iconImgs.map((imgSrc, idx) => (
-                          <div key={idx} className="h-6 px-2 py-0.5 bg-white border border-slate-200 rounded-md shadow-2xs flex items-center justify-center">
-                            <img src={imgSrc} alt="Payment Logo" className="h-4 max-w-[55px] object-contain" />
-                          </div>
-                        ))
-                      ) : (
-                        <div className="h-6 px-2 py-0.5 bg-white border border-slate-200 rounded-md shadow-2xs flex items-center justify-center">
-                          <img src={selectedChannel.logoImg} alt={selectedChannel.name} className="h-4 max-w-[55px] object-contain" />
-                        </div>
-                      )}
+                      <div className="h-6 px-2 py-0.5 bg-white border border-slate-200 rounded-md shadow-2xs flex items-center justify-center">
+                        <img src={selectedChannel.logoImg} alt={selectedChannel.name} className="h-4 max-w-[55px] object-contain" />
+                      </div>
                     </div>
                   </div>
 
@@ -903,7 +911,7 @@ export const Checkout: React.FC = () => {
                     </svg>
                     <div>
                       <p className="font-semibold text-xs">Pembayaran belum selesai</p>
-                      <p className="text-[11px] mt-0.5 text-amber-600">Invoice sudah dibuat. Klik tombol di bawah untuk melanjutkan tanpa membuat invoice baru.</p>
+                      <p className="text-[11px] mt-0.5 text-amber-600">Invoice sudah dibuat. Klik tombol di bawah untuk membuka kembali instruksi pembayaran.</p>
                     </div>
                   </div>
                 )}
@@ -933,7 +941,7 @@ export const Checkout: React.FC = () => {
                   </div>
                 )}
 
-                {/* Tombol Bayar Sekarang di Ringkasan Pesanan */}
+                {/* Tombol Bayar Sekarang */}
                 <button
                   type="submit"
                   disabled={loading}
@@ -968,7 +976,7 @@ export const Checkout: React.FC = () => {
                   <svg className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                   </svg>
-                  Pembayaran aman enkripsi SSL · Midtrans Official
+                  Pembayaran aman enkripsi SSL · NexCube Custom Payment UI
                 </div>
               </div>
             </div>
@@ -993,8 +1001,6 @@ export const Checkout: React.FC = () => {
                   </svg>
                   <span>Memproses...</span>
                 </>
-              ) : hasPendingPayment ? (
-                <span>Lanjutkan Pembayaran</span>
               ) : (
                 <>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1006,6 +1012,233 @@ export const Checkout: React.FC = () => {
             </button>
           </div>
         </form>
+
+        {/* NexCube Custom Payment Modal (100% Custom Website UI) */}
+        {customModalData && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/70 backdrop-blur-md animate-fade-in overflow-y-auto">
+            <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-lg w-full overflow-hidden my-auto relative">
+              {/* Modal Header */}
+              <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 p-5 text-white flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md flex items-center justify-center font-black text-sm">
+                    NC
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-base text-white">Instruksi Pembayaran</h3>
+                    <p className="text-xs text-blue-100/90 font-medium">Order #{customModalData.orderId}</p>
+                  </div>
+                </div>
+                {/* Tombol Close (X): Hanya menutup modal tanpa me-redirect atau menghapus halaman checkout */}
+                <button
+                  type="button"
+                  onClick={() => setCustomModalData(null)}
+                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center text-white cursor-pointer"
+                  title="Tutup Modal"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 space-y-6">
+                {/* Total Price Card & 24h Timer */}
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Tagihan</p>
+                    <p className="text-2xl font-black text-blue-600 mt-0.5">{formatRupiah(customModalData.grossAmount)}</p>
+                  </div>
+                  <div className="flex flex-col items-start sm:items-end gap-1.5">
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200/80 rounded-full text-[11px] font-bold shadow-2xs">
+                      <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                      Menunggu Pembayaran
+                    </span>
+                    <PaymentTimer expiresAt={customModalData.expiresAt} onExpire={handleTimerExpire} />
+                  </div>
+                </div>
+
+                {/* Sub-Switch Metode Pembayaran di Dalam Modal */}
+                <div className="bg-slate-100/80 p-1.5 rounded-2xl flex items-center gap-1 overflow-x-auto">
+                  {[
+                    { id: 'qris', label: 'QRIS', logo: '/images/payment/ewallet/qris.png' },
+                    { id: 'bca_va', label: 'BCA VA', logo: '/images/payment/transfer/bca.png' },
+                    { id: 'mandiri_va', label: 'Mandiri', logo: '/images/payment/transfer/mandiri.png' },
+                    { id: 'bni_va', label: 'BNI VA', logo: '/images/payment/transfer/bni.png' },
+                    { id: 'bri_va', label: 'BRI VA', logo: '/images/payment/transfer/briva.png' },
+                    { id: 'permata_va', label: 'Permata', logo: '/images/payment/transfer/permata.png' },
+                  ].map((ch) => {
+                    const isActive = customModalData.selectedChannel.id === ch.id;
+                    return (
+                      <button
+                        key={ch.id}
+                        type="button"
+                        onClick={() => {
+                          const targetCh = PAYMENT_CATEGORIES.flatMap(cat => cat.channels).find(c => c.id === ch.id);
+                          if (targetCh && pendingInvoiceId) {
+                            setSelectedChannelId(ch.id);
+                            processChargeForChannel(pendingInvoiceId, targetCh);
+                          }
+                        }}
+                        className={`flex-1 min-w-[75px] py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                          isActive
+                            ? 'bg-white text-blue-600 shadow-md ring-1 ring-blue-100'
+                            : 'text-slate-600 hover:bg-white/50'
+                        }`}
+                      >
+                        <span>{ch.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Virtual Account (BCA, BNI, BRI, Permata, BSI, CIMB, dll.) */}
+                {customModalData.vaNumber && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 p-3 bg-blue-50/50 rounded-xl border border-blue-100">
+                      <img src={customModalData.selectedChannel.logoImg} alt={customModalData.selectedChannel.name} className="h-7 max-w-[80px] object-contain" />
+                      <div>
+                        <h4 className="font-bold text-sm text-slate-800">{customModalData.selectedChannel.name}</h4>
+                        <p className="text-xs text-slate-500">Transfer via ATM atau Mobile Banking</p>
+                      </div>
+                    </div>
+
+                    <div className="bg-white border-2 border-dashed border-blue-300 rounded-2xl p-4 text-center space-y-2">
+                      <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nomor Virtual Account</p>
+                      <div className="flex items-center justify-center gap-2 flex-wrap">
+                        <span className="text-xl sm:text-2xl font-mono font-black text-slate-900 tracking-wider">
+                          {customModalData.vaNumber}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(customModalData.vaNumber!, 'va')}
+                          className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs shrink-0 flex items-center gap-1 cursor-pointer"
+                        >
+                          {copiedField === 'va' ? '✓ Tersalin' : 'Salin Nomor VA'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Mandiri Bill Payment */}
+                {customModalData.billerCode && customModalData.billKey && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 p-3 bg-blue-50/50 rounded-xl border border-blue-100">
+                      <img src={customModalData.selectedChannel.logoImg} alt="Mandiri" className="h-7 max-w-[80px] object-contain" />
+                      <div>
+                        <h4 className="font-bold text-sm text-slate-800">Mandiri Bill Payment</h4>
+                        <p className="text-xs text-slate-500">Bayar via Livin' by Mandiri atau ATM Mandiri</p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Kode Perusahaan</p>
+                        <p className="font-mono font-bold text-slate-900 text-base my-1">{customModalData.billerCode}</p>
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(customModalData.billerCode!, 'biller')}
+                          className="text-xs text-blue-600 font-bold hover:underline cursor-pointer"
+                        >
+                          {copiedField === 'biller' ? '✓ Tersalin' : 'Salin Kode'}
+                        </button>
+                      </div>
+
+                      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Kode Pembayaran (Bill Key)</p>
+                        <p className="font-mono font-bold text-slate-900 text-base my-1">{customModalData.billKey}</p>
+                        <button
+                          type="button"
+                          onClick={() => copyToClipboard(customModalData.billKey!, 'billkey')}
+                          className="text-xs text-blue-600 font-bold hover:underline cursor-pointer"
+                        >
+                          {copiedField === 'billkey' ? '✓ Tersalin' : 'Salin Key'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* QRIS / GoPay / E-Wallet */}
+                {customModalData.qrCodeUrl && !customModalData.vaNumber && !customModalData.billerCode && (
+                  <div className="text-center space-y-4">
+                    <div className="p-4 bg-white border border-slate-200 rounded-2xl shadow-xs inline-block mx-auto relative">
+                      <img
+                        src={customModalData.qrCodeUrl}
+                        alt="QRIS Pembayaran"
+                        className="w-56 h-56 object-contain mx-auto rounded-lg"
+                      />
+                      <p className="text-[10px] font-bold text-slate-500 mt-2.5">
+                        Scan QRIS menggunakan GoPay, DANA, OVO, ShopeePay, atau m-Banking
+                      </p>
+                    </div>
+
+                    <div className="flex justify-center gap-2 flex-wrap">
+                      <a
+                        href={customModalData.qrCodeUrl}
+                        download={`QRIS-NexCube-${customModalData.orderId}.png`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl font-bold text-xs transition-colors border border-blue-200"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        Unduh Kode QRIS
+                      </a>
+
+                      {customModalData.deeplinkUrl && (
+                        <a
+                          href={customModalData.deeplinkUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs transition-colors shadow-xs"
+                        >
+                          Buka Aplikasi E-Wallet
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Step-by-step Instructions */}
+                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 text-left space-y-2">
+                  <p className="text-xs font-bold text-slate-700">Petunjuk Pembayaran:</p>
+                  <ol className="text-xs text-slate-600 space-y-1.5 list-decimal pl-4 leading-relaxed">
+                    <li>Lakukan pembayaran sebelum batas waktu berakhir (24 Jam).</li>
+                    <li>Pastikan nominal transfer tepat <strong>{formatRupiah(customModalData.grossAmount)}</strong>.</li>
+                    <li>Status transaksi akan diverifikasi secara otomatis oleh sistem.</li>
+                  </ol>
+                </div>
+
+                {/* Modal Action Buttons */}
+                <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const activeInvoiceId = customModalData.invoiceId;
+                      if (!isDirectOrder) clearCart();
+                      localStorage.removeItem('nexcube_checkout_invoice_id');
+                      localStorage.removeItem('nexcube_checkout_modal');
+                      setPendingInvoiceId(null);
+                      setCustomModalData(null);
+                      navigate('/order/pending', { state: { invoiceId: activeInvoiceId } });
+                    }}
+                    className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition-colors shadow-md shadow-blue-200 cursor-pointer"
+                  >
+                    Saya Sudah Bayar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCustomModalData(null)}
+                    className="py-3 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition-colors cursor-pointer"
+                  >
+                    Tutup
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
