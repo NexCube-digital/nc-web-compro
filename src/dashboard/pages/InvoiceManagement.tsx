@@ -8,6 +8,31 @@ import { FormInvoice } from './invoice/FormInvoice'
 import { Toast } from '../../components/Toast'
 import NewDataBanner from '../../components/NewDataBanner'
 
+const normalizeAmount = (value: string | number): number => {
+  if (typeof value === 'number') return Number.isFinite(value) ? Math.round(value) : 0
+  const text = value.trim()
+  if (!text) return 0
+  const normalized = text.includes(',')
+    ? text.replace(/\./g, '').replace(',', '.')
+    : text
+  return Math.round(Number(normalized.replace(/[^\d.-]/g, '')) || 0)
+}
+
+const normalizePriceBreakdown = (value: string | null | undefined): string | null => {
+  if (!value?.trim()) return null
+  try {
+    const parsed: unknown = JSON.parse(value)
+    if (!Array.isArray(parsed) || parsed.length === 0) return null
+    return JSON.stringify(parsed.map(item => {
+      if (!item || typeof item !== 'object') return item
+      const entry = item as Record<string, unknown>
+      return { ...entry, price: normalizeAmount(String(entry.price ?? 0)) }
+    }))
+  } catch {
+    return null
+  }
+}
+
 export const InvoiceManagement: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
@@ -121,7 +146,7 @@ export const InvoiceManagement: React.FC = () => {
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     if (name === 'amount') {
-      setFormData(prev => ({ ...prev, [name]: parseFloat(value) || 0 }))
+      setFormData(prev => ({ ...prev, [name]: normalizeAmount(value) }))
     } else {
       setFormData(prev => ({ ...prev, [name]: value }))
     }
@@ -135,26 +160,11 @@ export const InvoiceManagement: React.FC = () => {
       setError('')
 
       // Prepare data with priceBreakdown as JSON string or null
-      let priceBreakdownValue = null;
-      if (formData.priceBreakdown) {
-        if (typeof formData.priceBreakdown === 'string' && formData.priceBreakdown.trim() !== '') {
-          try {
-            // Validate it's valid JSON
-            const parsed = JSON.parse(formData.priceBreakdown);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              priceBreakdownValue = formData.priceBreakdown;
-            }
-          } catch (e) {
-            // Invalid JSON, set to null
-            priceBreakdownValue = null;
-          }
-        } else if (typeof formData.priceBreakdown === 'object' && Array.isArray(formData.priceBreakdown) && (formData.priceBreakdown as any[]).length > 0) {
-          priceBreakdownValue = JSON.stringify(formData.priceBreakdown);
-        }
-      }
+      const priceBreakdownValue = normalizePriceBreakdown(formData.priceBreakdown)
 
       const submitData = {
         ...formData,
+        amount: normalizeAmount(formData.amount),
         priceBreakdown: priceBreakdownValue
       }
 
@@ -279,7 +289,9 @@ export const InvoiceManagement: React.FC = () => {
     
     const paidInvoices = invoiceArray.filter(inv => inv.status === 'paid').length
 
-    const totalAmount = invoiceArray.reduce((sum, inv) => sum + (parseFloat(String(inv.amount)) || 0), 0)
+    const totalAmount = invoiceArray
+      .filter(inv => inv.status !== 'paid')
+      .reduce((sum, inv) => sum + (parseFloat(String(inv.amount)) || 0), 0)
     const paidAmount = invoiceArray.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + (parseFloat(String(inv.amount)) || 0), 0)
 
     return { totalInvoices, paidInvoices, totalAmount, paidAmount }
@@ -345,6 +357,7 @@ export const InvoiceManagement: React.FC = () => {
               />
               <button
                 onClick={() => {
+                  handleCancel()
                   setTimeout(() => navigate('/dashboard/invoices/forminvoice'), 150)
                 }}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition-all hover:scale-105 whitespace-nowrap"
@@ -386,7 +399,7 @@ export const InvoiceManagement: React.FC = () => {
                 <p className="text-3xl font-bold text-green-600">{invoiceStats.paidInvoices}</p>
               </div>
               <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
-                <p className="text-slate-600 text-sm mb-2">Total Nominal</p>
+                <p className="text-slate-600 text-sm mb-2">Total Belum Terbayar</p>
                 <p className="text-xl font-bold text-slate-900">Rp {Math.round(invoiceStats.totalAmount).toLocaleString('id-ID')}</p>
               </div>
               <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-200">

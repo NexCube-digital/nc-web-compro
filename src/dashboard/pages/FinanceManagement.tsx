@@ -194,9 +194,14 @@ export const FinanceManagement: React.FC = () => {
   // Calculate stats
   const totalIncome = finances.reduce((sum, f) => f.type === 'income' && f.status === 'completed' ? sum + Number(f.amount) : sum, 0)
   const totalExpense = finances.reduce((sum, f) => f.type === 'expense' && f.status === 'completed' ? sum + Number(f.amount) : sum, 0)
-  const invoiceRevenue = invoices.reduce((sum, inv) => sum + Number(inv.amount), 0)
-  const totalPemasukan = invoiceRevenue + totalIncome
-  const balance = totalPemasukan - totalExpense
+  const invoicePaidRevenue = invoices
+    .filter(inv => inv.status === 'paid')
+    .reduce((sum, inv) => sum + Number(inv.amount), 0)
+  const invoiceOtherRevenue = invoices
+    .filter(inv => inv.status !== 'paid')
+    .reduce((sum, inv) => sum + Number(inv.amount), 0)
+  const totalPemasukan = invoicePaidRevenue
+  const balance = totalPemasukan + totalIncome - totalExpense
 
   return (
     <div>
@@ -275,8 +280,8 @@ export const FinanceManagement: React.FC = () => {
                 <p className="text-3xl font-bold text-green-600">Rp {Math.round(totalPemasukan || 0).toLocaleString('id-ID')}</p>
               </div>
               <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
-                <p className="text-slate-600 text-sm mb-2">Pemasukan Lainnya</p>
-                <p className="text-3xl font-bold text-green-600">Rp {Math.round(totalIncome || 0).toLocaleString('id-ID')}</p>
+                <p className="text-slate-600 text-sm mb-2">Pemasukan Belum Terbayar</p>
+                <p className="text-3xl font-bold text-green-600">Rp {Math.round(invoiceOtherRevenue || 0).toLocaleString('id-ID')}</p>
               </div>
               <div className="bg-white rounded-xl p-6 shadow-lg border border-slate-200">
                 <p className="text-slate-600 text-sm mb-2">Total Pengeluaran</p>
