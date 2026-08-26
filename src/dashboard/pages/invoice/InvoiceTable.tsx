@@ -63,23 +63,26 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
 
     try {
       setToast({ message: 'Membuat PDF...', type: 'info' })
-      const html2pdf = (await import('html2pdf.js')).default
 
-      const element = document.querySelector('.invoice-pdf-content') as HTMLElement
+      const html2canvas = (await import('html2canvas-pro')).default
+      const { jsPDF } = await import('jspdf')
+
+      const element = document.getElementById('kwitansi-print-area')
       if (!element) {
         setToast({ message: 'Gagal menemukan konten invoice', type: 'error' })
         return
       }
 
-      const opt: any = {
-        margin: 10,
-        filename: `${selectedInvoice.invoiceNumber}.pdf`,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
-      }
+      const canvas = await html2canvas(element, { scale: 2 })
+      const imgData = canvas.toDataURL('image/jpeg', 0.98)
 
-      await html2pdf().set(opt).from(element).save()
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width
+
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight)
+      pdf.save(`${selectedInvoice.invoiceNumber}.pdf`)
+
       setToast({ message: 'PDF berhasil diunduh', type: 'success' })
       setTimeout(() => setShowPDFModal(false), 500)
     } catch (error) {

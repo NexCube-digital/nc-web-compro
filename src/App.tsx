@@ -24,6 +24,7 @@ const ErrorPage        = lazy(() => import('./pages/ErrorPage').then(m => ({ def
 const Login            = lazy(() => import('./auth/Login').then(m => ({ default: m.Login })))
 const Dashboard        = lazy(() => import('./dashboard/Dashboard').then(m => ({ default: m.Dashboard })))
 const Checkout         = lazy(() => import('./pages/Checkout').then(m => ({ default: m.Checkout })))
+const HistoryInvoice   = lazy(() => import('./pages/historyInvoice').then(m => ({ default: m.HistoryInvoice })))
 const OrderSuccess     = lazy(() => import('./pages/OrderSuccess').then(m => ({ default: m.OrderSuccess })))
 const OrderPending     = lazy(() => import('./pages/OrderPending').then(m => ({ default: m.OrderPending })))
 const CreateUlasan     = lazy(() => import('./pages/CreateUlasan').then(m => ({ default: m.CreateUlasan })))
@@ -147,6 +148,7 @@ export const routes = [
       { path: 'dashboard',                element: <Dashboard /> },
       { path: 'dashboard/*',              element: <Dashboard /> },
       { path: 'checkout',                 element: <Checkout /> },
+      { path: 'history-invoice',          element: <HistoryInvoice /> },
       { path: 'order/success',            element: <OrderSuccess /> },
       { path: 'order/pending',            element: <OrderPending /> },
       { path: '*',                        element: <NotFound /> },
