@@ -17,15 +17,12 @@ const BACKEND_URL = API_BASE_URL.replace(/\/api\/?$/, '');
 const SESSION_IDLE_TIMEOUT_MS = 24 * 60 * 60 * 1000;
 const LAST_ACTIVITY_KEY = 'lastActivityAt';
 
-// Log API configuration in development
+// Log API configuration
 if (import.meta.env.DEV) {
   console.log('[API Config] Base URL:', API_BASE_URL);
   console.log('[API Config] Environment:', import.meta.env.MODE);
-}
-
-// Log API URL for debugging
-if (import.meta.env.DEV) {
-  console.log('API Base URL:', API_BASE_URL);
+} else {
+  console.log('[API] Production URL:', API_BASE_URL);
 }
 
 export const getImageUrl = (imagePath: string | null | undefined): string => {
@@ -445,14 +442,27 @@ class ApiClient {
 
       return response.data;
     } catch (error: any) {
-      console.error('[API Error]', error);
+      if (import.meta.env.DEV || import.meta.env.PROD) {
+        console.error('[API Error]', {
+          endpoint,
+          method,
+          status: error.response?.status,
+          message: error.message,
+          url: error.config?.url,
+          baseURL: error.config?.baseURL,
+        });
+      }
 
       if (error.response) {
         const message = error.response.data?.message || error.response.data?.error || `HTTP error! status: ${error.response.status}`;
         throw new Error(message);
       } else if (error.request) {
         console.error('[API Error] No response received:', error.request);
-        throw new Error('Tidak dapat terhubung ke server. Periksa koneksi internet Anda atau hubungi administrator.');
+        throw new Error(
+          `Tidak dapat terhubung ke server API (${API_BASE_URL}). ` +
+          `Pastikan server backend berjalan dan dapat diakses. ` +
+          `Error: ${error.message || 'Network Error'}`
+        );
       } else {
         throw new Error(error.message || 'Terjadi kesalahan yang tidak terduga');
       }
