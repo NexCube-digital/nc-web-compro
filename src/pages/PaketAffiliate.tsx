@@ -14,12 +14,12 @@ import {
 } from 'react-icons/hi';
 import {
   FaRocket, FaArrowRight, FaWhatsapp,
-  FaPalette, FaGoogle, FaCrown, FaMedal, FaGem
+  FaPalette, FaGoogle, FaCrown, FaMedal, FaGem,
+  FaSalesforce, FaMagento, FaAws
 } from 'react-icons/fa';
 import {
   SiStripe, SiPaypal, SiGoogleanalytics, SiMailchimp, SiHubspot,
-  SiSalesforce, SiShopify, SiWordpress, SiWoo, SiMagento,
-  SiAmazon, SiDocker,
+  SiShopify, SiWordpress, SiWoo, SiDocker,
 // @ts-ignore - react-icons type definition issue
 } from 'react-icons/si';
 import gsap from 'gsap';
@@ -168,12 +168,12 @@ const integrations = [
   { icon: SiGoogleanalytics, name: 'Analytics', color: 'text-yellow-600' },
   { icon: SiMailchimp, name: 'Mailchimp', color: 'text-yellow-500' },
   { icon: SiHubspot, name: 'HubSpot', color: 'text-orange-500' },
-  { icon: SiSalesforce, name: 'Salesforce', color: 'text-blue-500' },
+  { icon: FaSalesforce, name: 'Salesforce', color: 'text-blue-500' },
   { icon: SiShopify, name: 'Shopify', color: 'text-green-600' },
   { icon: SiWordpress, name: 'WordPress', color: 'text-blue-600' },
   { icon: SiWoo, name: 'WooCommerce', color: 'text-purple-600' },
-  { icon: SiMagento, name: 'Magento', color: 'text-orange-600' },
-  { icon: SiAmazon, name: 'AWS', color: 'text-yellow-500' },
+  { icon: FaMagento, name: 'Magento', color: 'text-orange-600' },
+  { icon: FaAws, name: 'AWS', color: 'text-yellow-500' },
   { icon: SiDocker, name: 'Docker', color: 'text-blue-500' },
 ];
 
