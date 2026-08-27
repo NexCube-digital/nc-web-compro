@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import apiClient from '../services/api';
@@ -9,27 +9,6 @@ const formatRupiah = (num: number) =>
     currency: 'IDR',
     minimumFractionDigits: 0,
   }).format(num);
-
-// Fallback Generator Nomor Virtual Account
-const getFallbackVA = (channelId: string, invoiceId: number): string => {
-  const paddedId = String(invoiceId).padStart(6, '0');
-  const c = channelId.toLowerCase();
-  if (c.includes('bca')) return `88390${paddedId}`;
-  if (c.includes('bni')) return `988${paddedId}123`;
-  if (c.includes('bri')) return `88810${paddedId}45`;
-  if (c.includes('mandiri') || c.includes('echannel')) return `70012${paddedId}`;
-  if (c.includes('permata')) return `8528${paddedId}88`;
-  if (c.includes('bsi')) return `77100${paddedId}`;
-  if (c.includes('cimb')) return `5919${paddedId}`;
-  return `80770${paddedId}`;
-};
-
-// Generator Format String QRIS Standar EMVCo (Dapat Di-scan Semua E-Wallet & M-Banking)
-const buildValidEMVCoQRIS = (orderId: string | number, amount: number): string => {
-  const cleanId = String(orderId).replace(/[^a-zA-Z0-9]/g, '').slice(-12);
-  const amtStr = String(Math.round(amount));
-  return `00020101021226680016ID.LINKAJA.WWW01189360091100210356130215${cleanId}520458125303360540${amtStr.length}${amtStr}5802ID5915NexCube Digital6007Jakarta63041A2B`;
-};
 
 // Component Timer Mundur 1x24 Jam
 const PaymentTimer: React.FC<{ expiresAt: number; onExpire: () => void }> = ({ expiresAt, onExpire }) => {
@@ -234,6 +213,7 @@ const PAYMENT_CATEGORIES: PaymentCategory[] = [
 interface CustomPaymentModalData {
   invoiceId: number;
   orderId: string;
+  invoiceNumber: string;
   grossAmount: number;
   paymentType: string;
   selectedChannel: PaymentChannel;
@@ -247,6 +227,78 @@ interface CustomPaymentModalData {
   createdAt: number;
   expiresAt: number;
 }
+
+const getDisplayInvoiceNumber = (orderId: string): string => orderId.replace(/-\d{13,}$/, '');
+
+// ✅ FIX v2: helper untuk membuat "sidik jari" dari isi pesanan (item + total).
+// Dipakai sebagai KEY di dalam peta (map) invoice — bukan slot tunggal — supaya
+// tiap kombinasi pesanan (jasa A, jasa B, dst) punya invoice pending-nya
+// masing-masing dan bisa di-resume kapan pun user kembali ke kombinasi itu,
+// walau di antaranya sempat ganti-ganti ke kombinasi lain.
+const computeOrderSignature = (its: { id: string; quantity: number }[], total: number): string =>
+  its.map((i) => `${i.id}x${i.quantity}`).sort().join(',') + `::${total}`;
+
+// Status pembayaran invoice yang di-polling dari backend (bukan klaim sepihak user)
+type PaidStatus = 'pending' | 'paid';
+
+// ✅ FIX v2: struktur record invoice pending per signature pesanan.
+interface StoredOrderRecord {
+  invoiceId: number;
+  modalData: CustomPaymentModalData | null;
+  createdAt: number;
+  expiresAt: number; // 24 jam sejak invoice dibuat — dipakai untuk auto-bersihkan record basi
+}
+
+type OrdersMap = Record<string, StoredOrderRecord>;
+
+const ORDERS_STORAGE_KEY = 'nexcube_checkout_orders_v2';
+
+// Baca peta invoice dari localStorage, sekaligus buang entri yang sudah expired (>24 jam)
+// supaya localStorage tidak menumpuk record basi selamanya.
+const loadOrdersMap = (): OrdersMap => {
+  try {
+    const raw = localStorage.getItem(ORDERS_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as OrdersMap;
+    const now = Date.now();
+    let changed = false;
+    for (const key of Object.keys(parsed)) {
+      if (parsed[key]?.expiresAt && now > parsed[key].expiresAt) {
+        delete parsed[key];
+        changed = true;
+      }
+    }
+    if (changed) {
+      try {
+        localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(parsed));
+      } catch (e) {}
+    }
+    return parsed;
+  } catch (e) {
+    return {};
+  }
+};
+
+const saveOrdersMap = (map: OrdersMap): void => {
+  try {
+    localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(map));
+  } catch (e) {}
+};
+
+// Hapus record berdasarkan invoiceId (dipakai saat expired/selesai/dibatalkan),
+// tanpa perlu tahu signature-nya persis — lebih aman kalau cart sempat berubah.
+const removeOrderRecordByInvoiceId = (invoiceId: number | null | undefined): void => {
+  if (!invoiceId) return;
+  const map = loadOrdersMap();
+  let changed = false;
+  for (const key of Object.keys(map)) {
+    if (map[key]?.invoiceId === invoiceId) {
+      delete map[key];
+      changed = true;
+    }
+  }
+  if (changed) saveOrdersMap(map);
+};
 
 export const Checkout: React.FC = () => {
   const navigate = useNavigate();
@@ -311,37 +363,27 @@ export const Checkout: React.FC = () => {
     return 'qris';
   });
 
-  // Custom Payment Modal State (Persistensi jika koneksi terputus/refresh)
-  const [customModalData, setCustomModalData] = useState<CustomPaymentModalData | null>(() => {
-    try {
-      const saved = localStorage.getItem('nexcube_checkout_modal');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.expiresAt && Date.now() > parsed.expiresAt) {
-          localStorage.removeItem('nexcube_checkout_modal');
-          localStorage.removeItem('nexcube_checkout_invoice_id');
-          return null;
-        }
-        return parsed;
-      }
-    } catch (e) {}
-    return null;
-  });
+  // ✅ FIX v2: customModalData TIDAK lagi diinisialisasi langsung dari satu key
+  // localStorage tunggal. Sumber kebenarannya sekarang adalah `ordersMap` (peta
+  // per-signature pesanan) — resolusi awal dilakukan oleh useEffect di bawah,
+  // begitu `items` (isi keranjang/direct order) sudah siap.
+  const [customModalData, setCustomModalData] = useState<CustomPaymentModalData | null>(null);
 
   const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  // Status pembayaran ASLI, hasil polling ke backend — bukan klaim klik user.
+  const [paidStatus, setPaidStatus] = useState<PaidStatus>('pending');
+  const [checkingStatus, setCheckingStatus] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const selectedCountryObj = useMemo(
     () => COUNTRY_CODES.find(c => c.code === countryCode) || COUNTRY_CODES[0],
     [countryCode]
   );
 
-  const [pendingInvoiceId, setPendingInvoiceId] = useState<number | null>(() => {
-    try {
-      const saved = localStorage.getItem('nexcube_checkout_invoice_id');
-      if (saved) return Number(saved);
-    } catch (e) {}
-    return null;
-  });
+  // ✅ FIX v2: sama seperti customModalData, pendingInvoiceId juga di-resolve dari
+  // ordersMap lewat useEffect di bawah, bukan dari key localStorage tunggal.
+  const [pendingInvoiceId, setPendingInvoiceId] = useState<number | null>(null);
 
   // Sync state ke localStorage
   useEffect(() => {
@@ -362,31 +404,105 @@ export const Checkout: React.FC = () => {
     } catch (e) {}
   }, [selectedChannelId]);
 
-  useEffect(() => {
-    try {
-      if (pendingInvoiceId) {
-        localStorage.setItem('nexcube_checkout_invoice_id', String(pendingInvoiceId));
-      } else {
-        localStorage.removeItem('nexcube_checkout_invoice_id');
-      }
-    } catch (e) {}
-  }, [pendingInvoiceId]);
-
-  useEffect(() => {
-    try {
-      if (customModalData) {
-        localStorage.setItem('nexcube_checkout_modal', JSON.stringify(customModalData));
-      } else {
-        localStorage.removeItem('nexcube_checkout_modal');
-      }
-    } catch (e) {}
-  }, [customModalData]);
+  // ✅ FIX v2: pendingInvoiceId & customModalData TIDAK lagi disinkronkan ke
+  // satu key localStorage tunggal di sini. Penulisan ke localStorage sekarang
+  // terjadi lewat `ordersMap` (di handlePay & processChargeForChannel), dan
+  // pembacaannya lewat efek resolve-by-signature di bawah. Ini yang memungkinkan
+  // beberapa kombinasi pesanan pending disimpan berdampingan tanpa saling timpa.
 
   useEffect(() => {
     if (!isDirectOrder && cartItems.length === 0 && !pendingInvoiceId && !customModalData) {
       navigate('/paket');
     }
   }, [cartItems, isDirectOrder, pendingInvoiceId, customModalData, navigate]);
+
+  // ✅ FIX v2: Setiap kali kombinasi pesanan aktif berubah (tambah/hapus/ganti
+  // jasa di keranjang, atau direct order berbeda), cari di `ordersMap` apakah
+  // kombinasi yang SEKARANG aktif itu punya invoice pending yang pernah dibuat
+  // sebelumnya:
+  //   • Ketemu & belum expired → RESUME invoice/modal itu (bukan bikin baru).
+  //     Ini yang memperbaiki kasus: pesan A → ganti B → balik lagi ke A →
+  //     invoice A yang lama tetap dipakai, bukan invoice A yang baru.
+  //   • Tidak ketemu → kombinasi ini belum punya invoice pending, jadi
+  //     tampilan direset ke "belum ada pembayaran pending" (tapi invoice milik
+  //     kombinasi LAIN tetap aman tersimpan di ordersMap, tidak terhapus).
+  useEffect(() => {
+    if (items.length === 0) return; // cart/direct order belum siap, jangan proses dulu
+
+    const signature = computeOrderSignature(items, subtotalPrice);
+    const ordersMap = loadOrdersMap();
+    const record = ordersMap[signature];
+
+    if (record) {
+      setPendingInvoiceId(record.invoiceId);
+      setCustomModalData(record.modalData);
+      setPaidStatus('pending');
+    } else {
+      setPendingInvoiceId(null);
+      setCustomModalData(null);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, subtotalPrice]);
+
+  /**
+   * Polling status invoice ke backend selagi modal pembayaran terbuka.
+   *
+   * PENTING: status "paid" di sini HARUS berasal dari backend (yang diupdate oleh
+   * webhook/notifikasi Midtrans setelah settlement asli), bukan dari klik tombol
+   * user. Ini menggantikan tombol "Saya Sudah Bayar" yang sebelumnya hanya klaim
+   * sepihak dan tidak pernah memverifikasi apa pun ke Midtrans.
+   *
+   * apiClient.checkoutGetInvoiceStatus(invoiceId) diasumsikan memanggil endpoint
+   * publik yang HANYA mengembalikan { status } (tanpa data sensitif lain), mis.
+   * GET /api/public/invoices/:id/status — lihat catatan backend.
+   */
+  useEffect(() => {
+    if (!customModalData || paidStatus === 'paid') {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+      return;
+    }
+
+    const invoiceId = customModalData.invoiceId;
+
+    const check = async () => {
+      try {
+        setCheckingStatus(true);
+        const res = await apiClient.checkoutGetInvoiceStatus(invoiceId);
+        const status = res?.data?.status;
+        if (status === 'paid') {
+          setPaidStatus('paid');
+          if (pollRef.current) {
+            clearInterval(pollRef.current);
+            pollRef.current = null;
+          }
+        }
+      } catch (err) {
+        // Diamkan error polling — jangan ganggu UX, coba lagi di interval berikutnya
+        console.warn('[Checkout] Gagal cek status invoice:', err);
+      } finally {
+        setCheckingStatus(false);
+      }
+    };
+
+    check(); // cek sekali langsung saat modal dibuka
+    pollRef.current = setInterval(check, 5000); // lalu polling tiap 5 detik
+
+    return () => {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customModalData?.invoiceId, paidStatus]);
+
+  // Reset status paid setiap kali modal untuk invoice/channel baru dibuka
+  useEffect(() => {
+    if (customModalData) setPaidStatus('pending');
+  }, [customModalData?.orderId]);
 
   // Cari Channel Terpilih dari Seluruh Kategori
   const selectedChannel = useMemo(() => {
@@ -424,21 +540,72 @@ export const Checkout: React.FC = () => {
   };
 
   const handleTimerExpire = () => {
-    localStorage.removeItem('nexcube_checkout_invoice_id');
-    localStorage.removeItem('nexcube_checkout_modal');
+    // ✅ FIX v2: hapus record invoice ini dari ordersMap berdasarkan invoiceId
+    // (bukan berdasarkan signature aktif saat ini), supaya tetap tepat sasaran
+    // meski cart sudah berubah sejak modal ini pertama dibuka.
+    removeOrderRecordByInvoiceId(pendingInvoiceId ?? customModalData?.invoiceId);
     setPendingInvoiceId(null);
     setCustomModalData(null);
+    setPaidStatus('pending');
     setError('Batas waktu pembayaran 24 jam telah berakhir. Silakan buat pesanan ulang.');
   };
 
-  // Fungsi untuk memproses charge Midtrans Core API dan membuka Modal Kustom Website
+  // Menutup modal saja — tidak menghapus invoice/pesanan, dan tidak melakukan klaim apa pun.
+  // Kalau user memang belum bayar, invoice tetap "pending" dan bisa dibuka lagi lewat
+  // "Lanjutkan Pembayaran". Kalau ternyata sudah bayar, polling/webhook yang akan
+  // mengonfirmasi otomatis lain kali modal dibuka atau saat SSE/notifikasi masuk.
+  const handleCloseModal = () => {
+    setCustomModalData(null);
+  };
+
+  // ✅ FIX v2: Batalkan invoice pending untuk kombinasi pesanan yang SEKARANG
+  // aktif secara eksplisit (dipicu tombol user) — dipakai kalau user memang mau
+  // mulai ulang walau kombinasi jasanya sama seperti invoice pending yang ada.
+  const handleCancelPendingOrder = () => {
+    removeOrderRecordByInvoiceId(pendingInvoiceId ?? customModalData?.invoiceId);
+    setPendingInvoiceId(null);
+    setCustomModalData(null);
+    setPaidStatus('pending');
+  };
+
+  // Dipanggil user setelah melihat konfirmasi sukses (ceklis) — baru di sini kita
+  // aman membersihkan cart & mengarahkan ke halaman pesanan, karena statusnya
+  // sudah terverifikasi backend, bukan klaim user.
+  const handleFinishAfterPaid = () => {
+    const activeInvoiceId = customModalData?.invoiceId;
+    if (!isDirectOrder) clearCart();
+    // ✅ FIX v2: bersihkan record invoice yang sudah lunas ini dari ordersMap,
+    // supaya tidak ikut ke-resume lagi di kemudian hari.
+    removeOrderRecordByInvoiceId(activeInvoiceId);
+    setPendingInvoiceId(null);
+    setCustomModalData(null);
+    setPaidStatus('pending');
+    navigate('/order/pending', { state: { invoiceId: activeInvoiceId } });
+  };
+
+  /**
+   * Fungsi untuk memproses charge Midtrans Core API dan membuka Modal Kustom Website.
+   *
+   * PENTING: Fungsi ini HANYA menampilkan data pembayaran (nomor VA, kode QRIS, dll)
+   * yang benar-benar dikembalikan oleh backend (yang berasal dari Midtrans).
+   * Sebelumnya ada fallback yang "mengarang" nomor VA / string QRIS sendiri di
+   * frontend kalau backend gagal mengirim data asli — itu sebabnya transaksi tidak
+   * pernah bisa berstatus "paid": nomor/QR yang ditampilkan ke user tidak pernah
+   * terdaftar di Midtrans, jadi transfer/scan apa pun tidak akan pernah trigger
+   * webhook settlement. Fallback itu sudah dihapus.
+   */
   const processChargeForChannel = async (invoiceId: number, targetChannel: PaymentChannel) => {
     setLoadingStep('payment');
     setLoading(true);
+    setError('');
 
     try {
       const paymentRes = await apiClient.checkoutGeneratePaymentLink(invoiceId, targetChannel.id);
       const data = paymentRes?.data;
+
+      if (!data) {
+        throw new Error('Respons pembayaran dari server kosong. Silakan coba lagi.');
+      }
 
       const createdAt = Date.now();
       const expiresAt = createdAt + 24 * 60 * 60 * 1000; // Timer 1x24 jam
@@ -448,43 +615,103 @@ export const Checkout: React.FC = () => {
 
       const isBankTransfer = targetChannel.category === 'Transfer Bank' || targetChannel.id.includes('va');
       const isMandiri = targetChannel.id.includes('mandiri');
+      const isQrisOrEwallet =
+        targetChannel.category.includes('E-Wallet') ||
+        ['qris', 'gopay', 'shopeepay', 'dana', 'ovo'].includes(targetChannel.id);
 
-      const displayVaNumber = data?.vaNumber || (isBankTransfer && !isMandiri ? getFallbackVA(targetChannel.id, invoiceId) : undefined);
-      const displayBillerCode = data?.billerCode || (isMandiri ? '70012' : undefined);
-      const displayBillKey = data?.billKey || (isMandiri ? getFallbackVA('mandiri', invoiceId) : undefined);
-      
-      const isQrisOrEwallet = targetChannel.category.includes('E-Wallet') || targetChannel.id === 'qris' || targetChannel.id === 'gopay' || targetChannel.id === 'shopeepay' || targetChannel.id === 'dana' || targetChannel.id === 'ovo';
-      
-      const validEmvcoQr = buildValidEMVCoQRIS(data?.orderId || invoiceId, updatedTotal);
-      const rawQrString = data?.qrString || (isQrisOrEwallet ? validEmvcoQr : undefined);
-      const displayQrCodeUrl = data?.qrCodeUrl || (rawQrString ? `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(rawQrString)}` : undefined);
+      // Hanya pakai data ASLI dari Midtrans (via backend). Tidak ada fabrikasi di sisi client.
+      const displayVaNumber = !isMandiri ? data.vaNumber : undefined;
+      const displayBillerCode = isMandiri ? data.billerCode : undefined;
+      const displayBillKey = isMandiri ? data.billKey : undefined;
 
-      setCustomModalData({
+      // qrCodeUrl: pakai langsung dari backend kalau tersedia. Kalau backend hanya
+      // memberi qrString (payload EMVCo ASLI dari Midtrans), generate gambar QR dari
+      // string asli tsb — ini hanya proses render gambar, bukan membuat data baru.
+      const rawQrString = data.qrString;
+      const displayQrCodeUrl =
+        data.qrCodeUrl ||
+        (rawQrString
+          ? `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(rawQrString)}`
+          : undefined);
+
+      // Validasi: pastikan instruksi pembayaran yang relevan untuk channel ini
+      // benar-benar tersedia dari Midtrans sebelum ditampilkan ke user.
+      if (isBankTransfer && !isMandiri && !displayVaNumber) {
+        throw new Error('Nomor Virtual Account belum tersedia dari Midtrans. Silakan coba lagi atau pilih metode lain.');
+      }
+      if (isMandiri && (!displayBillerCode || !displayBillKey)) {
+        throw new Error('Kode pembayaran Mandiri belum tersedia dari Midtrans. Silakan coba lagi atau pilih metode lain.');
+      }
+      if (isQrisOrEwallet && !displayQrCodeUrl) {
+        throw new Error('Kode QRIS belum tersedia dari Midtrans. Silakan coba lagi atau pilih metode lain.');
+      }
+
+      const newModalData: CustomPaymentModalData = {
         invoiceId,
-        orderId: data?.orderId || `INV-${invoiceId}`,
-        grossAmount: updatedTotal,
-        paymentType: data?.paymentType || targetChannel.category,
+        orderId: data.orderId || `INV-${invoiceId}`,
+        invoiceNumber: getDisplayInvoiceNumber(data.orderId || `INV-${invoiceId}`),
+        grossAmount: data.grossAmount || updatedTotal,
+        paymentType: data.paymentType || targetChannel.category,
         selectedChannel: targetChannel,
         vaNumber: displayVaNumber,
-        bank: data?.bank || targetChannel.name,
+        bank: data.bank || targetChannel.name,
         billerCode: displayBillerCode,
         billKey: displayBillKey,
         qrCodeUrl: displayQrCodeUrl,
-        qrString: data?.qrString || rawQrString,
-        deeplinkUrl: data?.deeplinkUrl,
+        qrString: rawQrString,
+        deeplinkUrl: data.deeplinkUrl,
         createdAt,
         expiresAt,
-      });
+      };
+
+      setPaidStatus('pending');
+      setCustomModalData(newModalData);
+
+      // ✅ FIX v2: simpan modalData ini ke record ordersMap milik kombinasi
+      // pesanan yang SEKARANG aktif, supaya kalau user pindah ke kombinasi lain
+      // lalu balik lagi ke sini, instruksi pembayaran (VA/QR) yang sama muncul
+      // lagi tanpa perlu generate payment link baru ke Midtrans.
+      const signature = computeOrderSignature(items, subtotalPrice);
+      const ordersMap = loadOrdersMap();
+      if (ordersMap[signature]) {
+        ordersMap[signature] = { ...ordersMap[signature], modalData: newModalData };
+        saveOrdersMap(ordersMap);
+      }
 
     } catch (err: any) {
       console.error('[Checkout] Error:', err);
       setError(err.message || 'Gagal memproses metode pembayaran terpilih.');
+      // Jangan tampilkan modal dengan data yang tidak valid/tidak lengkap.
+      setCustomModalData(null);
     } finally {
       setLoading(false);
       setLoadingStep(null);
     }
   };
 
+  /**
+   * ✅ FIX v3 — Edit data / channel untuk invoice pending yang SUDAH ada:
+   *
+   * Sebelumnya: begitu invoice pending ada (`pendingInvoiceId`), semua input
+   * form (nama/email/nomor WA) dan pemilihan channel di-disable. Ini salah,
+   * karena user seharusnya BOLEH:
+   *   1. Ubah salah satu field (nama saja / email saja / nomor saja), atau
+   *   2. Ubah semuanya, dengan jasa/pesanan yang tetap sama, atau
+   *   3. Ganti channel pembayaran untuk invoice yang sama.
+   *
+   * Solusinya BUKAN membuat invoice baru (itu akan membuat invoice/order_id
+   * dobel di Midtrans untuk pesanan yang sama), tapi:
+   *   • Kalau invoice pending SUDAH ada → panggil apiClient.updateInvoice()
+   *     untuk sinkronkan nama/email/nomor & nominal terbaru ke invoice yang
+   *     sudah ada, BARU lanjut generate/reuse instruksi pembayaran.
+   *   • Kalau channel yang dipilih PERSIS SAMA dengan instruksi pembayaran
+   *     terakhir yang sudah pernah digenerate & belum expired → jangan panggil
+   *     Midtrans lagi, cukup tampilkan lagi modal yang sudah ada. Ini menghindari
+   *     resiko error "order_id sudah dipakai" di Midtrans akibat charge ulang
+   *     untuk channel & invoice yang sama persis.
+   *   • Kalau channel BERBEDA (atau belum pernah ada instruksi sama sekali)
+   *     → baru generate payment link baru via processChargeForChannel().
+   */
   const handlePay = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -510,13 +737,14 @@ export const Checkout: React.FC = () => {
     try {
       let invoiceId: number | null = pendingInvoiceId;
 
-      if (!invoiceId) {
-        setLoadingStep('invoice');
+      const checkoutItems = [
+        ...items,
+        { id: 'ppn-fee', name: `PPN & Biaya Gateway (${selectedChannel.name})`, price: ppnFeeAmount, quantity: 1 }
+      ];
 
-        const checkoutItems = [
-          ...items,
-          { id: 'ppn-fee', name: `PPN & Biaya Gateway (${selectedChannel.name})`, price: ppnFeeAmount, quantity: 1 }
-        ];
+      if (!invoiceId) {
+        // ── Belum ada invoice pending sama sekali → buat baru seperti biasa ──
+        setLoadingStep('invoice');
 
         const invoiceRes = await apiClient.checkoutCreateInvoice({
           name: form.name,
@@ -530,9 +758,72 @@ export const Checkout: React.FC = () => {
         if (!createdId) throw new Error('Invoice dibuat tapi ID tidak ditemukan di response backend.');
         invoiceId = createdId;
         setPendingInvoiceId(createdId);
+
+        // ✅ FIX v2: daftarkan invoice baru ini ke ordersMap, dikunci dengan
+        // signature kombinasi pesanan yang SEKARANG aktif. Kombinasi pesanan
+        // lain (kalau ada) yang sudah tersimpan sebelumnya TIDAK tersentuh —
+        // jadi kalau user nanti balik ke kombinasi itu, invoice-nya tetap ada.
+        const signature = computeOrderSignature(items, subtotalPrice);
+        const createdAt = Date.now();
+        const expiresAt = createdAt + 24 * 60 * 60 * 1000;
+        const ordersMap = loadOrdersMap();
+        ordersMap[signature] = { invoiceId: createdId, modalData: null, createdAt, expiresAt };
+        saveOrdersMap(ordersMap);
+      } else {
+        // ── Invoice pending SUDAH ada → update data pemesan & nominal di invoice
+        //    yang sama, JANGAN bikin invoice baru (supaya tidak dobel di Midtrans). ──
+        setLoadingStep('invoice');
+
+        await apiClient.updateInvoice(String(invoiceId), {
+          clientName: form.name,
+          clientEmail: form.email,
+          // @ts-ignore — "phone" dikirim mentah ke backend, sama seperti saat create invoice
+          phone: fullFormattedPhone,
+          amount: grandTotal,
+          description: checkoutItems.map((i) => `${i.name} ×${i.quantity}`).join(', '),
+          priceBreakdown: checkoutItems.map((i) => ({
+            name: i.name,
+            price: i.price,
+            quantity: i.quantity,
+            subtotal: i.price * i.quantity,
+          })) as any,
+        });
+
+        // Pastikan record di ordersMap tetap konsisten (signature bisa berubah
+        // kalau nominal/channel berubah), tapi invoiceId & modalData lama dipertahankan.
+        const signature = computeOrderSignature(items, subtotalPrice);
+        const ordersMap = loadOrdersMap();
+        let existingRecord: StoredOrderRecord | undefined;
+        for (const key of Object.keys(ordersMap)) {
+          if (ordersMap[key]?.invoiceId === invoiceId) {
+            existingRecord = ordersMap[key];
+            if (key !== signature) delete ordersMap[key];
+          }
+        }
+        ordersMap[signature] = {
+          invoiceId,
+          modalData: existingRecord?.modalData ?? null,
+          createdAt: existingRecord?.createdAt ?? Date.now(),
+          expiresAt: existingRecord?.expiresAt ?? (Date.now() + 24 * 60 * 60 * 1000),
+        };
+        saveOrdersMap(ordersMap);
       }
 
-      await processChargeForChannel(invoiceId, selectedChannel);
+      // ── Bonus optimasi: reuse instruksi pembayaran lama kalau channel yang
+      //    dipilih PERSIS SAMA dengan instruksi terakhir & belum expired ──
+      const canReuseExistingInstruction =
+        !!customModalData &&
+        customModalData.invoiceId === invoiceId &&
+        customModalData.selectedChannel.id === selectedChannel.id &&
+        Date.now() < customModalData.expiresAt;
+
+      if (canReuseExistingInstruction) {
+        setPaidStatus('pending');
+        setLoading(false);
+        setLoadingStep(null);
+      } else {
+        await processChargeForChannel(invoiceId, selectedChannel);
+      }
 
     } catch (err: any) {
       console.error('[Checkout] Error:', err);
@@ -546,7 +837,7 @@ export const Checkout: React.FC = () => {
 
   const loadingLabel =
     loadingStep === 'invoice'
-      ? 'Membuat invoice pesanan...'
+      ? 'Menyimpan data pesanan...'
       : loadingStep === 'payment'
       ? 'Menyiapkan instruksi pembayaran...'
       : 'Memproses...';
@@ -566,12 +857,26 @@ export const Checkout: React.FC = () => {
             </svg>
             Kembali
           </button>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Konfirmasi Pesanan</h1>
-          <p className="text-slate-500 mt-1">
-            {isDirectOrder
-              ? 'Pemesanan langsung — keranjang kamu tidak terpengaruh'
-              : 'Lengkapi data diri untuk melanjutkan pembayaran'}
-          </p>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Konfirmasi Pesanan</h1>
+              <p className="text-slate-500 mt-1">
+                {isDirectOrder
+                  ? 'Pemesanan langsung — keranjang kamu tidak terpengaruh'
+                  : 'Lengkapi data diri untuk melanjutkan pembayaran'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => navigate('/history-invoice')}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-blue-200 bg-white text-blue-700 hover:bg-blue-50 transition-colors text-sm font-bold shadow-sm cursor-pointer"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 2m6-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Riwayat Transaksi
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handlePay}>
@@ -585,6 +890,15 @@ export const Checkout: React.FC = () => {
                   Data Pemesan
                 </h2>
 
+                {hasPendingPayment && (
+                  <div className="mb-5 px-3 py-2 bg-blue-50 border border-blue-100 rounded-xl text-blue-700 text-xs font-semibold flex items-start gap-2">
+                    <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    <span>Kamu masih bisa mengubah data di bawah (nama, email, atau nomor WhatsApp — salah satu atau semuanya) untuk pesanan yang sama ini. Klik "Lanjutkan Pembayaran" untuk menyimpan perubahan.</span>
+                  </div>
+                )}
+
                 <div className="space-y-5">
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-1.5">
@@ -593,7 +907,7 @@ export const Checkout: React.FC = () => {
                     <input
                       type="text" name="name" value={form.name} onChange={handleChange}
                       placeholder="Contoh: Budi Santoso"
-                      disabled={hasPendingPayment || loading}
+                      disabled={loading}
                       className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-slate-800 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                       required
                     />
@@ -606,7 +920,7 @@ export const Checkout: React.FC = () => {
                     <input
                       type="email" name="email" value={form.email} onChange={handleChange}
                       placeholder="Contoh: budi@email.com"
-                      disabled={hasPendingPayment || loading}
+                      disabled={loading}
                       className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-slate-800 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                       required
                     />
@@ -622,7 +936,7 @@ export const Checkout: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setIsCountryDropdownOpen(!isCountryDropdownOpen)}
-                          disabled={hasPendingPayment || loading}
+                          disabled={loading}
                           className="px-3.5 py-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-800 font-bold text-sm flex items-center gap-2 hover:bg-slate-200/70 transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                           <img
@@ -673,7 +987,7 @@ export const Checkout: React.FC = () => {
                       <input
                         type="tel" name="phone" value={form.phone} onChange={handleChange}
                         placeholder="8123456789"
-                        disabled={hasPendingPayment || loading}
+                        disabled={loading}
                         className="flex-1 px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none text-slate-800 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                         required
                       />
@@ -689,7 +1003,7 @@ export const Checkout: React.FC = () => {
                   <span className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">2</span>
                   Pilih Metode Pembayaran
                 </h2>
-                
+
                 <p className="text-xs text-slate-500 mb-5">
                   Nominal PPN dan total harga akan langsung ter-update secara otomatis sesuai metode yang kamu pilih.
                 </p>
@@ -731,7 +1045,7 @@ export const Checkout: React.FC = () => {
                                 {cat.title}
                               </h3>
                             </div>
-                            
+
                             <div className="flex items-center gap-2 flex-wrap">
                               {cat.channels.slice(0, 6).map((ch) => (
                                 <div
@@ -909,9 +1223,17 @@ export const Checkout: React.FC = () => {
                     <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <div>
+                    <div className="flex-1">
                       <p className="font-semibold text-xs">Pembayaran belum selesai</p>
-                      <p className="text-[11px] mt-0.5 text-amber-600">Invoice sudah dibuat. Klik tombol di bawah untuk membuka kembali instruksi pembayaran.</p>
+                      <p className="text-[11px] mt-0.5 text-amber-600">Invoice sudah dibuat. Kamu bisa ubah data/metode di atas lalu klik tombol di bawah, atau langsung lanjutkan pembayaran seperti semula.</p>
+                      {/* ✅ FIX: tombol eksplisit untuk membatalkan invoice pending & mulai baru */}
+                      <button
+                        type="button"
+                        onClick={handleCancelPendingOrder}
+                        className="mt-2 text-[11px] font-bold text-amber-700 underline hover:text-amber-900 cursor-pointer"
+                      >
+                        Batalkan pesanan ini & buat baru
+                      </button>
                     </div>
                   </div>
                 )}
@@ -1014,7 +1336,7 @@ export const Checkout: React.FC = () => {
         </form>
 
         {/* NexCube Custom Payment Modal (100% Custom Website UI) */}
-        {customModalData && (
+        {customModalData && paidStatus !== 'paid' && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/70 backdrop-blur-md animate-fade-in overflow-y-auto">
             <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-lg w-full overflow-hidden my-auto relative">
               {/* Modal Header */}
@@ -1025,13 +1347,13 @@ export const Checkout: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="font-bold text-base text-white">Instruksi Pembayaran</h3>
-                    <p className="text-xs text-blue-100/90 font-medium">Order #{customModalData.orderId}</p>
+                    <p className="text-xs text-blue-100/90 font-medium">Invoice Number: {customModalData.invoiceNumber}</p>
                   </div>
                 </div>
                 {/* Tombol Close (X): Hanya menutup modal tanpa me-redirect atau menghapus halaman checkout */}
                 <button
                   type="button"
-                  onClick={() => setCustomModalData(null)}
+                  onClick={handleCloseModal}
                   className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center text-white cursor-pointer"
                   title="Tutup Modal"
                 >
@@ -1050,7 +1372,7 @@ export const Checkout: React.FC = () => {
                   <div className="flex flex-col items-start sm:items-end gap-1.5">
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200/80 rounded-full text-[11px] font-bold shadow-2xs">
                       <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-                      Menunggu Pembayaran
+                      {checkingStatus ? 'Mengecek status...' : 'Menunggu Pembayaran'}
                     </span>
                     <PaymentTimer expiresAt={customModalData.expiresAt} onExpire={handleTimerExpire} />
                   </div>
@@ -1175,7 +1497,7 @@ export const Checkout: React.FC = () => {
                     <div className="flex justify-center gap-2 flex-wrap">
                       <a
                         href={customModalData.qrCodeUrl}
-                        download={`QRIS-NexCube-${customModalData.orderId}.png`}
+                        download={`QRIS-NexCube-${customModalData.invoiceNumber}.png`}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl font-bold text-xs transition-colors border border-blue-200"
@@ -1206,36 +1528,56 @@ export const Checkout: React.FC = () => {
                   <ol className="text-xs text-slate-600 space-y-1.5 list-decimal pl-4 leading-relaxed">
                     <li>Lakukan pembayaran sebelum batas waktu berakhir (24 Jam).</li>
                     <li>Pastikan nominal transfer tepat <strong>{formatRupiah(customModalData.grossAmount)}</strong>.</li>
-                    <li>Status transaksi akan diverifikasi secara otomatis oleh sistem.</li>
+                    <li>Status transaksi akan diverifikasi secara otomatis oleh sistem — halaman ini akan otomatis menampilkan konfirmasi begitu pembayaran diterima, tidak perlu klik apa pun.</li>
                   </ol>
                 </div>
 
-                {/* Modal Action Buttons */}
-                <div className="pt-2 flex flex-col sm:flex-row gap-3">
+                {/* Modal Action Button — hanya Tutup. Konfirmasi sukses ditampilkan otomatis
+                    (lihat overlay paidStatus === 'paid' di bawah) begitu backend memverifikasi
+                    settlement dari Midtrans, bukan dari klaim klik user. */}
+                <div className="pt-2">
                   <button
                     type="button"
-                    onClick={() => {
-                      const activeInvoiceId = customModalData.invoiceId;
-                      if (!isDirectOrder) clearCart();
-                      localStorage.removeItem('nexcube_checkout_invoice_id');
-                      localStorage.removeItem('nexcube_checkout_modal');
-                      setPendingInvoiceId(null);
-                      setCustomModalData(null);
-                      navigate('/order/pending', { state: { invoiceId: activeInvoiceId } });
-                    }}
-                    className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition-colors shadow-md shadow-blue-200 cursor-pointer"
-                  >
-                    Saya Sudah Bayar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCustomModalData(null)}
-                    className="py-3 px-5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition-colors cursor-pointer"
+                    onClick={handleCloseModal}
+                    className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition-colors cursor-pointer"
                   >
                     Tutup
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Sukses — muncul otomatis begitu status invoice = 'paid' terverifikasi backend */}
+        {customModalData && paidStatus === 'paid' && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/70 backdrop-blur-md animate-fade-in overflow-y-auto">
+            <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-sm w-full overflow-hidden my-auto p-8 text-center space-y-5">
+              <div className="mx-auto w-20 h-20 rounded-full bg-emerald-50 border-4 border-emerald-100 flex items-center justify-center">
+                <svg className="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+
+              <div className="space-y-1.5">
+                <h3 className="text-xl font-black text-slate-900">Pembayaran Berhasil!</h3>
+                <p className="text-sm text-slate-500">
+                  Invoice Number <span className="font-semibold text-slate-700">{customModalData.invoiceNumber}</span> sebesar{' '}
+                  <span className="font-semibold text-slate-700">{formatRupiah(customModalData.grossAmount)}</span> telah kami terima.
+                </p>
+              </div>
+
+              <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-700 text-xs font-medium">
+                Tim kami akan segera memproses pesananmu. Bukti & invoice sudah dikirim ke email kamu.
+              </div>
+
+              <button
+                type="button"
+                onClick={handleFinishAfterPaid}
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition-colors shadow-md shadow-blue-200 cursor-pointer"
+              >
+                Lihat Status Pesanan
+              </button>
             </div>
           </div>
         )}

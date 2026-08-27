@@ -143,13 +143,14 @@ export interface Invoice {
     company?: string;
   };
   amount: number;
-  status: 'draft' | 'sent' | 'paid' | 'overdue';
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'expired';
   issueDate: string;
   dueDate: string;
   service?: 'website' | 'undangan' | 'desain' | 'katalog';
   priceBreakdown?: string | null;
   description?: string;
   notes?: string;
+  expiredAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -533,20 +534,46 @@ class ApiClient {
    * STEP 2: Generate Midtrans payment link dari invoice yang sudah dibuat.
    * Route POST /invoices/:id/payment-link pakai optionalAuthMiddleware di backend.
    */
-  async checkoutGeneratePaymentLink(invoiceId: number | string, paymentMethod?: string): Promise<ApiResponse<PaymentLinkResponse>> {
+    async checkoutGeneratePaymentLink(
+    invoiceId: number | string,
+    paymentMethod?: string,
+    amount?: number
+    ): Promise<ApiResponse<PaymentLinkResponse>> {
+      const isLoggedIn = !!this.token;
+
+      const body: Record<string, any> = {};
+      if (paymentMethod) body.paymentMethod = paymentMethod;
+      if (amount !== undefined) body.amount = amount;
+
+      return this.request<PaymentLinkResponse>(
+        isLoggedIn
+          ? `/invoices/${invoiceId}/payment-link`
+          : `/invoices/noLogin/${invoiceId}/payment-link`,
+        'POST',
+        body
+      );
+    }
+
+
+  // status invoice public
+  async checkoutGetInvoiceStatus(invoiceId: number | string): Promise<ApiResponse<{ status: Invoice['status'] }>> {
     const isLoggedIn = !!this.token;
 
-    return this.request<PaymentLinkResponse>(
+    return this.request<{ status: Invoice['status'] }>(
       isLoggedIn
-        ? `/invoices/${invoiceId}/payment-link`
-        : `/invoices/noLogin/${invoiceId}/payment-link`,
-      'POST',
-      paymentMethod ? { paymentMethod } : {}
+        ? `/invoices/${invoiceId}`
+        : `/invoices/noLogin/${invoiceId}/status`,
+      'GET'
     );
   }
 
-
-
+  // Cari invoice berdasarkan kode invoice (public, tanpa login).
+  async searchInvoiceByCode(invoiceNumber: string): Promise<ApiResponse<Invoice>> {
+    return this.request<Invoice>(
+      `/invoices/noLogin/search?invoiceNumber=${encodeURIComponent(invoiceNumber)}`,
+      'GET'
+    );
+  }
 
   // ── Contact endpoints ───────────────────────────────────────────────────────
 

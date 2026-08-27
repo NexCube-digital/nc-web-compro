@@ -76,6 +76,11 @@ export const About: React.FC = () => {
     status?: 'active' | 'in-active';
   };
 
+  type TeamApiItem = Omit<TeamPublic, 'name'> & {
+    name?: string;
+    account?: { name?: string };
+  };
+
   const [teams, setTeams] = useState<TeamPublic[]>([]);
   const API_MEDIA_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '');
 
@@ -84,12 +89,18 @@ export const About: React.FC = () => {
     const load = async () => {
       try {
         const res = await apiClient.getTeams();
-        if (res.success && res.data && !Array.isArray(res.data) && Array.isArray((res.data as any).teams)) {
-          const items = (res.data as any).teams
-            .filter((t: any) => t.status === 'active')
-            .map((t: any) => ({
+        const rawTeams: TeamApiItem[] = Array.isArray(res.data)
+          ? res.data as TeamApiItem[]
+          : res.data && Array.isArray((res.data as { teams?: TeamApiItem[] }).teams)
+            ? (res.data as { teams: TeamApiItem[] }).teams
+            : [];
+
+        if (res.success && rawTeams.length > 0) {
+          const items = rawTeams
+            .filter(t => t.status === 'active')
+            .map(t => ({
               id: t.id,
-              name: t.name,
+              name: t.account?.name || t.name || 'Anggota Tim NexCube',
               position: t.position,
               image: typeof t.image === 'string' && t.image.startsWith('/uploads') ? `${API_MEDIA_BASE}${t.image}` : t.image || '/images/team/team-1.jpg',
               bio: t.bio,

@@ -8,6 +8,23 @@ interface PriceBreakdownItem {
   price: number
 }
 
+interface StoredPriceBreakdownItem {
+  id?: string | number
+  name?: string
+  description?: string
+  price?: string | number
+}
+
+const normalizePrice = (value: string | number): number => {
+  if (typeof value === 'number') return Number.isFinite(value) ? Math.round(value) : 0
+  const text = value.trim()
+  if (!text) return 0
+  const normalized = text.includes(',')
+    ? text.replace(/\./g, '').replace(',', '.')
+    : text
+  return Math.round(Number(normalized.replace(/[^\d.-]/g, '')) || 0)
+}
+
 interface FormInvoiceProps {
   formData: Omit<Invoice, 'id' | 'createdAt' | 'updatedAt'>;
   editingId: string | null;
@@ -33,6 +50,7 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
   onCancel,
   onPriceBreakdownChange
 }) => {
+  const [manualClient, setManualClient] = useState(false)
   const [priceBreakdown, setPriceBreakdown] = useState<PriceBreakdownItem[]>([
     { id: '1', description: '', price: 0 }
   ])
@@ -68,9 +86,13 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
   useEffect(() => {
     if (editingId && formData.priceBreakdown) {
       try {
-        const parsed = JSON.parse(formData.priceBreakdown as any)
+        const parsed = JSON.parse(formData.priceBreakdown)
         if (Array.isArray(parsed) && parsed.length > 0) {
-          setPriceBreakdown(parsed)
+          setPriceBreakdown((parsed as StoredPriceBreakdownItem[]).map((item, index) => ({
+            id: String(item.id ?? index + 1),
+            description: item.description || item.name || '',
+            price: normalizePrice(item.price ?? 0),
+          })))
         } else {
           setPriceBreakdown([{ id: '1', description: '', price: 0 }])
         }
@@ -79,11 +101,16 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
         setPriceBreakdown([{ id: '1', description: '', price: 0 }])
       }
     }
-  }, [editingId]) // Only depend on editingId to avoid resetting when formData changes
+  }, [editingId, formData.priceBreakdown])
 
-  // Find selected client to auto-fill email
-  const selectedClient = clients.find(c => c.name === formData.clientName)
-  
+  const selectedClient = clients.find(client => client.name === formData.clientName)
+  const isKnownClient = Boolean(selectedClient)
+  const useManualClient = manualClient || (Boolean(formData.clientName) && !isKnownClient)
+
+  useEffect(() => {
+    if (!editingId && !formData.clientName) setManualClient(false)
+  }, [editingId, formData.clientName])
+
   const handleClientChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const clientName = e.target.value
     const client = clients.find(c => c.name === clientName)
@@ -92,15 +119,19 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
     onInputChange({
       ...e,
       target: { ...e.target, name: 'clientName', value: clientName }
-    } as any)
+    } as React.ChangeEvent<HTMLSelectElement>)
     
     // Auto-fill email
     if (client && client.email) {
       onInputChange({
         ...e,
         target: { ...e.target, name: 'clientEmail', value: client.email }
-      } as any)
+      } as React.ChangeEvent<HTMLSelectElement>)
     }
+  }
+
+  const handleManualClientChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onInputChange(e)
   }
 
   // Handle issueDate change and auto-calculate dueDate
@@ -128,7 +159,7 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
   const handleBreakdownChange = (id: string, field: 'description' | 'price', value: string | number) => {
     const updated = priceBreakdown.map(item =>
       item.id === id
-        ? { ...item, [field]: field === 'price' ? Number(value) : value }
+        ? { ...item, [field]: field === 'price' ? normalizePrice(value) : value }
         : item
     )
     setPriceBreakdown(updated)
@@ -224,23 +255,53 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-2">
-              Pilih Klien <span className="text-red-500">*</span>
+              Nama Klien <span className="text-red-500">*</span>
             </label>
-            <select
-              name="clientName"
-              value={formData.clientName || ''}
-              onChange={handleClientChange}
-              required
-              className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            {useManualClient ? (
+              <input
+                type="text"
+                name="clientName"
+                value={formData.clientName || ''}
+                onChange={handleManualClientChange}
+                required
+                placeholder="Ketik nama client"
+                className="w-full px-4 py-2.5 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            ) : (
+              <select
+                name="clientName"
+                value={formData.clientName || ''}
+                onChange={handleClientChange}
+                required
+                className="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Pilih client dari database</option>
+                {clients.map(client => (
+                  <option key={client.id} value={client.name}>
+                    {client.name} - {client.email}
+                  </option>
+                ))}
+              </select>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                if (useManualClient) {
+                  setManualClient(false)
+                  onInputChange({
+                    target: { name: 'clientName', value: '' }
+                  } as any)
+                  onInputChange({
+                    target: { name: 'clientEmail', value: '' }
+                  } as any)
+                } else {
+                  setManualClient(true)
+                }
+              }}
+              className="mt-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline"
             >
-              <option value="">-- Pilih Klien dari Database --</option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.name}>
-                  {client.name} ({client.email})
-                </option>
-              ))}
-            </select>
-            <p className="text-xs text-slate-500 mt-1">Email akan otomatis terisi saat memilih klien</p>
+              {useManualClient ? 'Pilih client dari database' : 'Atau input client manual'}
+            </button>
           </div>
 
           <div>
@@ -252,11 +313,11 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
               name="clientEmail"
               value={formData.clientEmail || ''}
               onChange={onInputChange}
-              readOnly
-              className="w-full px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-100 text-slate-600 cursor-not-allowed focus:outline-none"
-              placeholder="Email akan terisi otomatis"
+              disabled={!useManualClient}
+              className="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed"
+              placeholder="Email client"
             />
-            <p className="text-xs text-slate-500 mt-1">Email otomatis terisi dari database klien</p>
+            <p className="text-xs text-slate-500 mt-1">Otomatis terisi untuk client database, atau ketik manual</p>
           </div>
         </div>
 
