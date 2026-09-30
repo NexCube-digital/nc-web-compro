@@ -5,9 +5,11 @@ import Toast from '../Toast'
 
 interface Props {
   onCloseMenu?: () => void
+  isHeroMode?: boolean
+  className?: string
 }
 
-export const LoginButton: React.FC<Props> = ({ onCloseMenu }) => {
+export const LoginButton: React.FC<Props> = ({ onCloseMenu, isHeroMode, className }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -78,9 +80,12 @@ export const LoginButton: React.FC<Props> = ({ onCloseMenu }) => {
       {/* Premium CTA Button */}
       <button
         onClick={open}
-        className="group inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/80 hover:bg-[#126EFE] px-4 py-2 text-sm font-bold text-slate-700 hover:text-white transition-all duration-200 shadow-xs cursor-pointer"
+        className={className || (isHeroMode 
+          ? "group inline-flex items-center gap-2 rounded-full bg-white hover:bg-slate-100 text-slate-900 px-5 py-2 text-sm font-bold shadow-md shadow-white/10 hover:shadow-white/20 transition-all duration-200 hover:scale-105 active:scale-98 cursor-pointer"
+          : "group inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50/80 hover:bg-[#126EFE] px-4 py-2 text-sm font-bold text-slate-700 hover:text-white transition-all duration-200 shadow-xs cursor-pointer"
+        )}
       >
-        <svg className="h-4 w-4 text-[#126EFE] group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+        <svg className={`h-4 w-4 transition-colors ${isHeroMode ? "text-slate-900" : "text-[#126EFE] group-hover:text-white"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
         </svg>
         <span>Masuk</span>

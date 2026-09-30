@@ -727,19 +727,19 @@ export const PaketAffiliate: React.FC = () => {
             </div>
           </div>
 
-          <div className="container relative z-10 px-4">
-            <div className="max-w-5xl mx-auto text-center space-y-4">
-              <div ref={heroBadgeRef} className="inline-flex items-center gap-3 backdrop-blur-xl bg-white/70 border border-white/30 shadow-lg px-5 py-2 rounded-2xl">
-                <div className="relative">
+          <div className="container mx-auto relative z-10 px-4">
+            <div className="max-w-5xl mx-auto text-center space-y-4 min-w-0 w-full">
+              <div ref={heroBadgeRef} className="inline-flex max-w-full items-center gap-3 backdrop-blur-xl bg-white/70 border border-white/30 shadow-lg px-4 sm:px-5 py-2 rounded-2xl">
+                <div className="relative shrink-0">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-orange-500 rounded-full blur-md opacity-75 animate-pulse"></div>
                   <HiSparkles className="w-5 h-5 text-orange-500 relative" />
                 </div>
-                <span className="text-sm font-bold bg-gradient-to-r from-blue-600 to-orange-600 bg-clip-text text-transparent">
+                <span className="text-xs sm:text-sm font-bold bg-gradient-to-r from-blue-600 to-orange-600 bg-clip-text text-transparent break-words">
                   Solusi Digital Terintegrasi 2025
                 </span>
               </div>
 
-              <h1 ref={heroTitleRef} className="text-2xl sm:text-3xl md:text-5xl font-black leading-[1.05] tracking-tight overflow-hidden">
+              <h1 ref={heroTitleRef} className="text-2xl sm:text-3xl md:text-5xl font-black leading-[1.1] sm:leading-[1.05] tracking-tight overflow-hidden break-words [overflow-wrap:anywhere]">
                 <span className="block hero-word bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 bg-clip-text text-transparent drop-shadow-lg">
                   Solusi Terbaik
                 </span>
@@ -748,7 +748,7 @@ export const PaketAffiliate: React.FC = () => {
                 </span>
               </h1>
 
-              <p ref={heroDescRef} className="text-sm md:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto">
+              <p ref={heroDescRef} className="text-xs sm:text-sm md:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto break-words [overflow-wrap:anywhere]">
                 Temukan paket kami yang tepat untuk bisnis Anda. Dari{' '}
                 <span className="font-bold text-blue-600">Website</span>,{' '}
                 <span className="font-bold text-emerald-600">Undangan Digital</span>,{' '}

@@ -1,93 +1,175 @@
 import React from 'react';
 import { FaRocket, FaGem, FaBolt, FaCheckCircle } from 'react-icons/fa';
-import { HiSparkles } from 'react-icons/hi';
+
+// 3D Isometric Cube Icon for Section Header Badge
+const IsometricCubeIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor">
+    {/* Top Face */}
+    <path 
+      d="M12 2 L21 7.2 L12 12.4 L3 7.2 Z" 
+      fill="currentColor" 
+      fillOpacity="0.2" 
+      stroke="currentColor" 
+      strokeWidth="1.3" 
+      strokeLinejoin="round" 
+    />
+    {/* Left Face */}
+    <path 
+      d="M3 7.2 L12 12.4 L12 22 L3 16.8 Z" 
+      fill="currentColor" 
+      fillOpacity="0.1" 
+      stroke="currentColor" 
+      strokeWidth="1.3" 
+      strokeLinejoin="round" 
+    />
+    {/* Right Face */}
+    <path 
+      d="M12 12.4 L21 7.2 L21 16.8 L12 22 Z" 
+      fill="currentColor" 
+      fillOpacity="0.15" 
+      stroke="currentColor" 
+      strokeWidth="1.3" 
+      strokeLinejoin="round" 
+    />
+  </svg>
+);
+
+// 3D Isometric Wireframe Cube Watermark for Card Background
+const CubeWatermark: React.FC = () => (
+  <svg 
+    className="absolute -top-6 -right-6 w-32 h-32 text-slate-400/15 group-hover:text-slate-600/25 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 pointer-events-none" 
+    viewBox="0 0 100 100" 
+    fill="none" 
+    stroke="currentColor"
+  >
+    {/* Top Diamond Wireframe */}
+    <path d="M50 10 L85 30 L50 50 L15 30 Z" strokeWidth="1.5" strokeDasharray="3 3" />
+    {/* Left Isometric Wall */}
+    <path d="M15 30 L50 50 L50 90 L15 70 Z" strokeWidth="1.5" />
+    {/* Right Isometric Wall */}
+    <path d="M50 50 L85 30 L85 70 L50 90 Z" strokeWidth="1.5" />
+    {/* Internal Core Nodes */}
+    <circle cx="50" cy="50" r="3.5" fill="currentColor" />
+    <line x1="50" y1="50" x2="50" y2="10" strokeWidth="1" opacity="0.5" />
+    <line x1="50" y1="50" x2="15" y2="70" strokeWidth="1" opacity="0.5" />
+    <line x1="50" y1="50" x2="85" y2="70" strokeWidth="1" opacity="0.5" />
+  </svg>
+);
 
 export const BrandShowcaseSection: React.FC = () => {
   const highlights = [
     {
-      icon: <FaRocket className="w-5 h-5 sm:w-6 sm:h-6 text-[#126EFE]" />,
+      code: 'PILLAR // 01',
+      icon: <FaRocket className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />,
+      bgIcon: 'bg-blue-50/90 border-blue-100',
       title: 'Inovasi Tanpa Batas',
-      subtitle: 'Teknologi Modern & Fast Load',
-      desc: 'Pengembangan teknologi modern (React, Tailwind v4, Vite) untuk performa website yang super kencang, aman, dan responsif.',
-      accentColor: 'from-[#126EFE] to-blue-600',
-      bgIcon: 'bg-blue-50 border-blue-100',
-      features: ['Tech Stack Terkini', 'Loading Super Kencang', 'Keamanan Terjamin']
+      subtitle: 'Modern High-Speed Stack',
+      desc: 'Pengembangan teknologi modern (React, Tailwind, Vite) untuk performa website super kencang, aman, dan responsif di era Industry 5.0.',
+      features: ['Tech Stack Modern Terkini', 'Ultra Fast Core Web Vitals', 'Arsitektur Keamanan Terjamin']
     },
     {
-      icon: <FaGem className="w-5 h-5 sm:w-6 sm:h-6 text-[#FBA41C]" />,
-      title: 'Kualitas Premium',
+      code: 'PILLAR // 02',
+      icon: <FaGem className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-600" />,
+      bgIcon: 'bg-indigo-50/90 border-indigo-100',
+      title: 'Kualitas Presisi & Elegan',
       subtitle: 'Standar Desain Internasional',
-      desc: 'Desain elegan, user-friendly, ramah SEO, dan berstandar internasional dengan harga lokal terjangkau untuk akselerasi bisnismu.',
-      accentColor: 'from-[#FBA41C] to-amber-600',
-      bgIcon: 'bg-amber-50 border-amber-100',
-      features: ['Desain UI/UX Eksklusif', 'Struktur SEO Friendly', 'Tampilan Ramah HP & PC']
+      desc: 'Desain visual berkelas, user-friendly, dan berstandar internasional yang disesuaikan secara strategis untuk mendongkrak reputasi brand.',
+      features: ['Desain UI/UX Eksklusif & Bersih', 'Struktur SEO-Native Optimal', 'Tampilan Sempurna di HP & Desktop']
     },
     {
+      code: 'PILLAR // 03',
       icon: <FaBolt className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />,
-      title: 'Pengerjaan Cepat & Tepat',
+      bgIcon: 'bg-emerald-50/90 border-emerald-100',
+      title: 'Eksekusi Cepat & Terukur',
       subtitle: 'Proses Transparan 24/7',
-      desc: 'Proses pengerjaan transparan, tepat waktu, serta dukungan konsultasi ramah 24/7 untuk memastikan proyek berjalan lancar.',
-      accentColor: 'from-emerald-500 to-teal-600',
-      bgIcon: 'bg-emerald-50 border-emerald-100',
-      features: ['Garansi Tepat Waktu', 'Revisi Ramah & Cepat', 'Konsultasi Gratis 24/7']
+      desc: 'Proses pengerjaan transparan, timeline presisi, serta dukungan konsultasi teknis responsif 24/7 untuk menjamin keberhasilan proyek Anda.',
+      features: ['Garansi Tepat Waktu (On-Time)', 'Revisi Ramah & Cepat Tanggap', 'Pendampingan Konsultasi 24/7']
     }
   ];
 
   return (
-    <section className="py-8 sm:py-16 md:py-24 bg-gradient-to-b from-blue-50/40 via-white to-slate-50/50 text-slate-900 relative overflow-hidden">
+    <section className="py-10 sm:py-16 md:py-24 bg-gradient-to-b from-slate-100/40 via-white to-slate-50/60 text-slate-900 relative overflow-hidden border-b border-slate-200/60">
+      {/* ── Background Aesthetics: Digital Isometric Grid Matching Services ── */}
+      <div 
+        className="absolute inset-0 opacity-[0.08] pointer-events-none"
+        style={{
+          backgroundImage: `linear-gradient(#64748b 1px, transparent 1px), linear-gradient(90deg, #64748b 1px, transparent 1px)`,
+          backgroundSize: '48px 48px'
+        }}
+      ></div>
+
       {/* Soft Ambient Light Effects */}
-      <div className="absolute top-10 left-10 w-96 h-96 bg-blue-300/10 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-10 right-10 w-96 h-96 bg-amber-300/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="absolute top-1/4 -left-20 w-[450px] h-[450px] bg-slate-300/20 rounded-full blur-[120px] pointer-events-none"></div>
+      <div className="absolute bottom-1/4 -right-20 w-[450px] h-[450px] bg-blue-200/20 rounded-full blur-[120px] pointer-events-none"></div>
 
       <div className="container mx-auto px-3 sm:px-4 md:px-6 relative z-10">
         
-        {/* Section Header Banner (Compact on Mobile) */}
-        <div className="max-w-3xl mx-auto text-center mb-7 sm:mb-14 space-y-2 sm:space-y-3">
-          <div className="inline-flex items-center gap-1.5 bg-blue-50 border border-blue-100 px-3.5 py-1 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#126EFE] shadow-xs">
-            <HiSparkles className="w-3.5 h-3.5 text-[#FBA41C]" />
-            <span>NEXCUBE DIGITAL INDONESIA</span>
+        {/* Section Header */}
+        <div className="max-w-3xl mx-auto text-center mb-8 sm:mb-14 space-y-2 sm:space-y-3">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200 shadow-xs text-slate-800 text-[11px] sm:text-xs font-bold tracking-wider uppercase">
+            <IsometricCubeIcon className="w-3.5 h-3.5 text-slate-700" />
+            <span>NEXCUBE 5.0 ECOSYSTEM</span>
           </div>
 
           <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
-            Mitra Strategis <span className="bg-gradient-to-r from-[#126EFE] via-blue-600 to-[#FBA41C] bg-clip-text text-transparent">Transformasi Digital</span> Anda
+            Mitra Strategis <br className="hidden sm:inline" />
+            <span className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-800 bg-clip-text text-transparent">
+              Transformasi Digital Anda
+            </span>
           </h2>
 
           <p className="text-slate-600 text-xs sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-            Kami membantu ribuan pelaku usaha, UMKM, dan perorangan untuk tampil lebih profesional & terpercaya di era digital.
+            Sinergi teknologi modern dan keahlian manusia (Human-Cyber Synergy) untuk membangun aset digital yang tangguh, kredibel, dan siap berkembang di era Industry 5.0.
           </p>
         </div>
 
-        {/* 3 Pillars Cards (Compact & Inline Title/Icon on Mobile) */}
+        {/* 3 Pillars Cards (Matching Services & Hero Aesthetic) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-6 max-w-6xl mx-auto">
           {highlights.map((item, idx) => (
             <div 
               key={idx}
-              className="group relative bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-7 border border-slate-200/90 shadow-xs hover:shadow-2xl hover:border-blue-300 hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between overflow-hidden"
+              className="group relative bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl p-5 sm:p-7 md:p-8 border border-slate-200/90 hover:border-slate-400/80 hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-xs"
             >
-              {/* Top Accent Gradient Line */}
-              <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${item.accentColor}`}></div>
+              {/* Cube Wireframe Watermark Background */}
+              <CubeWatermark />
 
-              <div className="space-y-3 sm:space-y-4">
-                {/* Header Row: Icon + Title & Subtitle beside Icon */}
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl border ${item.bgIcon} flex items-center justify-center group-hover:scale-105 transition-all duration-300 shadow-2xs shrink-0`}>
+              {/* Subtle Titanium Top Accent Line */}
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-slate-300 to-transparent group-hover:via-slate-600 transition-all duration-300"></div>
+
+              <div className="space-y-3.5 relative z-10">
+                {/* Pillar Code Header */}
+                <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                  <span className="text-[10px] font-mono font-bold tracking-widest text-slate-400 group-hover:text-slate-700 transition-colors">
+                    {item.code}
+                  </span>
+                  <span className="w-2 h-2 rounded-full bg-slate-300 group-hover:bg-slate-700 transition-colors"></span>
+                </div>
+
+                {/* Icon & Title Row */}
+                <div className="flex items-center gap-3">
+                  <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl border ${item.bgIcon} flex items-center justify-center group-hover:scale-105 transition-all duration-300 shadow-2xs shrink-0`}>
                     {item.icon}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h3 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-[#126EFE] transition-colors leading-snug">
+                    <h3 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-slate-800 transition-colors leading-snug">
                       {item.title}
                     </h3>
-                    <div className="text-[10px] sm:text-xs font-medium text-slate-500 mt-0.5">
+                    <div className="text-[11px] sm:text-xs font-medium text-slate-500 mt-0.5">
                       {item.subtitle}
                     </div>
                   </div>
                 </div>
 
+                {/* Description */}
+                <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed min-h-[2.5rem]">
+                  {item.desc}
+                </p>
+
                 {/* Feature Bullet List */}
-                <ul className="space-y-1.5 sm:space-y-2 pt-2.5 sm:pt-3 border-t border-slate-100">
+                <ul className="space-y-2 pt-3 border-t border-slate-100">
                   {item.features.map((feat, fIdx) => (
-                    <li key={fIdx} className="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-slate-700">
-                      <FaCheckCircle className="text-[#126EFE] w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
+                    <li key={fIdx} className="flex items-center gap-2 text-[11px] sm:text-xs font-medium text-slate-700">
+                      <FaCheckCircle className="text-slate-700 shrink-0 w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       <span>{feat}</span>
                     </li>
                   ))}

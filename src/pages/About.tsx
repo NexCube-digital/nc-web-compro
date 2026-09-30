@@ -173,24 +173,24 @@ export const About: React.FC = () => {
           <div className="grid lg:grid-cols-12 gap-6 lg:gap-12 items-center">
             
             {/* Left Column: Hero Text */}
-            <div className={`lg:col-span-7 space-y-3 sm:space-y-5 text-center lg:text-left ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}>
+            <div className={`lg:col-span-7 min-w-0 w-full space-y-3 sm:space-y-5 text-center lg:text-left ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}>
               
               {/* Badge */}
-              <div className="inline-flex items-center gap-1.5 bg-blue-50 border border-blue-100 px-3.5 py-1 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#126EFE] shadow-xs">
-                <HiSparkles className="w-3.5 h-3.5 text-[#FBA41C]" />
-                <span>NEXCUBE DIGITAL INDONESIA</span>
+              <div className="inline-flex max-w-full items-center gap-1.5 bg-blue-50 border border-blue-100 px-3.5 py-1 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider text-[#126EFE] shadow-xs">
+                <HiSparkles className="w-3.5 h-3.5 text-[#FBA41C] shrink-0" />
+                <span className="truncate">NEXCUBE DIGITAL INDONESIA</span>
               </div>
 
               {/* Clean Unified Headline */}
-              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 tracking-tight leading-tight break-words [overflow-wrap:anywhere]">
                 Mitra Strategis <br className="hidden sm:inline" />
-                <span className="bg-gradient-to-r from-[#126EFE] via-blue-600 to-[#FBA41C] bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-[#126EFE] via-blue-600 to-[#FBA41C] bg-clip-text text-transparent inline-block pb-1">
                   Transformasi Digital
                 </span> Bisnis Anda
               </h1>
 
               {/* Clean Subtitle */}
-              <p className="text-slate-600 text-xs sm:text-base lg:text-lg max-w-xl mx-auto lg:mx-0 leading-relaxed font-normal">
+              <p className="text-slate-600 text-xs sm:text-base lg:text-lg max-w-xl mx-auto lg:mx-0 leading-relaxed font-normal break-words [overflow-wrap:anywhere]">
                 Kami menghadirkan solusi digital terpadu (Website, Undangan Digital, Desain Grafis, dan Katalog Produk) berstandar internasional dengan pendekatan terukur & harga terjangkau.
               </p>
 
