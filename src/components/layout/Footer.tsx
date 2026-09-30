@@ -138,7 +138,7 @@ export const Footer: React.FC = () => {
               <img 
                 src="/images/NexCube-full.png" 
                 alt="NexCube Digital" 
-                className="h-8 sm:h-9 w-auto object-contain"
+                className="h-22 sm:h-20 w-auto object-contain"
               />
             </Link>
 

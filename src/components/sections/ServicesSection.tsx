@@ -35,10 +35,10 @@ const IsometricCubeIcon: React.FC<{ className?: string }> = ({ className = 'w-4 
   </svg>
 );
 
-// 3D Isometric Wireframe Cube Watermark for Card Background
+// 3D Isometric Wireframe Cube Watermark for Card Background (Blue on Hover)
 const CubeWatermark: React.FC = () => (
   <svg 
-    className="absolute -top-6 -right-6 w-32 h-32 text-slate-400/15 group-hover:text-slate-600/25 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 pointer-events-none" 
+    className="absolute -top-5 -right-5 w-28 h-28 text-slate-400/10 group-hover:text-blue-500/20 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 pointer-events-none" 
     viewBox="0 0 100 100" 
     fill="none" 
     stroke="currentColor"
@@ -57,7 +57,11 @@ const CubeWatermark: React.FC = () => (
   </svg>
 );
 
-export const ServicesSection: React.FC = () => {
+export interface ServicesSectionProps {
+  id?: string;
+}
+
+export const ServicesSection: React.FC<ServicesSectionProps> = ({ id = 'services' }) => {
   const services = [
     {
       id: 'website',
@@ -65,8 +69,7 @@ export const ServicesSection: React.FC = () => {
       title: 'Website Premium',
       subtitle: 'Company Profile & Web App',
       description: 'Arsitektur web kencang, responsif semua perangkat, SEO-native, dan scalable untuk ekosistem Industry 5.0.',
-      icon: <FaCode className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />,
-      bgIcon: 'bg-blue-50/90 border-blue-100',
+      icon: <FaCode className="w-5 h-5 text-blue-600" />,
       badge: 'Core Engine',
       features: ['Responsive Fluid Layout (All Devices)', 'SEO Native & Core Web Vitals Ultra Fast', 'Free Domain & Cloud Hosting (1 Thn)'],
       link: '/paket/website'
@@ -76,9 +79,8 @@ export const ServicesSection: React.FC = () => {
       code: 'CUBE // MOD-02',
       title: 'Undangan Digital',
       subtitle: 'Interactive Event & Wedding',
-      description: 'Platform undangan interaktif dengan fitur live RSVP WhatsApp cerdas, geolocation map, galeri visual, & audio ambience.',
-      icon: <FaEnvelope className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />,
-      bgIcon: 'bg-purple-50/90 border-purple-100',
+      description: 'Platform undangan interaktif dengan live RSVP WhatsApp cerdas, geolocation map, galeri visual, & audio ambience.',
+      icon: <FaEnvelope className="w-5 h-5 text-blue-600" />,
       badge: 'Interactive Event',
       features: ['Sistem RSVP & Buku Tamu WhatsApp', 'Integrasi Google Maps & Waze Sync', 'Galeri Visual HD & Custom Background Audio'],
       link: '/paket/undangan-digital'
@@ -89,8 +91,7 @@ export const ServicesSection: React.FC = () => {
       title: 'Desain Grafis',
       subtitle: 'Brand Identity & Visual Asset',
       description: 'Desain visual presisi tinggi dari brand identity (Logo, Guideline, Feed Social) hingga materi komersial.',
-      icon: <FaPalette className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600" />,
-      bgIcon: 'bg-amber-50/90 border-amber-100',
+      icon: <FaPalette className="w-5 h-5 text-blue-600" />,
       badge: 'Creative Visual',
       features: ['Brand Identity & Precision Vector Logo', 'Social Media Dynamic Feed & Banner', 'Iterasi Cepat & Source File Resolusi HD'],
       link: '/paket/desain-grafis'
@@ -101,8 +102,7 @@ export const ServicesSection: React.FC = () => {
       title: 'Katalog Digital',
       subtitle: 'Smart QR Menu & Commerce',
       description: 'Katalog digital pintar & menu QR cafe/resto dengan pembaruan harga instan & direct ordering ke WhatsApp.',
-      icon: <FaBook className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />,
-      bgIcon: 'bg-emerald-50/90 border-emerald-100',
+      icon: <FaBook className="w-5 h-5 text-blue-600" />,
       badge: 'Smart Automation',
       features: ['Instan Scan QR Code Tanpa Aplikasi', 'Real-time Sinkronisasi Menu & Stok', 'Direct Checkout Order ke WhatsApp'],
       link: '/paket/menu-katalog'
@@ -110,101 +110,104 @@ export const ServicesSection: React.FC = () => {
   ];
 
   return (
-    <section className="py-10 sm:py-16 md:py-24 bg-gradient-to-b from-white via-slate-50/70 to-slate-100/50 text-slate-900 relative overflow-hidden border-b border-slate-200/60">
+    <section 
+      id={id} 
+      className="py-6 sm:py-8 lg:py-12 lg:min-h-[calc(100vh-5rem)] flex items-center justify-center bg-gradient-to-b from-white via-slate-50/70 to-slate-100/50 text-slate-900 relative overflow-hidden border-b border-slate-200/60"
+    >
       {/* ── Background Aesthetics: Digital Isometric Grid ── */}
       <div 
-        className="absolute inset-0 opacity-[0.08] pointer-events-none"
+        className="absolute inset-0 opacity-[0.06] pointer-events-none"
         style={{
           backgroundImage: `linear-gradient(#64748b 1px, transparent 1px), linear-gradient(90deg, #64748b 1px, transparent 1px)`,
           backgroundSize: '48px 48px'
         }}
-      ></div>
+      />
 
-      {/* Soft Ambient Light Glows */}
-      <div className="absolute top-1/4 -left-20 w-[450px] h-[450px] bg-slate-300/20 rounded-full blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-1/4 -right-20 w-[450px] h-[450px] bg-indigo-200/20 rounded-full blur-[120px] pointer-events-none"></div>
+      {/* Ambient Lighting Glows */}
+      <div className="absolute top-1/4 -left-20 w-80 h-80 bg-blue-300/15 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-indigo-300/15 rounded-full blur-[100px] pointer-events-none" />
 
-      <div className="container mx-auto px-3 sm:px-4 md:px-6 relative z-10">
+      <div className="container mx-auto px-3 sm:px-4 md:px-6 max-w-7xl relative z-10 w-full flex flex-col justify-center">
         
-        {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-8 sm:mb-14 space-y-2 sm:space-y-3">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-slate-200 shadow-xs text-slate-800 text-[11px] sm:text-xs font-bold tracking-wider uppercase">
+        {/* ── Section Header ── */}
+        <div className="text-center max-w-3xl mx-auto mb-5 sm:mb-8 space-y-1.5 sm:space-y-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-slate-200 shadow-2xs text-slate-800 text-[10px] sm:text-[11px] font-bold tracking-wider uppercase">
             <IsometricCubeIcon className="w-3.5 h-3.5 text-slate-700" />
             <span>Ekosistem Modular CUBE 5.0</span>
           </div>
 
-          <h2 className="text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight">
             Solusi Digital Terpadu Untuk <br className="hidden sm:inline" />
-            <span className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-800 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-700 bg-clip-text text-transparent">
               Akselerasi Bisnis & Event
             </span>
           </h2>
 
-          <p className="text-slate-600 text-xs sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+          <p className="text-slate-600 text-[11px] sm:text-xs md:text-sm max-w-2xl mx-auto leading-relaxed">
             Arsitektur modul digital adaptif berkinerja tinggi, dirancang terstruktur untuk mendukung transformasi digital dan skala bisnis Anda di era Industry 5.0.
           </p>
         </div>
 
-        {/* Services Grid (2 Columns on mobile, 4 Columns on desktop) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        {/* ── Services 4-Card Grid (1 Frame / Blue Hover State) ── */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4 md:gap-5">
           {services.map((service) => (
             <div 
               key={service.id}
-              className="group relative bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-7 border border-slate-200/90 hover:border-slate-400/80 hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-xs"
+              className="group relative bg-white/95 backdrop-blur-md rounded-2xl sm:rounded-3xl p-4 sm:p-5 border border-slate-200/90 hover:border-blue-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between overflow-hidden shadow-xs cursor-pointer"
             >
-              {/* Cube Wireframe Watermark Background */}
+              {/* Cube Wireframe Watermark Background (Glows blue on hover) */}
               <CubeWatermark />
 
-              {/* Subtle Titanium Top Accent Line */}
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-slate-300 to-transparent group-hover:via-slate-600 transition-all duration-300"></div>
+              {/* Blue Glow Top Accent Line on Hover */}
+              <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-transparent via-slate-200 to-transparent group-hover:via-blue-500 group-hover:from-blue-600/40 group-hover:to-cyan-400/40 transition-all duration-300"></div>
 
-              <div className="space-y-3 sm:space-y-4 relative z-10">
+              <div className="space-y-3 relative z-10">
                 {/* Module Code Header & Badge */}
-                <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-slate-100">
-                  <span className="text-[10px] font-mono font-bold tracking-widest text-slate-400 group-hover:text-slate-700 transition-colors">
+                <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                  <span className="text-[10px] font-mono font-bold tracking-widest text-slate-400 group-hover:text-blue-600 transition-colors">
                     {service.code}
                   </span>
-                  <span className="text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100/90 text-slate-700 border border-slate-200/80 shrink-0">
+                  <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100/90 text-slate-700 group-hover:bg-blue-50 group-hover:text-blue-700 group-hover:border-blue-200 border border-slate-200/80 transition-colors shrink-0">
                     {service.badge}
                   </span>
                 </div>
 
                 {/* Service Identity: Icon + Title */}
-                <div className="space-y-2.5">
-                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl border ${service.bgIcon} flex items-center justify-center group-hover:scale-105 transition-all duration-300 shadow-2xs`}>
+                <div className="space-y-2">
+                  <div className="w-10 h-10 rounded-xl border border-slate-200/90 bg-slate-50 group-hover:bg-blue-50 group-hover:border-blue-200 flex items-center justify-center group-hover:scale-105 transition-all duration-300 shadow-2xs">
                     {service.icon}
                   </div>
                   <div>
-                    <h3 className="text-sm sm:text-lg font-bold text-slate-900 group-hover:text-slate-800 transition-colors leading-snug">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors leading-snug">
                       {service.title}
                     </h3>
-                    <div className="text-[11px] sm:text-xs font-medium text-slate-500 mt-0.5">
+                    <div className="text-[11px] font-medium text-slate-500 mt-0.5">
                       {service.subtitle}
                     </div>
                   </div>
                 </div>
 
                 {/* Description */}
-                <p className="text-[11px] sm:text-xs text-slate-600 leading-relaxed min-h-[2.5rem]">
+                <p className="text-[11px] text-slate-600 leading-relaxed min-h-[2.8rem]">
                   {service.description}
                 </p>
 
                 {/* Feature Checklist */}
-                <ul className="space-y-2 pt-3 border-t border-slate-100">
+                <ul className="space-y-1.5 pt-2.5 border-t border-slate-100">
                   {service.features.map((feat, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-[11px] sm:text-xs font-medium text-slate-700">
-                      <FaCheckCircle className="text-slate-700 shrink-0 w-3 h-3 sm:w-3.5 sm:h-3.5 mt-0.5" />
-                      <span className="leading-snug">{feat}</span>
+                    <li key={idx} className="flex items-start gap-1.5 text-[10px] sm:text-[11px] font-medium text-slate-700">
+                      <FaCheckCircle className="text-blue-600 shrink-0 w-3 h-3 mt-0.5" />
+                      <span className="leading-tight">{feat}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              {/* Action CTA Button */}
-              <div className="pt-4 sm:pt-6 relative z-10">
+              {/* Action CTA Button (Turns Blue on Card Hover) */}
+              <div className="pt-3.5 relative z-10">
                 <Link
                   to={service.link}
-                  className="w-full inline-flex items-center justify-center gap-2 py-2.5 sm:py-3 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm shadow-xs hover:shadow-md transition-all duration-300 group/btn cursor-pointer"
+                  className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-slate-900 group-hover:bg-blue-600 hover:!bg-blue-700 text-white font-bold text-xs shadow-xs group-hover:shadow-md transition-all duration-300 group/btn cursor-pointer"
                 >
                   <span>Lihat Detail Modul</span>
                   <FaArrowRight className="w-3 h-3 group-hover/btn:translate-x-1 transition-transform shrink-0" />
@@ -219,3 +222,5 @@ export const ServicesSection: React.FC = () => {
     </section>
   );
 };
+
+export default ServicesSection;
