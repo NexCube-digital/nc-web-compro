@@ -22,4 +22,6 @@ export {
   Badge,
   Alert
 } from './UIComponents'
+export { ScrollTop } from './ScrollTop'
+export type { ScrollTopProps } from './ScrollTop'
 

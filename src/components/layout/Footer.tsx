@@ -273,7 +273,7 @@ export const Footer: React.FC = () => {
         </div>
 
         {/* ── Bottom Bar Footer ── */}
-        <div className="border-t border-slate-200/90 pt-6 mt-8 sm:mt-12">
+        <div className="border-t border-slate-200/90 pt-6 mt-8 sm:mt-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
             
             {/* Copyright & Architecture Note */}

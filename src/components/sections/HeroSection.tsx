@@ -75,7 +75,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExploreClick }) => {
     }
   ];
   return (
-    <section className="relative min-h-[100dvh] pt-28 pb-10 sm:pt-32 sm:pb-14 lg:pt-36 lg:pb-16 flex flex-col justify-between overflow-x-clip bg-[#030712] text-white">
+    <section id="hero" className="relative min-h-[100dvh] pt-28 pb-10 sm:pt-32 sm:pb-14 lg:pt-36 lg:pb-16 flex flex-col justify-between overflow-x-clip bg-[#030712] text-white">
       {/* ── Background Aesthetics: Deep Space, Radial Glows & Laser Spline ── */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#030712] via-[#060c20] to-[#040817] pointer-events-none"></div>
 

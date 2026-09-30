@@ -194,14 +194,14 @@ export const Navbar: React.FC = () => {
     return userName.substring(0, 2).toUpperCase()
   }
 
-  const isHeroMode = location.pathname === '/' && !isScrolled
+  const isHeroMode = (location.pathname === '/' || location.pathname === '/portfolio' || location.pathname === '/about' || location.pathname === '/contact') && !isScrolled
 
   return (
     <nav className="fixed inset-x-0 top-3 z-50 px-3 sm:px-4">
       <div
         className={`mx-auto max-w-7xl rounded-[28px] border backdrop-blur-xl transition-all duration-300 ${
           isHeroMode
-            ? 'border-white/10 bg-[#040816]/75 shadow-[0_20px_50px_rgba(0,0,0,0.6)]'
+            ? 'border-cyan-500/25 bg-[#040816]/80 shadow-[0_20px_50px_rgba(0,0,0,0.7),0_0_30px_rgba(0,210,255,0.06)]'
             : isScrolled
             ? 'border-blue-200/70 bg-white/90 shadow-[0_22px_50px_rgba(18,110,254,0.12)]'
             : 'border-blue-100/60 bg-white/84 shadow-[0_16px_40px_rgba(15,23,42,0.10)]'
@@ -224,6 +224,33 @@ export const Navbar: React.FC = () => {
                 }`}>
                   NexCube
                 </span>
+                {location.pathname === '/portfolio' && (
+                  <span className={`hidden xs:inline-flex items-center gap-1 text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border transition-colors ${
+                    isHeroMode 
+                      ? 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30 shadow-[0_0_10px_rgba(0,210,255,0.2)]' 
+                      : 'bg-blue-50 text-blue-700 border-blue-200'
+                  }`}>
+                    PORTFOLIO
+                  </span>
+                )}
+                {location.pathname === '/about' && (
+                  <span className={`hidden xs:inline-flex items-center gap-1 text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border transition-colors ${
+                    isHeroMode 
+                      ? 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30 shadow-[0_0_10px_rgba(99,102,241,0.2)]' 
+                      : 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                  }`}>
+                    ABOUT US
+                  </span>
+                )}
+                {location.pathname === '/contact' && (
+                  <span className={`hidden xs:inline-flex items-center gap-1 text-[9px] font-mono font-bold px-2 py-0.5 rounded-full border transition-colors ${
+                    isHeroMode 
+                      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.2)]' 
+                      : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                  }`}>
+                    CONTACT
+                  </span>
+                )}
               </div>
               <div className={`text-[10px] font-semibold tracking-wider uppercase ${isHeroMode ? 'text-cyan-400' : 'text-[#126EFE]'}`}>
                 Digital
@@ -339,7 +366,7 @@ export const Navbar: React.FC = () => {
                     to={link.href}
                     className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200 ${
                       isActive(link.href) 
-                        ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-sm' 
+                        ? 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-[0_0_16px_rgba(0,210,255,0.35)]' 
                         : isHeroMode
                         ? 'text-slate-300 hover:bg-white/10 hover:text-white'
                         : 'text-slate-700 hover:bg-white hover:text-slate-950'
