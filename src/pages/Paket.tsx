@@ -114,21 +114,21 @@ export const Paket: React.FC = () => {
           <div className="absolute bottom-10 right-10 w-96 h-96 bg-amber-300/10 rounded-full blur-3xl pointer-events-none"></div>
 
           {/* Hero Header */}
-          <div className={`text-center max-w-4xl mx-auto mb-16 space-y-4 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}>
+          <div className={`text-center max-w-4xl mx-auto mb-16 space-y-4 min-w-0 w-full px-2 sm:px-0 ${!isLoaded ? 'opacity-0' : 'animate-fadeInUp'}`}>
             
-            <div className="inline-flex items-center gap-2 bg-blue-50 border border-blue-100 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider text-[#126EFE] shadow-xs">
-              <HiSparkles className="w-3.5 h-3.5 text-[#FBA41C]" />
-              <span>HUB LAYANAN DIGITAL NEXCUBE</span>
+            <div className="inline-flex max-w-full items-center gap-2 bg-blue-50 border border-blue-100 px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider text-[#126EFE] shadow-xs">
+              <HiSparkles className="w-3.5 h-3.5 text-[#FBA41C] shrink-0" />
+              <span className="truncate">HUB LAYANAN DIGITAL NEXCUBE</span>
             </div>
 
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight break-words [overflow-wrap:anywhere]">
               Pilih Kategori Layanan <br className="hidden sm:inline" />
-              <span className="bg-gradient-to-r from-[#126EFE] via-blue-600 to-[#FBA41C] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#126EFE] via-blue-600 to-[#FBA41C] bg-clip-text text-transparent inline-block pb-1">
                 Digital Terbaik Anda
               </span>
             </h1>
 
-            <p className="text-slate-600 text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+            <p className="text-slate-600 text-sm sm:text-base md:text-lg max-w-2xl mx-auto leading-relaxed break-words [overflow-wrap:anywhere]">
               Jelajahi 4 kategori utama layanan digital kami. Setiap kategori dilengkapi dengan daftar tier paket terperinci, fitur transparan, dan garansi resmi.
             </p>
 

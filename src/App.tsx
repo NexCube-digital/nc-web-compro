@@ -7,6 +7,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import Loading from './components/Loading'
 import { CartProvider } from './context/CartContext'     
 import { CartDrawer } from './components/cart/CartDrawer'
+import { ScrollTop } from './components/ui/ScrollTop'
 
 // Lazy load pages
 const Services         = lazy(() => import('./pages/Services').then(m => ({ default: m.Services })))
@@ -88,7 +89,9 @@ const RootLayout = () => {
                 <Outlet />
               </PageTransition>
             </Suspense>
+            <ScrollTop />
           </div>
+
           <Toaster 
             position="top-right"
             toastOptions={{

@@ -579,20 +579,20 @@ export const PaketDigital: React.FC = () => {
             </div>
           </div>
           
-          <div className="container relative z-10">
-            <div className="max-w-5xl mx-auto text-center space-y-3">
+          <div className="container mx-auto px-4 sm:px-6 relative z-10">
+            <div className="max-w-5xl mx-auto text-center space-y-3 min-w-0 w-full">
               
               {/* Modern Trust Badge */}
-              <div ref={heroBadgeRef} className="inline-flex items-center justify-center gap-3 backdrop-blur-xl bg-white/70 border border-white/30 shadow-lg px-5 py-2 rounded-2xl">
-                <div className="relative">
+              <div ref={heroBadgeRef} className="inline-flex max-w-full items-center justify-center gap-3 backdrop-blur-xl bg-white/70 border border-white/30 shadow-lg px-4 sm:px-5 py-2 rounded-2xl">
+                <div className="relative shrink-0">
                   <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-orange-500 rounded-full blur-md opacity-75 animate-pulse"></div>
                   <HiSparkles className="w-5 h-5 text-orange-500 relative" />
                 </div>
-                <span className="text-sm font-bold bg-gradient-to-r from-blue-600 to-orange-600 bg-clip-text text-transparent">Digital Solutions 2025</span>
+                <span className="text-xs sm:text-sm font-bold bg-gradient-to-r from-blue-600 to-orange-600 bg-clip-text text-transparent break-words">Digital Solutions 2025</span>
               </div>
 
-              <div className="space-y-2">
-                <h1 ref={heroTitleRef} className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black leading-[1.05] tracking-tight">
+              <div className="space-y-2 w-full">
+                <h1 ref={heroTitleRef} className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-black leading-[1.1] sm:leading-[1.05] tracking-tight break-words [overflow-wrap:anywhere]">
                   <span className="inline-block hero-title-word">
                     <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-500 bg-clip-text text-transparent drop-shadow-lg">Transformasi Digital</span>
                   </span>
@@ -601,10 +601,10 @@ export const PaketDigital: React.FC = () => {
                     <span className="bg-gradient-to-r from-orange-500 via-amber-500 to-yellow-500 bg-clip-text text-transparent drop-shadow-lg">Untuk Bisnis Anda</span>
                   </span>
                   <br />
-                  <span className="text-slate-800 text-xl md:text-2xl lg:text-3xl font-bold mt-2 inline-block drop-shadow hero-title-word">Dengan Teknologi Modern</span>
+                  <span className="text-slate-800 text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mt-2 inline-block drop-shadow hero-title-word">Dengan Teknologi Modern</span>
                 </h1>
                 
-                <p ref={heroDescRef} className="text-xs md:text-sm lg:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto">
+                <p ref={heroDescRef} className="text-xs md:text-sm lg:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto break-words [overflow-wrap:anywhere]">
                   Pilih solusi digital yang tepat untuk mengembangkan bisnis Anda dengan <span className="font-bold text-blue-600">teknologi modern</span> dan <span className="font-bold text-orange-600">tim profesional</span>.
                 </p>
               </div>

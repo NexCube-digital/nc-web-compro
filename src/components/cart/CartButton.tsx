@@ -2,17 +2,25 @@ import React from 'react';
 import { useCart } from '../../context/CartContext';
 import { openCartDrawer } from './CartDrawer';
 
-export const CartButton: React.FC = () => {
+interface CartButtonProps {
+  isHeroMode?: boolean;
+}
+
+export const CartButton: React.FC<CartButtonProps> = ({ isHeroMode }) => {
   const { totalItems } = useCart();
 
   return (
     <button
       onClick={openCartDrawer}
-      className="relative flex h-10 w-10 items-center justify-center rounded-full border border-blue-100 bg-blue-50/80 hover:bg-[#126EFE] text-[#126EFE] hover:text-white transition-all duration-200 shadow-xs group cursor-pointer"
+      className={`relative flex h-10 w-10 items-center justify-center rounded-full transition-all duration-200 shadow-xs group cursor-pointer ${
+        isHeroMode
+          ? 'border border-white/20 bg-white/10 hover:bg-white/20 text-white'
+          : 'border border-blue-100 bg-blue-50/80 hover:bg-[#126EFE] text-[#126EFE] hover:text-white'
+      }`}
       aria-label="Buka keranjang"
     >
       <svg
-        className="w-4 h-4 text-[#126EFE] group-hover:text-white transition-colors"
+        className={`w-4 h-4 transition-colors ${isHeroMode ? 'text-white' : 'text-[#126EFE] group-hover:text-white'}`}
         fill="none" stroke="currentColor" viewBox="0 0 24 24"
       >
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}

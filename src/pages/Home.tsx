@@ -4,7 +4,6 @@ import { Portfolio } from '../components/Portfolio';
 import { Testimonial } from '../components/Testimonial';
 
 import { HeroSection } from '../components/sections/HeroSection';
-import { StatsSection } from '../components/sections/StatsSection';
 import { ServicesSection } from '../components/sections/ServicesSection';
 import { BrandShowcaseSection } from '../components/sections/BrandShowcaseSection';
 import { TrustedBySection } from '../components/sections/TrustedBySection';
@@ -27,35 +26,28 @@ export const Home: React.FC = () => {
 
   return (
     <Layout>
-      {/* 1. Hero Section */}
+      {/* 1. Hero Section (includes Key Statistics Bar) */}
       <HeroSection onExploreClick={handleExploreClick} />
 
-      {/* 2. Key Statistics Counters */}
-      <StatsSection />
+      {/* 2. Trusted By Clients */}
+      <TrustedBySection />
 
       {/* 3. Services Showcase */}
       <div ref={servicesRef}>
         <ServicesSection />
       </div>
 
-      {/* 4. Brand Value Showcase */}
+      {/* 5. Brand Value Showcase */}
       <BrandShowcaseSection />
-
-      {/* 5. Trusted By Clients */}
-      <TrustedBySection />
 
       {/* 6. Why Choose NexCube Comparison */}
       <WhyUsSection />
 
       {/* 7. Portfolio Gallery */}
-      <section id="portfolio" className="py-8 bg-white">
-        <Portfolio limit={9} showViewMore={true} />
-      </section>
+      <Portfolio limit={9} showViewMore={true} />
 
       {/* 8. Testimonials & Reviews */}
-      <section id="testimonials" className="py-8 bg-slate-50/60">
-        <Testimonial />
-      </section>
+      <Testimonial id="testimonials" />
 
       {/* 9. FAQ Accordions */}
       <FaqSection />

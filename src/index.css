@@ -118,12 +118,25 @@ body {
   }
 }
 
+@keyframes progressFill {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
 .animate-fadeInUp {
   animation: fadeInUp 0.35s ease-out forwards;
 }
 
 .animate-float {
   animation: float 8s ease-in-out infinite;
+}
+
+.animate-progressFill {
+  animation: progressFill linear forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
