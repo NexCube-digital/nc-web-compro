@@ -4,6 +4,8 @@ import { ConfirmDialog } from '../../../components/ConfirmDialog'
 import { Toast, ToastType } from '../../../components/Toast'
 import { InvoicePDFModal } from '../../../components/InvoicePDFModal'
 import { KwitansiPreview } from '../../../components/KwitansiPreview'
+import { TerminPaymentModal } from './TerminPaymentModal'
+import { CreditCard } from 'lucide-react'
 
 interface InvoiceTableProps {
   invoices: Invoice[];
@@ -11,6 +13,7 @@ interface InvoiceTableProps {
   onEditInvoice?: (invoice: Invoice) => void;
   onDeleteInvoice?: (invoiceId: number) => Promise<void>;
   onViewDetail?: (invoice: Invoice) => void;
+  onInvoiceUpdated?: () => void;
 }
 
 export const InvoiceTable: React.FC<InvoiceTableProps> = ({ 
@@ -18,7 +21,8 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
   loading = false,
   onEditInvoice,
   onDeleteInvoice,
-  onViewDetail
+  onViewDetail,
+  onInvoiceUpdated
 }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteInvoiceId, setDeleteInvoiceId] = useState<number | null>(null)
@@ -26,6 +30,7 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
   const [isDeleting, setIsDeleting] = useState(false)
   const [showPDFModal, setShowPDFModal] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null)
+  const [selectedTerminInvoice, setSelectedTerminInvoice] = useState<Invoice | null>(null)
 
   const handleDeleteClick = (invoiceId: number) => {
     setDeleteInvoiceId(invoiceId)
@@ -159,40 +164,131 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                   <p className="text-xs text-slate-500">Jatuh tempo: {new Date(invoice.dueDate).toLocaleDateString('id-ID')}</p>
                 </td>
 
-                {/* Service */}
+                {/* Service & Category Breakdown */}
                 <td className="px-6 py-4">
-                  <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">
-                    {invoice.service === 'website' ? 'Website' : 
-                     invoice.service === 'undangan' ? 'Undangan' :
-                     invoice.service === 'desain' ? 'Desain' : 'Katalog'}
-                  </span>
+                  <div className="space-y-1.5">
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700 inline-block">
+                      {invoice.service === 'website' ? 'Website' : 
+                       invoice.service === 'undangan' ? 'Undangan' :
+                       invoice.service === 'desain' ? 'Desain' : 'Katalog'}
+                    </span>
+                    {(() => {
+                      let items: any[] = []
+                      if (invoice.priceBreakdown) {
+                        try {
+                          let p = typeof invoice.priceBreakdown === 'string' ? JSON.parse(invoice.priceBreakdown) : invoice.priceBreakdown
+                          while (typeof p === 'string') {
+                            try { p = JSON.parse(p) } catch { break }
+                          }
+                          if (Array.isArray(p)) {
+                            items = p.filter((x: any) => x && (x.description || x.name || x.price > 0))
+                          }
+                        } catch {}
+                      }
+                      if (items.length === 0) return null
+                      return (
+                        <div className="flex flex-wrap gap-1 max-w-xs pt-0.5">
+                          {items.map((it, idx) => (
+                            <span
+                              key={idx}
+                              className="inline-block bg-slate-100 text-slate-700 text-[10px] px-1.5 py-0.5 rounded font-medium border border-slate-200"
+                              title={it.price ? `Rp ${Number(it.price).toLocaleString('id-ID')}` : undefined}
+                            >
+                              {it.description || it.name}
+                            </span>
+                          ))}
+                        </div>
+                      )
+                    })()}
+                  </div>
                 </td>
 
                 {/* Amount */}
                 <td className="px-6 py-4 text-right">
-                  <p className="font-bold text-slate-900">Rp {Math.round(parseFloat(String(invoice.amount)) || 0).toLocaleString('id-ID')}</p>
+                  <p className="font-bold text-slate-900">
+                    Rp {Math.round(parseFloat(String(invoice.amount)) || 0).toLocaleString('id-ID')}
+                  </p>
+                  {invoice.paymentTerms && (() => {
+                    let terms: any[] = []
+                    try {
+                      let p = typeof invoice.paymentTerms === 'string' ? JSON.parse(invoice.paymentTerms) : invoice.paymentTerms
+                      while (typeof p === 'string') { try { p = JSON.parse(p) } catch { break } }
+                      if (Array.isArray(p)) terms = p
+                    } catch {}
+                    if (terms.length === 0) return null
+                    const paid = Number(invoice.paidAmount) || terms.filter(t => t.status === 'paid').reduce((s, t) => s + (Number(t.amount) || 0), 0)
+                    const remaining = Math.max(0, Number(invoice.amount) - paid)
+                    const totalInv = Number(invoice.amount) || 0
+                    const pct = totalInv > 0 ? Math.min(100, Math.round((paid / totalInv) * 100)) : 0
+
+                    return (
+                      <div className="text-[11px] mt-1 space-y-0.5">
+                        <div className="flex items-center justify-end gap-1.5 text-emerald-600 font-semibold">
+                          <span>Terbayar: Rp {Math.round(paid).toLocaleString('id-ID')}</span>
+                        </div>
+                        {remaining > 0 ? (
+                          <div className="text-amber-600 font-medium">
+                            <span>Sisa: Rp {Math.round(remaining).toLocaleString('id-ID')}</span>
+                          </div>
+                        ) : (
+                          <div className="text-emerald-700 font-bold">
+                            <span>Lunas 100%</span>
+                          </div>
+                        )}
+                        <div className="w-20 ml-auto bg-slate-200 h-1.5 rounded-full overflow-hidden mt-1">
+                          <div
+                            className={`h-full rounded-full ${remaining === 0 ? 'bg-emerald-500' : 'bg-blue-600'}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    )
+                  })()}
                 </td>
 
                 {/* Status */}
                 <td className="px-6 py-4">
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    invoice.status === 'paid' 
-                      ? 'bg-green-100 text-green-700'
-                      : invoice.status === 'sent'
-                      ? 'bg-blue-100 text-blue-700'
-                      : invoice.status === 'draft'
-                      ? 'bg-yellow-100 text-yellow-700'
-                      : 'bg-red-100 text-red-700'
-                  }`}>
-                    {invoice.status === 'paid' ? 'Terbayar' :
-                     invoice.status === 'sent' ? 'Terkirim' :
-                     invoice.status === 'draft' ? 'Draft' : 'Jatuh Tempo'}
-                  </span>
+                  <div className="space-y-1">
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold inline-block ${
+                      invoice.status === 'paid' 
+                        ? 'bg-green-100 text-green-700 border border-green-200'
+                        : invoice.status === 'partial'
+                        ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                        : invoice.status === 'sent'
+                        ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                        : invoice.status === 'draft'
+                        ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                        : 'bg-red-100 text-red-700 border border-red-200'
+                    }`}>
+                      {invoice.status === 'paid' ? 'Terbayar' :
+                       invoice.status === 'partial' ? 'DP Terbayar' :
+                       invoice.status === 'sent' ? 'Terkirim' :
+                       invoice.status === 'draft' ? 'Draft' : 'Jatuh Tempo'}
+                    </span>
+                    {invoice.paymentTerms && invoice.status !== 'paid' && (
+                      <button
+                        onClick={() => setSelectedTerminInvoice(invoice)}
+                        className="block text-[11px] text-indigo-600 hover:text-indigo-800 font-semibold hover:underline"
+                      >
+                        Kelola Termin →
+                      </button>
+                    )}
+                  </div>
                 </td>
 
                 {/* Actions */}
                 <td className="px-6 py-4">
-                  <div className="flex items-center gap-3 justify-center">
+                  <div className="flex items-center gap-2 justify-center">
+                    {invoice.paymentTerms && (
+                      <button
+                        onClick={() => setSelectedTerminInvoice(invoice)}
+                        disabled={loading}
+                        className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg hover:text-indigo-700 disabled:opacity-50 transition-colors"
+                        title="Kelola Termin & Catat Pembayaran"
+                      >
+                        <CreditCard className="w-5 h-5" />
+                      </button>
+                    )}
                     <button
                       onClick={() => handlePDFPreview(invoice)}
                       disabled={loading}
@@ -255,6 +351,19 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
             setSelectedInvoice(null)
           }}
           onDownload={handleDownloadPDF}
+        />
+      )}
+
+      {/* Termin Payment Modal */}
+      {selectedTerminInvoice && (
+        <TerminPaymentModal
+          isOpen={Boolean(selectedTerminInvoice)}
+          invoice={selectedTerminInvoice}
+          onClose={() => setSelectedTerminInvoice(null)}
+          onPaymentSuccess={(updated) => {
+            setSelectedTerminInvoice(updated)
+            onInvoiceUpdated?.()
+          }}
         />
       )}
 

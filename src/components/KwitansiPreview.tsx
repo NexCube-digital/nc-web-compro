@@ -11,8 +11,15 @@ export const KwitansiPreview: React.FC<KwitansiPreviewProps> = ({ invoice }) => 
   let breakdown: any[] = []
   if (invoice.priceBreakdown) {
     try {
-      const parsed = JSON.parse(invoice.priceBreakdown)
-      if (Array.isArray(parsed)) breakdown = parsed
+      let parsed = typeof invoice.priceBreakdown === 'string'
+        ? JSON.parse(invoice.priceBreakdown)
+        : invoice.priceBreakdown
+      while (typeof parsed === 'string') {
+        try { parsed = JSON.parse(parsed) } catch { break }
+      }
+      if (Array.isArray(parsed)) {
+        breakdown = parsed.filter(item => item && (item.description || item.name || Number(item.price) > 0))
+      }
     } catch (e) {
       console.warn('Failed to parse priceBreakdown:', e)
     }
@@ -115,7 +122,7 @@ export const KwitansiPreview: React.FC<KwitansiPreviewProps> = ({ invoice }) => 
               return (
                 <tr key={row.id || idx} className={`${bgClass} border-b border-slate-200/80`}>
                   <td className="py-2 px-3 text-center font-medium text-slate-700 border-r border-slate-200">{idx + 1}</td>
-                  <td className="py-2 px-4 font-semibold text-slate-800 border-r border-slate-200">{row.description || ' '}</td>
+                  <td className="py-2 px-4 font-semibold text-slate-800 border-r border-slate-200">{row.description || row.name || ' '}</td>
                   <td className="py-2 px-3 text-center font-medium text-slate-700 border-r border-slate-200">{row.isEmpty ? '0' : (row.qty || 1)}</td>
                   <td className="py-2 px-4 text-right font-medium text-slate-700 border-r border-slate-200">
                     {row.isEmpty ? 'Rp 0' : `Rp. ${Math.round(row.price || 0).toLocaleString('id-ID')}`}
@@ -156,6 +163,58 @@ export const KwitansiPreview: React.FC<KwitansiPreviewProps> = ({ invoice }) => 
             <p><span className="font-semibold text-slate-900">Bank Name :</span> BCA - a.n Aslam Mushtafa Karim</p>
             <p><span className="font-semibold text-slate-900">Account Number :</span> 8320476420</p>
           </div>
+
+          {invoice.paymentTerms && (() => {
+            let terms: any[] = []
+            try {
+              let p = typeof invoice.paymentTerms === 'string' ? JSON.parse(invoice.paymentTerms) : invoice.paymentTerms
+              while (typeof p === 'string') { try { p = JSON.parse(p) } catch { break } }
+              if (Array.isArray(p)) terms = p
+            } catch {}
+            if (terms.length === 0) return null
+            const paid = Number(invoice.paidAmount) || terms.filter(t => t.status === 'paid').reduce((s, t) => s + (Number(t.amount) || 0), 0)
+            const remaining = Math.max(0, Number(invoice.amount) - paid)
+
+            return (
+              <div className="bg-slate-50 border border-slate-200 rounded p-2.5 my-3 text-[11px] space-y-1.5">
+                <p className="font-bold text-slate-900 border-b border-slate-200 pb-1 flex justify-between items-center">
+                  <span>Rincian Pembayaran Termin:</span>
+                  {invoice.status === 'paid' && (
+                    <span className="text-emerald-700 font-bold bg-emerald-100 px-1.5 py-0.5 rounded text-[10px]">
+                      LUNAS
+                    </span>
+                  )}
+                </p>
+                {terms.map((t, idx) => (
+                  <div key={idx} className="flex justify-between items-center text-slate-700">
+                    <span>
+                      {t.name}
+                      <span className={t.status === 'paid' ? ' text-emerald-600 font-semibold' : ' text-amber-600'}>
+                        {t.status === 'paid' ? ' (Terbayar)' : ' (Belum Bayar)'}
+                      </span>
+                    </span>
+                    <span className="font-semibold">
+                      Rp {Number(t.amount || 0).toLocaleString('id-ID')}
+                    </span>
+                  </div>
+                ))}
+                <div className="border-t border-slate-200 pt-1 flex justify-between font-bold text-slate-900">
+                  <span>Total Terbayar:</span>
+                  <span className="text-emerald-600">Rp {Math.round(paid).toLocaleString('id-ID')}</span>
+                </div>
+                {remaining > 0 ? (
+                  <div className="flex justify-between font-bold text-slate-900">
+                    <span>Sisa Tagihan:</span>
+                    <span className="text-amber-600">Rp {Math.round(remaining).toLocaleString('id-ID')}</span>
+                  </div>
+                ) : (
+                  <div className="text-emerald-700 font-bold text-right pt-0.5">
+                    ✓ Tagihan Telah Dilunasi
+                  </div>
+                )}
+              </div>
+            )
+          })()}
 
           <div className="border-t border-slate-300 pt-3 mt-3">
             <p className="font-bold text-slate-900 text-xs sm:text-sm mb-2">Terimakasi telah berbisnis dengan kami !</p>
