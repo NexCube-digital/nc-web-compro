@@ -25,25 +25,18 @@ export const ScrollTop: React.FC<ScrollTopProps> = ({
   tooltipText = 'Scroll ke Hero',
   ariaLabel = 'Scroll kembali ke bagian hero'
 }) => {
-  let pathname = '';
-  try {
-    const location = useLocation();
-    pathname = location.pathname;
-  } catch {
-    // Abaikan jika digunakan di luar konteks router
-  }
+  const location = useLocation();
+  const pathname = location?.pathname || '';
 
   const [isVisible, setIsVisible] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
 
-  // Jangan tampilkan pada rute dashboard admin
-  if (pathname.startsWith('/dashboard')) {
-    return null;
-  }
-
+  const isDashboard = pathname.startsWith('/dashboard');
 
   // Monitor scroll position dan hitung progress
   const handleScroll = useCallback(() => {
+    if (isDashboard) return;
+
     const currentScrollY = window.scrollY;
     
     // Tampilkan tombol jika posisi scroll melewati threshold
@@ -57,14 +50,16 @@ export const ScrollTop: React.FC<ScrollTopProps> = ({
         setScrollProgress(progress);
       }
     }
-  }, [threshold, showProgress]);
+  }, [threshold, showProgress, isDashboard]);
 
   useEffect(() => {
+    if (isDashboard) return;
+
     window.addEventListener('scroll', handleScroll, { passive: true });
     // Panggil sekali untuk sinkronisasi state awal
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
+  }, [handleScroll, isDashboard]);
 
   // Aksi scroll halus ke hero / atas halaman
   const scrollToHero = () => {
@@ -90,6 +85,10 @@ export const ScrollTop: React.FC<ScrollTopProps> = ({
   const strokeWidth = 2.5;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (scrollProgress / 100) * circumference;
+
+  if (isDashboard) {
+    return null;
+  }
 
   return (
     <div

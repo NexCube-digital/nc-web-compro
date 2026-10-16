@@ -157,6 +157,7 @@ export interface Invoice {
 
 export interface Finance {
   id: number;
+  division?: 'nexcube' | 'printing';
   type: 'income' | 'expense';
   category: string;
   amount: number;
@@ -797,8 +798,15 @@ class ApiClient {
 
   // ── Finance endpoints ───────────────────────────────────────────────────────
 
- async getFinances(): Promise<ApiResponse<Finance[]>> {
-  const response = await this.request<any>(`/finances?_t=${Date.now()}`, 'GET');
+ async getFinances(params?: { division?: string; type?: string; category?: string; status?: string }): Promise<ApiResponse<Finance[]>> {
+  const query = new URLSearchParams()
+  query.set('_t', Date.now().toString())
+  if (params?.division) query.set('division', params.division)
+  if (params?.type) query.set('type', params.type)
+  if (params?.category) query.set('category', params.category)
+  if (params?.status) query.set('status', params.status)
+
+  const response = await this.request<any>(`/finances?${query.toString()}`, 'GET');
 
   if (response.data) {
     if (Array.isArray(response.data.items)) {
@@ -821,6 +829,10 @@ class ApiClient {
     return this.request<Finance>('/finances', 'POST', data);
   }
 
+  async bulkCreateFinances(items: any[], division: 'nexcube' | 'printing'): Promise<ApiResponse<Finance[]>> {
+    return this.request<Finance[]>('/finances/bulk', 'POST', { items, division });
+  }
+
   async updateFinance(id: string, data: Partial<Finance>): Promise<ApiResponse<Finance>> {
     return this.request<Finance>(`/finances/${id}`, 'PUT', data);
   }
@@ -829,8 +841,9 @@ class ApiClient {
     return this.request<void>(`/finances/${id}`, 'DELETE');
   }
 
-  async getFinanceSummary(): Promise<ApiResponse<any>> {
-    return this.request<any>('/finances/summary/all', 'GET');
+  async getFinanceSummary(division?: string): Promise<ApiResponse<any>> {
+    const query = division ? `?division=${encodeURIComponent(division)}` : ''
+    return this.request<any>(`/finances/summary/all${query}`, 'GET');
   }
 
   // ── Report endpoints ────────────────────────────────────────────────────────
