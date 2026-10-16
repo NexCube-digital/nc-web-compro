@@ -18,16 +18,25 @@ const normalizeAmount = (value: string | number): number => {
   return Math.round(Number(normalized.replace(/[^\d.-]/g, '')) || 0)
 }
 
-const normalizePriceBreakdown = (value: string | null | undefined): string | null => {
-  if (!value?.trim()) return null
+const normalizePriceBreakdown = (value: any): string | null => {
+  if (!value) return null
   try {
-    const parsed: unknown = JSON.parse(value)
+    let parsed: any = typeof value === 'string' ? JSON.parse(value) : value
+    while (typeof parsed === 'string') {
+      try { parsed = JSON.parse(parsed) } catch { break }
+    }
     if (!Array.isArray(parsed) || parsed.length === 0) return null
-    return JSON.stringify(parsed.map(item => {
-      if (!item || typeof item !== 'object') return item
-      const entry = item as Record<string, unknown>
-      return { ...entry, price: normalizeAmount(String(entry.price ?? 0)) }
-    }))
+    const valid = parsed
+      .filter((item: any) => item && (item.description || item.name || Number(item.price) > 0))
+      .map((item: any) => {
+        const entry = item as Record<string, unknown>
+        return {
+          id: String(entry.id || Math.random().toString(36).substring(2, 9)),
+          description: String(entry.description || entry.name || 'Layanan').trim(),
+          price: normalizeAmount(String(entry.price ?? 0))
+        }
+      })
+    return valid.length > 0 ? JSON.stringify(valid) : null
   } catch {
     return null
   }
@@ -54,6 +63,8 @@ export const InvoiceManagement: React.FC = () => {
     issueDate: new Date().toISOString().split('T')[0],
     dueDate: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     amount: 0,
+    paidAmount: 0,
+    paymentTerms: '',
     status: 'draft',
     service: 'website',
     priceBreakdown: '',
@@ -152,19 +163,57 @@ export const InvoiceManagement: React.FC = () => {
     }
   }, [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, customBreakdown?: any[], customPaymentTerms?: any[]) => {
     e.preventDefault()
     
     try {
       setLoading(true)
       setError('')
 
-      // Prepare data with priceBreakdown as JSON string or null
-      const priceBreakdownValue = normalizePriceBreakdown(formData.priceBreakdown)
+      // Gunakan breakdown langsung dari submit handler form jika tersedia, fallback ke formData
+      const breakdownToUse = (customBreakdown && Array.isArray(customBreakdown) && customBreakdown.length > 0)
+        ? JSON.stringify(customBreakdown)
+        : formData.priceBreakdown;
+
+      const priceBreakdownValue = normalizePriceBreakdown(breakdownToUse)
+
+      let paymentTermsValue: string | null = null
+      let paidAmountValue = 0
+
+      if (customPaymentTerms && Array.isArray(customPaymentTerms) && customPaymentTerms.length > 0) {
+        paymentTermsValue = JSON.stringify(customPaymentTerms)
+        paidAmountValue = customPaymentTerms.reduce((sum: number, t: any) => {
+          return t.status === 'paid' ? sum + (Number(t.amount) || 0) : sum
+        }, 0)
+      } else if (formData.paymentTerms) {
+        paymentTermsValue = formData.paymentTerms
+        try {
+          let parsed = typeof formData.paymentTerms === 'string' ? JSON.parse(formData.paymentTerms) : formData.paymentTerms
+          while (typeof parsed === 'string') { parsed = JSON.parse(parsed) }
+          if (Array.isArray(parsed)) {
+            paidAmountValue = parsed.reduce((sum: number, t: any) => {
+              return t.status === 'paid' ? sum + (Number(t.amount) || 0) : sum
+            }, 0)
+          }
+        } catch {}
+      }
+
+      const totalAmount = normalizeAmount(formData.amount)
+      let finalStatus = formData.status
+      if (paymentTermsValue) {
+        if (paidAmountValue >= totalAmount && totalAmount > 0) {
+          finalStatus = 'paid'
+        } else if (paidAmountValue > 0) {
+          finalStatus = 'partial'
+        }
+      }
 
       const submitData = {
         ...formData,
-        amount: normalizeAmount(formData.amount),
+        amount: totalAmount,
+        paidAmount: paidAmountValue,
+        paymentTerms: paymentTermsValue,
+        status: finalStatus,
         priceBreakdown: priceBreakdownValue
       }
 
@@ -182,6 +231,8 @@ export const InvoiceManagement: React.FC = () => {
               issueDate: new Date().toISOString().split('T')[0],
               dueDate: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
               amount: 0,
+              paidAmount: 0,
+              paymentTerms: '',
               status: 'draft',
               service: 'website',
               priceBreakdown: '',
@@ -206,6 +257,8 @@ export const InvoiceManagement: React.FC = () => {
               issueDate: new Date().toISOString().split('T')[0],
               dueDate: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
               amount: 0,
+              paidAmount: 0,
+              paymentTerms: '',
               status: 'draft',
               service: 'website',
               priceBreakdown: '',
@@ -233,6 +286,8 @@ export const InvoiceManagement: React.FC = () => {
       issueDate: invoice.issueDate,
       dueDate: invoice.dueDate,
       amount: invoice.amount,
+      paidAmount: invoice.paidAmount || 0,
+      paymentTerms: invoice.paymentTerms || '',
       status: invoice.status,
       service: invoice.service,
       priceBreakdown: invoice.priceBreakdown || '',
@@ -266,6 +321,8 @@ export const InvoiceManagement: React.FC = () => {
       issueDate: new Date().toISOString().split('T')[0],
       dueDate: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
       amount: 0,
+      paidAmount: 0,
+      paymentTerms: '',
       status: 'draft',
       service: 'website',
       priceBreakdown: '',
@@ -289,10 +346,19 @@ export const InvoiceManagement: React.FC = () => {
     
     const paidInvoices = invoiceArray.filter(inv => inv.status === 'paid').length
 
-    const totalAmount = invoiceArray
-      .filter(inv => inv.status !== 'paid')
-      .reduce((sum, inv) => sum + (parseFloat(String(inv.amount)) || 0), 0)
-    const paidAmount = invoiceArray.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + (parseFloat(String(inv.amount)) || 0), 0)
+    // Hitung total nominal terbayar (termasuk cicilan/termin yang sudah dibayar)
+    const paidAmount = invoiceArray.reduce((sum, inv) => {
+      if (inv.status === 'paid') return sum + (parseFloat(String(inv.amount)) || 0)
+      return sum + (parseFloat(String(inv.paidAmount)) || 0)
+    }, 0)
+
+    // Hitung sisa tagihan yang belum terbayar
+    const totalAmount = invoiceArray.reduce((sum, inv) => {
+      if (inv.status === 'paid') return sum
+      const invTotal = parseFloat(String(inv.amount)) || 0
+      const invPaid = parseFloat(String(inv.paidAmount)) || 0
+      return sum + Math.max(0, invTotal - invPaid)
+    }, 0)
 
     return { totalInvoices, paidInvoices, totalAmount, paidAmount }
   }, [invoices])
@@ -420,6 +486,7 @@ export const InvoiceManagement: React.FC = () => {
               loading={loading}
               onEditInvoice={handleEditInvoice}
               onDeleteInvoice={handleDeleteInvoice}
+              onInvoiceUpdated={loadInvoices}
             />
           </div>
         )}

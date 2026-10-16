@@ -123,6 +123,17 @@ export type PortfolioFormData = Omit<Portfolio, 'id' | 'createdAt' | 'updatedAt'
   imageFile?: File | null;
 };
 
+export interface ITerminPayment {
+  id: string;
+  name: string;
+  amount: number;
+  dueDate?: string;
+  status: 'paid' | 'unpaid';
+  paidAt?: string | null;
+  paymentMethod?: string | null;
+  notes?: string | null;
+}
+
 export interface Invoice {
   id: number;
   invoiceNumber: string;
@@ -140,7 +151,9 @@ export interface Invoice {
     company?: string;
   };
   amount: number;
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'expired';
+  paidAmount?: number;
+  paymentTerms?: string | null;
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'expired' | 'partial';
   issueDate: string;
   dueDate: string;
   service?: 'website' | 'undangan' | 'desain' | 'katalog';
@@ -804,6 +817,13 @@ class ApiClient {
 
   async updateInvoiceStatus(id: string, status: Invoice['status']): Promise<ApiResponse<Invoice>> {
     return this.request<Invoice>(`/invoices/${id}/status`, 'PUT', { status });
+  }
+
+  async payInvoiceTerm(
+    id: string | number,
+    payload: { termId: string; paymentMethod?: string; paidAt?: string; notes?: string }
+  ): Promise<ApiResponse<Invoice> & { isFullyPaid?: boolean }> {
+    return this.request<any>(`/invoices/${id}/pay-term`, 'POST', payload);
   }
 
   // ── Finance endpoints ───────────────────────────────────────────────────────

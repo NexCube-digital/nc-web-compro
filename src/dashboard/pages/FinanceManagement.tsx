@@ -227,13 +227,17 @@ export const FinanceManagement: React.FC<FinanceManagementProps> = ({ division }
   // NexCube Stats (dihitung khusus dari data divisi NexCube)
   const nexcubeIncome = divisionFinances.reduce((sum, f) => f.type === 'income' && f.status === 'completed' ? sum + Number(f.amount) : sum, 0)
   const nexcubeExpense = divisionFinances.reduce((sum, f) => f.type === 'expense' && f.status === 'completed' ? sum + Number(f.amount) : sum, 0)
-  const invoicePaidRevenue = isPrinting ? 0 : invoices
-    .filter(inv => inv.status === 'paid')
+  
+  // Hanya hitung invoice lunas yang belum tercatat di tabel keuangan (mencegah double-counting)
+  const unrecordedInvoicePaidRevenue = isPrinting ? 0 : invoices
+    .filter(inv => inv.status === 'paid' && !divisionFinances.some(f => (f.notes?.includes(inv.invoiceNumber) || f.description?.includes(inv.invoiceNumber))))
     .reduce((sum, inv) => sum + Number(inv.amount), 0)
+
   const invoiceOtherRevenue = isPrinting ? 0 : invoices
     .filter(inv => inv.status !== 'paid')
     .reduce((sum, inv) => sum + Number(inv.amount), 0)
-  const totalPemasukanNexCube = invoicePaidRevenue + nexcubeIncome
+
+  const totalPemasukanNexCube = nexcubeIncome + unrecordedInvoicePaidRevenue
   const balanceNexCube = totalPemasukanNexCube - nexcubeExpense
 
   // Printing Stats (P&L: dihitung murni dari data divisi Printing)
