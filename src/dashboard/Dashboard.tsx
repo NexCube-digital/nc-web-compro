@@ -38,6 +38,8 @@ const ADMIN_ONLY_TABS = [
   'invoices/forminvoice',
   'finances',
   'finances/formfinance',
+  'finances/printing',
+  'finances/printing/form',
 ]
 
 export const Dashboard: React.FC = () => {
@@ -200,7 +202,10 @@ export const Dashboard: React.FC = () => {
         return <InvoiceManagement />
       case 'finances':
       case 'finances/formfinance':
-        return <FinanceManagement />
+        return <FinanceManagement division="nexcube" />
+      case 'finances/printing':
+      case 'finances/printing/form':
+        return <FinanceManagement division="printing" />
       case 'reports':
         return <ReportManagement />
       case 'profile':

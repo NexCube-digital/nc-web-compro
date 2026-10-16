@@ -11,6 +11,7 @@ const DASHBOARD_PREFETCHERS: Record<string, () => Promise<unknown>> = {
   clients: () => import('../pages/ClientManagement'),
   invoices: () => import('../pages/InvoiceManagement'),
   finances: () => import('../pages/FinanceManagement'),
+  'finances/printing': () => import('../pages/FinanceManagement'),
   portfolios: () => import('../pages/PortfolioManagement'),
   testimonials: () => import('../pages/TestimonialManagement'),
   'paket/website': () => import('../pages/PackageManagement'),
@@ -131,7 +132,16 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
   const contentAdminItems = [
     { id: 'clients',   label: 'Klien',   icon: icons.clients   },
     { id: 'invoices',  label: 'Invoice', icon: icons.invoices  },
-    { id: 'finances',  label: 'Keuangan', icon: icons.finances },
+  ]
+
+  // Sub-keuangan — admin only
+  const financeItems = [
+    { id: 'finances',          label: 'NexCube',  icon: icons.finances },
+    { id: 'finances/printing', label: 'Printing', icon: (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+      </svg>
+    ) },
   ]
 
   // Tersedia untuk semua (termasuk user)
@@ -140,24 +150,21 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
     { id: 'testimonials', label: 'Testimonial', icon: icons.testimonials },
   ]
 
-  // Sub-paket — tersedia semua role
+  // Sub-paket — tersedia semua role (termasuk affiliate yang digabung ke kategori paket)
   const packageItems = [
-    { id: 'paket/website', label: 'Website',         icon: icons.website  },
-    { id: 'paket/desain',  label: 'Desain Grafis',   icon: icons.desain   },
-    { id: 'paket/event',   label: 'Event',           icon: icons.event    },
-    { id: 'paket/katalog', label: 'Katalog Digital', icon: icons.katalog  },
-  ]
-
-  const affiliateItems = [
+    { id: 'paket/website',   label: 'Website',         icon: icons.website   },
+    { id: 'paket/desain',    label: 'Desain Grafis',   icon: icons.desain    },
+    { id: 'paket/event',     label: 'Event',           icon: icons.event     },
+    { id: 'paket/katalog',   label: 'Katalog Digital', icon: icons.katalog   },
     { id: 'paket/affiliate', label: 'Paket Affiliate', icon: icons.affiliate },
   ]
 
   // ===== STATE =====
+  const [financeOpen, setFinanceOpen] = useState(true)
   const [pkgOpen, setPkgOpen] = useState(true)
-  const [affiliateOpen, setAffiliateOpen] = useState(true)
 
-  const isPaketActive = activeTab?.startsWith('paket/') && activeTab !== 'paket/affiliate'
-  const isAffiliateActive = activeTab === 'paket/affiliate'
+  const isFinanceActive = activeTab === 'finances' || activeTab.startsWith('finances/')
+  const isPaketActive = activeTab?.startsWith('paket/')
 
   const handleNavigate = (id: string) => {
     const path = id === 'overview' ? '/dashboard' : `/dashboard/${id}`
@@ -255,6 +262,43 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
                       onPrefetch={() => handlePrefetchTab(item.id)}
                     />
                   ))}
+
+                  {/* ── KEUANGAN ACCORDION (Pindah ke Kategori Admin) ── */}
+                  <div>
+                    <button
+                      onClick={() => setFinanceOpen(!financeOpen)}
+                      onMouseEnter={() => handlePrefetchTab('finances')}
+                      onFocus={() => handlePrefetchTab('finances')}
+                      className={`group w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
+                        isFinanceActive ? btnActive : btnDefault
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="transition-transform duration-300 group-hover:scale-110">{icons.finances}</div>
+                        <span className="font-medium text-sm">Keuangan</span>
+                      </div>
+                      <svg className={`w-4 h-4 transition-transform duration-300 ${financeOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+
+                    {financeOpen && (
+                      <div className="pl-4 space-y-1 mt-1 border-l-2 border-slate-200 ml-3">
+                        {financeItems.map(item => (
+                          <NavButton
+                            key={item.id}
+                            item={item}
+                            active={activeTab === item.id || (item.id === 'finances' && activeTab === 'finances/formfinance') || (item.id === 'finances/printing' && activeTab === 'finances/printing/form')}
+                            activeClass={subBtnActive}
+                            defaultClass={subBtnDefault}
+                            onClick={() => handleNavigate(item.id)}
+                            onPrefetch={() => handlePrefetchTab(item.id)}
+                            small
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -275,6 +319,7 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
                     onPrefetch={() => handlePrefetchTab(item.id)}
                   />
                 ))}
+
                 {/* Shared content items (semua role) */}
                 {contentSharedItems.map(item => (
                   <NavButton
@@ -290,7 +335,7 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
               </div>
             </div>
 
-            {/* ── PAKET — semua role ── */}
+            {/* ── PAKET (Termasuk Paket Affiliate) — semua role ── */}
             <div>
               <SectionLabel label="Paket" />
               <div className="space-y-1">
@@ -314,46 +359,6 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
                 {pkgOpen && (
                   <div className="pl-4 space-y-1 mt-1 border-l-2 border-slate-200 ml-3">
                     {packageItems.map(item => (
-                      <NavButton
-                        key={item.id}
-                        item={item}
-                        active={activeTab === item.id}
-                        activeClass={subBtnActive}
-                        defaultClass={subBtnDefault}
-                        onClick={() => handleNavigate(item.id)}
-                        onPrefetch={() => handlePrefetchTab(item.id)}
-                        small
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* ── AFFILIATE — semua role ── */}
-            <div>
-              <SectionLabel label="Affiliate" />
-              <div className="space-y-1">
-                <button
-                  onClick={() => setAffiliateOpen(!affiliateOpen)}
-                  onMouseEnter={() => handlePrefetchTab('paket/affiliate')}
-                  onFocus={() => handlePrefetchTab('paket/affiliate')}
-                  className={`group w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
-                    isAffiliateActive ? btnActive : btnDefault
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="transition-transform duration-300 group-hover:scale-110">{icons.affiliate}</div>
-                    <span className="font-medium text-sm">Affiliate</span>
-                  </div>
-                  <svg className={`w-4 h-4 transition-transform duration-300 ${affiliateOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-
-                {affiliateOpen && (
-                  <div className="pl-4 space-y-1 mt-1 border-l-2 border-slate-200 ml-3">
-                    {affiliateItems.map(item => (
                       <NavButton
                         key={item.id}
                         item={item}
