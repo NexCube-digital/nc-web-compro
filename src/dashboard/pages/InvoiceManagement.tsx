@@ -8,14 +8,31 @@ import { FormInvoice } from './invoice/FormInvoice'
 import { Toast } from '../../components/Toast'
 import NewDataBanner from '../../components/NewDataBanner'
 
-const normalizeAmount = (value: string | number): number => {
+const normalizeAmount = (value: string | number | null | undefined): number => {
+  if (value === null || value === undefined) return 0
   if (typeof value === 'number') return Number.isFinite(value) ? Math.round(value) : 0
-  const text = value.trim()
+  const text = String(value).trim()
   if (!text) return 0
-  const normalized = text.includes(',')
-    ? text.replace(/\./g, '').replace(',', '.')
-    : text
-  return Math.round(Number(normalized.replace(/[^\d.-]/g, '')) || 0)
+
+  const sanitized = text.replace(/[^0-9.,-]/g, '')
+  if (!sanitized) return 0
+
+  if (sanitized.includes(',')) {
+    const clean = sanitized.replace(/\./g, '').replace(',', '.')
+    const num = Number(clean)
+    return Number.isFinite(num) ? Math.round(num) : 0
+  }
+
+  // Format MySQL DECIMAL: misal 400000.00
+  if (/^-?\d+\.\d{1,2}$/.test(sanitized)) {
+    const num = Number(sanitized)
+    return Number.isFinite(num) ? Math.round(num) : 0
+  }
+
+  // Format ribuan Indonesia: 400.000 atau 1.500.000
+  const clean = sanitized.replace(/\./g, '')
+  const num = Number(clean)
+  return Number.isFinite(num) ? Math.round(num) : 0
 }
 
 const normalizePriceBreakdown = (value: any): string | null => {
@@ -128,22 +145,6 @@ export const InvoiceManagement: React.FC = () => {
   )
   const [sseUpdating, setSseUpdating] = useState(false)
 
-  // SSE temporarily disabled - backend doesn't support it yet
-  // useSSE('/stream', {
-  //   'invoice:created': async (d: any) => {
-  //     setSseUpdating(true)
-  //     try { await loadInvoices() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) }
-  //   },
-  //   'invoice:updated': async (d: any) => {
-  //     setSseUpdating(true)
-  //     try { await loadInvoices() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) }
-  //   },
-  //   'invoice:deleted': async (d: any) => {
-  //     setSseUpdating(true)
-  //     try { await loadInvoices() } catch {} finally { setTimeout(() => setSseUpdating(false), 700) }
-  //   },
-  // })
-
   const filteredInvoices = useMemo(() => {
     if (!Array.isArray(invoices)) return [] as Invoice[]
     const q = searchTerm.toLowerCase()
@@ -163,7 +164,18 @@ export const InvoiceManagement: React.FC = () => {
     }
   }, [])
 
-  const handleSubmit = async (e: React.FormEvent, customBreakdown?: any[], customPaymentTerms?: any[]) => {
+  const handlePaymentTermsChange = useCallback((terms: any[] | null) => {
+    setFormData(prev => ({
+      ...prev,
+      paymentTerms: terms && terms.length > 0 ? JSON.stringify(terms) : ''
+    }))
+  }, [])
+
+  const handleSubmit = async (
+    e: React.FormEvent,
+    customBreakdown?: any[],
+    customPaymentTerms?: any[] | null
+  ) => {
     e.preventDefault()
     
     try {
@@ -180,22 +192,32 @@ export const InvoiceManagement: React.FC = () => {
       let paymentTermsValue: string | null = null
       let paidAmountValue = 0
 
-      if (customPaymentTerms && Array.isArray(customPaymentTerms) && customPaymentTerms.length > 0) {
-        paymentTermsValue = JSON.stringify(customPaymentTerms)
-        paidAmountValue = customPaymentTerms.reduce((sum: number, t: any) => {
-          return t.status === 'paid' ? sum + (Number(t.amount) || 0) : sum
-        }, 0)
+      // Jika customPaymentTerms secara eksplisit dikirim (array atau null jika termin dimatikan)
+      if (customPaymentTerms !== undefined) {
+        if (customPaymentTerms && Array.isArray(customPaymentTerms) && customPaymentTerms.length > 0) {
+          paymentTermsValue = JSON.stringify(customPaymentTerms)
+          paidAmountValue = customPaymentTerms.reduce((sum: number, t: any) => {
+            return t.status === 'paid' ? sum + (Number(t.amount) || 0) : sum
+          }, 0)
+        } else {
+          paymentTermsValue = null
+          paidAmountValue = 0
+        }
       } else if (formData.paymentTerms) {
         paymentTermsValue = formData.paymentTerms
         try {
           let parsed = typeof formData.paymentTerms === 'string' ? JSON.parse(formData.paymentTerms) : formData.paymentTerms
           while (typeof parsed === 'string') { parsed = JSON.parse(parsed) }
-          if (Array.isArray(parsed)) {
+          if (Array.isArray(parsed) && parsed.length > 0) {
             paidAmountValue = parsed.reduce((sum: number, t: any) => {
               return t.status === 'paid' ? sum + (Number(t.amount) || 0) : sum
             }, 0)
+          } else {
+            paymentTermsValue = null
           }
-        } catch {}
+        } catch {
+          paymentTermsValue = null
+        }
       }
 
       const totalAmount = normalizeAmount(formData.amount)
@@ -206,6 +228,8 @@ export const InvoiceManagement: React.FC = () => {
         } else if (paidAmountValue > 0) {
           finalStatus = 'partial'
         }
+      } else if (finalStatus === 'paid') {
+        paidAmountValue = totalAmount
       }
 
       const submitData = {
@@ -217,31 +241,33 @@ export const InvoiceManagement: React.FC = () => {
         priceBreakdown: priceBreakdownValue
       }
 
+      const resetFormState = () => {
+        setFormData({
+          invoiceNumber: '',
+          clientName: '',
+          clientEmail: '',
+          issueDate: new Date().toISOString().split('T')[0],
+          dueDate: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          amount: 0,
+          paidAmount: 0,
+          paymentTerms: '',
+          status: 'draft',
+          service: 'website',
+          priceBreakdown: '',
+          notes: '',
+          description: ''
+        })
+        setEditingId(null)
+      }
+
       if (editingId) {
         // Update existing invoice
         const response = await apiClient.updateInvoice(editingId, submitData)
         if (response.success) {
           setToast({ message: 'Invoice berhasil diperbarui', type: 'success' })
           await loadInvoices()
-          setTimeout(() => {
-            setFormData({
-              invoiceNumber: '',
-              clientName: '',
-              clientEmail: '',
-              issueDate: new Date().toISOString().split('T')[0],
-              dueDate: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-              amount: 0,
-              paidAmount: 0,
-              paymentTerms: '',
-              status: 'draft',
-              service: 'website',
-              priceBreakdown: '',
-              notes: '',
-              description: ''
-            })
-            setEditingId(null)
-            navigate('/dashboard/invoices')
-          }, 1500)
+          resetFormState()
+          navigate('/dashboard/invoices')
         }
       } else {
         // Create new invoice
@@ -249,25 +275,8 @@ export const InvoiceManagement: React.FC = () => {
         if (response.success) {
           setToast({ message: 'Invoice berhasil dibuat', type: 'success' })
           await loadInvoices()
-          setTimeout(() => {
-            setFormData({
-              invoiceNumber: '',
-              clientName: '',
-              clientEmail: '',
-              issueDate: new Date().toISOString().split('T')[0],
-              dueDate: new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-              amount: 0,
-              paidAmount: 0,
-              paymentTerms: '',
-              status: 'draft',
-              service: 'website',
-              priceBreakdown: '',
-              notes: '',
-              description: ''
-            })
-            setEditingId(null)
-            navigate('/dashboard/invoices')
-          }, 1500)
+          resetFormState()
+          navigate('/dashboard/invoices')
         }
       }
     } catch (err: any) {
@@ -279,6 +288,19 @@ export const InvoiceManagement: React.FC = () => {
   }
 
   const handleEditInvoice = (invoice: Invoice) => {
+    let normalizedTerms = ''
+    if (invoice.paymentTerms) {
+      if (typeof invoice.paymentTerms === 'string') {
+        normalizedTerms = invoice.paymentTerms
+      } else {
+        try {
+          normalizedTerms = JSON.stringify(invoice.paymentTerms)
+        } catch {
+          normalizedTerms = ''
+        }
+      }
+    }
+
     setFormData({
       invoiceNumber: invoice.invoiceNumber,
       clientName: invoice.clientName,
@@ -287,7 +309,7 @@ export const InvoiceManagement: React.FC = () => {
       dueDate: invoice.dueDate,
       amount: invoice.amount,
       paidAmount: invoice.paidAmount || 0,
-      paymentTerms: invoice.paymentTerms || '',
+      paymentTerms: normalizedTerms,
       status: invoice.status,
       service: invoice.service,
       priceBreakdown: invoice.priceBreakdown || '',
@@ -447,6 +469,7 @@ export const InvoiceManagement: React.FC = () => {
               onSubmit={handleSubmit}
               onCancel={handleCancel}
               onPriceBreakdownChange={handlePriceBreakdownChange}
+              onPaymentTermsChange={handlePaymentTermsChange}
             />
           </div>
         )}

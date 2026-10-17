@@ -28,14 +28,54 @@ const COMMON_BREAKDOWN_CATEGORIES = [
   'Custom Fitur / Modul Tambahan'
 ];
 
-const normalizePrice = (value: string | number): number => {
+const normalizePrice = (value: string | number | null | undefined): number => {
+  if (value === null || value === undefined) return 0
   if (typeof value === 'number') return Number.isFinite(value) ? Math.round(value) : 0
-  const text = value.trim()
+  const text = String(value).trim()
   if (!text) return 0
-  const normalized = text.includes(',')
-    ? text.replace(/\./g, '').replace(',', '.')
-    : text
-  return Math.round(Number(normalized.replace(/[^\d.-]/g, '')) || 0)
+
+  const sanitized = text.replace(/[^0-9.,-]/g, '')
+  if (!sanitized) return 0
+
+  if (sanitized.includes(',')) {
+    const clean = sanitized.replace(/\./g, '').replace(',', '.')
+    const num = Number(clean)
+    return Number.isFinite(num) ? Math.round(num) : 0
+  }
+
+  // Format MySQL DECIMAL: misal 400000.00
+  if (/^-?\d+\.\d{1,2}$/.test(sanitized)) {
+    const num = Number(sanitized)
+    return Number.isFinite(num) ? Math.round(num) : 0
+  }
+
+  // Format ribuan Indonesia: 400.000 atau 1.500.000
+  const clean = sanitized.replace(/\./g, '')
+  const num = Number(clean)
+  return Number.isFinite(num) ? Math.round(num) : 0
+}
+
+export const parsePaymentTermsData = (data: any): ITerminPayment[] => {
+  if (!data) return []
+  try {
+    let parsed = typeof data === 'string' ? JSON.parse(data) : data
+    while (typeof parsed === 'string') {
+      try { parsed = JSON.parse(parsed) } catch { break }
+    }
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      return parsed.map((item, index) => ({
+        id: String(item.id ?? index + 1),
+        name: item.name || (index === 0 ? 'Termin 1 (DP)' : index === parsed.length - 1 ? `Termin ${index + 1} (Pelunasan)` : `Termin ${index + 1}`),
+        amount: normalizePrice(item.amount ?? 0),
+        dueDate: item.dueDate || undefined,
+        status: item.status === 'paid' ? 'paid' : 'unpaid',
+        paidAt: item.paidAt || null,
+        paymentMethod: item.paymentMethod || null,
+        notes: item.notes || null
+      }))
+    }
+  } catch {}
+  return []
 }
 
 interface FormInvoiceProps {
@@ -45,7 +85,7 @@ interface FormInvoiceProps {
   clients: Contact[];
   invoices: Invoice[];
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
-  onSubmit: (e: React.FormEvent, priceBreakdownData?: PriceBreakdownItem[], paymentTermsData?: ITerminPayment[]) => Promise<void>;
+  onSubmit: (e: React.FormEvent, priceBreakdownData?: PriceBreakdownItem[], paymentTermsData?: ITerminPayment[] | null) => Promise<void>;
   onCancel: () => void;
   onPriceBreakdownChange?: (priceBreakdown: PriceBreakdownItem[]) => void;
   onPaymentTermsChange?: (terms: ITerminPayment[]) => void;
@@ -74,12 +114,17 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
     return num > 0 ? num.toLocaleString('id-ID') : ''
   })
 
-  // State untuk Termin / DP
-  const [isTerminMode, setIsTerminMode] = useState<boolean>(false)
-  const [paymentTerms, setPaymentTerms] = useState<ITerminPayment[]>([
-    { id: '1', name: 'Termin 1 (DP)', amount: 0, status: 'unpaid' },
-    { id: '2', name: 'Termin 2 (Pelunasan)', amount: 0, status: 'unpaid' }
-  ])
+  // Inisialisasi awal paymentTerms dari formData (langsung aktif jika ada data termin tersimpan)
+  const initialTerms = React.useMemo(() => parsePaymentTermsData(formData.paymentTerms), [])
+
+  const [isTerminMode, setIsTerminMode] = useState<boolean>(() => initialTerms.length > 0)
+  const [paymentTerms, setPaymentTerms] = useState<ITerminPayment[]>(() => {
+    if (initialTerms.length > 0) return initialTerms
+    return [
+      { id: '1', name: 'Termin 1 (DP)', amount: 0, status: 'unpaid' },
+      { id: '2', name: 'Termin 2 (Pelunasan)', amount: 0, status: 'unpaid' }
+    ]
+  })
 
   // Sinkronisasi amountDisplay saat formData.amount berubah dari luar
   useEffect(() => {
@@ -156,34 +201,16 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
     }
   }, [editingId, formData.priceBreakdown])
 
-  // Load paymentTerms when entering edit mode
+  // Load paymentTerms when entering edit mode or when formData.paymentTerms updates
   useEffect(() => {
-    if (editingId && formData.paymentTerms) {
-      try {
-        let parsed: any = typeof formData.paymentTerms === 'string'
-          ? JSON.parse(formData.paymentTerms)
-          : formData.paymentTerms
-        while (typeof parsed === 'string') {
-          try { parsed = JSON.parse(parsed) } catch { break }
-        }
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const loadedTerms: ITerminPayment[] = parsed.map((item, index) => ({
-            id: String(item.id ?? index + 1),
-            name: item.name || (index === 0 ? 'Termin 1 (DP)' : index === parsed.length - 1 ? `Termin ${index + 1} (Pelunasan)` : `Termin ${index + 1}`),
-            amount: normalizePrice(item.amount ?? 0),
-            dueDate: item.dueDate || undefined,
-            status: item.status === 'paid' ? 'paid' : 'unpaid',
-            paidAt: item.paidAt || null,
-            paymentMethod: item.paymentMethod || null,
-            notes: item.notes || null
-          }))
-          setPaymentTerms(loadedTerms)
-          setIsTerminMode(true)
-          onPaymentTermsChange?.(loadedTerms)
-        }
-      } catch (err) {
-        console.warn('Failed to parse payment terms:', err)
+    if (formData.paymentTerms) {
+      const parsed = parsePaymentTermsData(formData.paymentTerms)
+      if (parsed.length > 0) {
+        setPaymentTerms(parsed)
+        setIsTerminMode(true)
       }
+    } else if (editingId && !formData.paymentTerms) {
+      setIsTerminMode(false)
     }
   }, [editingId, formData.paymentTerms])
 
@@ -232,7 +259,7 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
     return priceBreakdown.reduce((sum, item) => sum + (item.price || 0), 0)
   }
 
-  const currentTotalAmount = Number(formData.amount) || calculateTotal() || 0
+  const currentTotalAmount = normalizePrice(formData.amount) || calculateTotal() || 0
 
   const handleBreakdownChange = (id: string, field: 'description' | 'price', value: string | number) => {
     const updated = priceBreakdown.map(item =>
@@ -273,8 +300,8 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
   }
 
   // Helper untuk Termin Presets & Rows
-  const applyTerminPreset = (preset: '50-50' | '30-40-30') => {
-    const total = currentTotalAmount
+  const applyTerminPreset = (preset: '50-50' | '30-40-30', customTotal?: number) => {
+    const total = customTotal !== undefined ? customTotal : (normalizePrice(formData.amount) || calculateTotal() || 0)
     const issue = formData.issueDate || new Date().toISOString().split('T')[0]
     const due = formData.dueDate || calculateDueDate(issue)
 
@@ -328,6 +355,31 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
       ]
       setPaymentTerms(newTerms)
       onPaymentTermsChange?.(newTerms)
+    }
+  }
+
+  // Otomatis terapkan 50-50 jika mode termin aktif tapi nilainya masih 0 dan total invoice terisi
+  useEffect(() => {
+    const total = normalizePrice(formData.amount) || calculateTotal() || 0
+    if (isTerminMode && total > 0) {
+      const allZero = paymentTerms.every(t => (Number(t.amount) || 0) === 0)
+      if (allZero) {
+        applyTerminPreset('50-50', total)
+      }
+    }
+  }, [formData.amount, priceBreakdown, isTerminMode])
+
+  const handleToggleTermin = (enable: boolean) => {
+    setIsTerminMode(enable)
+    if (enable) {
+      const hasAmount = paymentTerms.some(t => (Number(t.amount) || 0) > 0)
+      if (!hasAmount || paymentTerms.length === 0) {
+        applyTerminPreset('50-50')
+      } else {
+        onPaymentTermsChange?.(paymentTerms)
+      }
+    } else {
+      onPaymentTermsChange?.([])
     }
   }
 
@@ -406,7 +458,8 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
     const itemsToSubmit = validItems.length > 0 ? validItems : priceBreakdown
     onPriceBreakdownChange?.(itemsToSubmit)
 
-    let termsToSubmit: ITerminPayment[] | undefined = undefined
+    // Jika isTerminMode aktif, submit array termin. Jika tidak aktif, kirim null secara eksplisit!
+    let termsToSubmit: ITerminPayment[] | null = null
     if (isTerminMode && paymentTerms.length > 0) {
       termsToSubmit = paymentTerms.map((t, idx) => ({
         id: t.id || `term-${idx + 1}`,
@@ -714,7 +767,7 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
             <div className="flex items-center gap-2 bg-white border border-slate-200 p-1 rounded-xl self-start sm:self-auto">
               <button
                 type="button"
-                onClick={() => setIsTerminMode(false)}
+                onClick={() => handleToggleTermin(false)}
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   !isTerminMode
                     ? 'bg-blue-600 text-white shadow-sm'
@@ -725,12 +778,7 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setIsTerminMode(true)
-                  if (paymentTerms.length === 0 || paymentTerms.every(t => t.amount === 0)) {
-                    applyTerminPreset('50-50')
-                  }
-                }}
+                onClick={() => handleToggleTermin(true)}
                 className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   isTerminMode
                     ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-sm'
@@ -793,7 +841,7 @@ export const FormInvoice: React.FC<FormInvoiceProps> = ({
                             <span className="absolute left-2 top-1.5 text-slate-400 select-none">Rp</span>
                             <input
                               type="text"
-                              value={term.amount > 0 ? term.amount.toLocaleString('id-ID') : ''}
+                              value={term.amount > 0 ? term.amount.toLocaleString('id-ID') : (term.amount === 0 ? '0' : '')}
                               onChange={(e) => {
                                 const digits = e.target.value.replace(/\D/g, '')
                                 handleTerminItemChange(term.id, 'amount', digits ? parseInt(digits, 10) : 0)
