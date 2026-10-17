@@ -1,12 +1,12 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import apiClient from '../../services/api'
 import { useTheme } from '../ThemeContext'
 
 const DASHBOARD_PREFETCHERS: Record<string, () => Promise<unknown>> = {
   overview: () => import('./Stats'),
-  team: () => import('../pages/TeamManagement'),
   users: () => import('../pages/UserManagement'),
+  'hak-akses': () => import('../pages/HakAksesManagement'),
   reports: () => import('../pages/ReportManagement'),
   clients: () => import('../pages/ClientManagement'),
   invoices: () => import('../pages/InvoiceManagement'),
@@ -25,20 +25,72 @@ interface SidebarProps {
   open: boolean
   setOpen: (open: boolean) => void
   activeTab: string
-  userRole?: 'admin' | 'user'  // ← tambah prop role
+  userRole?: string
 }
 
 export const DashboardSidebar: React.FC<SidebarProps> = ({ 
   open, 
   setOpen, 
   activeTab,
-  userRole = 'user'  // default user agar aman
+  userRole = 'user'
 }) => {
   const navigate = useNavigate()
   const { theme } = useTheme()
   const [prefetchedTabs, setPrefetchedTabs] = useState<Record<string, boolean>>({})
 
   const isAdmin = userRole === 'admin'
+
+  // Dynamic role permissions from BE/cache
+  const [rolePermissions, setRolePermissions] = useState<string[]>(() => {
+    try {
+      const cached = localStorage.getItem('rolePermissionsCache')
+      if (cached) {
+        const parsed = JSON.parse(cached)
+        return parsed[userRole] || []
+      }
+    } catch {}
+    return []
+  })
+
+  useEffect(() => {
+    let mounted = true
+    const loadPermissions = async () => {
+      try {
+        const res = await apiClient.getRolePermissions()
+        if (res.success && res.data && mounted) {
+          localStorage.setItem('rolePermissionsCache', JSON.stringify(res.data))
+          setRolePermissions(res.data[userRole] || [])
+        }
+      } catch {}
+    }
+
+    loadPermissions()
+
+    const handlePermUpdated = () => {
+      loadPermissions()
+    }
+    window.addEventListener('permissionsUpdated', handlePermUpdated)
+    return () => {
+      mounted = false
+      window.removeEventListener('permissionsUpdated', handlePermUpdated)
+    }
+  }, [userRole])
+
+  // Helper: check if the menu item is permitted for current role
+  const canAccess = (id: string): boolean => {
+    if (isAdmin) return true
+    if (rolePermissions.length > 0) {
+      return rolePermissions.includes(id)
+    }
+    // Fallback defaults if cache not yet populated
+    if (userRole === 'designer') {
+      return ['overview', 'portfolios', 'testimonials', 'paket/desain', 'paket/katalog', 'paket/website'].includes(id)
+    }
+    if (userRole === 'teknis') {
+      return ['overview', 'portfolios', 'testimonials', 'paket/website', 'paket/event'].includes(id)
+    }
+    return ['overview', 'portfolios', 'testimonials', 'paket/website', 'paket/desain', 'paket/event', 'paket/katalog', 'paket/affiliate'].includes(id)
+  }
 
   // ===== ICONS =====
   const icons = {
@@ -48,14 +100,14 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 22V12h6v10" />
       </svg>
     ),
-    team: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-      </svg>
-    ),
     users: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+    ),
+    hakAkses: (
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
       </svg>
     ),
     reports: (
@@ -121,20 +173,20 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
   }
 
   // ===== MENU GROUPS =====
-  // Admin only
+  // Manajemen User & Sistem (Sidebar cuman ada Users sama Hak Akses)
   const adminItems = [
-    { id: 'team',    label: 'Tim',     icon: icons.team    },
-    { id: 'users',   label: 'User',    icon: icons.users   },
-    { id: 'reports', label: 'Laporan', icon: icons.reports  },
+    { id: 'users',     label: 'Users',     icon: icons.users },
+    { id: 'hak-akses', label: 'Hak Akses', icon: icons.hakAkses },
+    { id: 'reports',   label: 'Laporan',   icon: icons.reports },
   ]
 
-  // Admin only (konten sensitif)
+  // Operasional (Klien & Invoice)
   const contentAdminItems = [
-    { id: 'clients',   label: 'Klien',   icon: icons.clients   },
-    { id: 'invoices',  label: 'Invoice', icon: icons.invoices  },
+    { id: 'clients',   label: 'Klien',   icon: icons.clients },
+    { id: 'invoices',  label: 'Invoice', icon: icons.invoices },
   ]
 
-  // Sub-keuangan — admin only
+  // Sub-keuangan
   const financeItems = [
     { id: 'finances',          label: 'NexCube',  icon: icons.finances },
     { id: 'finances/printing', label: 'Printing', icon: (
@@ -144,20 +196,27 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
     ) },
   ]
 
-  // Tersedia untuk semua (termasuk user)
+  // Konten Showcase
   const contentSharedItems = [
-    { id: 'portfolios',   label: 'Portfolio',   icon: icons.portfolios   },
+    { id: 'portfolios',   label: 'Portfolio',   icon: icons.portfolios },
     { id: 'testimonials', label: 'Testimonial', icon: icons.testimonials },
   ]
 
-  // Sub-paket — tersedia semua role (termasuk affiliate yang digabung ke kategori paket)
+  // Sub-paket
   const packageItems = [
-    { id: 'paket/website',   label: 'Website',         icon: icons.website   },
-    { id: 'paket/desain',    label: 'Desain Grafis',   icon: icons.desain    },
-    { id: 'paket/event',     label: 'Event',           icon: icons.event     },
-    { id: 'paket/katalog',   label: 'Katalog Digital', icon: icons.katalog   },
+    { id: 'paket/website',   label: 'Website',         icon: icons.website },
+    { id: 'paket/desain',    label: 'Desain Grafis',   icon: icons.desain },
+    { id: 'paket/event',     label: 'Event',           icon: icons.event },
+    { id: 'paket/katalog',   label: 'Katalog Digital', icon: icons.katalog },
     { id: 'paket/affiliate', label: 'Paket Affiliate', icon: icons.affiliate },
   ]
+
+  // Filter items according to permissions
+  const visibleAdminItems = adminItems.filter(item => canAccess(item.id))
+  const visibleFinanceItems = financeItems.filter(item => canAccess(item.id))
+  const visibleContentAdminItems = contentAdminItems.filter(item => canAccess(item.id))
+  const visibleContentSharedItems = contentSharedItems.filter(item => canAccess(item.id))
+  const visiblePackageItems = packageItems.filter(item => canAccess(item.id))
 
   // ===== STATE =====
   const [financeOpen, setFinanceOpen] = useState(true)
@@ -187,6 +246,38 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
   const btnDefault = 'text-slate-600 hover:text-blue-600 hover:bg-blue-50/80 hover:scale-[1.01] hover:translate-x-0.5 font-medium'
   const subBtnActive = 'bg-blue-600 text-white shadow-sm shadow-blue-500/20 font-medium'
   const subBtnDefault = 'text-slate-500 hover:text-blue-600 hover:bg-blue-50/60 hover:scale-[1.01] hover:translate-x-1'
+
+  // Role Badge Styling
+  const getRoleBadge = () => {
+    switch (userRole) {
+      case 'admin':
+        return {
+          label: 'Administrator',
+          badgeClass: 'bg-purple-50 text-purple-700 border-purple-200/60',
+          dot: 'bg-purple-500',
+        }
+      case 'designer':
+        return {
+          label: 'Designer',
+          badgeClass: 'bg-pink-50 text-pink-700 border-pink-200/60',
+          dot: 'bg-pink-500',
+        }
+      case 'teknis':
+        return {
+          label: 'Teknis',
+          badgeClass: 'bg-cyan-50 text-cyan-700 border-cyan-200/60',
+          dot: 'bg-cyan-500',
+        }
+      default:
+        return {
+          label: 'User',
+          badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200/60',
+          dot: 'bg-emerald-500',
+        }
+    }
+  }
+
+  const roleBadge = getRoleBadge()
 
   return (
     <>
@@ -220,38 +311,36 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
 
           {/* Role Badge */}
           <div className="px-5 pt-3 pb-1 flex-shrink-0">
-            <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full ${
-              isAdmin
-                ? 'bg-blue-50 text-blue-700 border border-blue-200/60'
-                : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
-            }`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${isAdmin ? 'bg-blue-500' : 'bg-emerald-500'}`} />
-              {isAdmin ? 'Administrator' : 'User'}
+            <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border ${roleBadge.badgeClass}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${roleBadge.dot}`} />
+              {roleBadge.label}
             </span>
           </div>
 
-          {/* Nav */}
+          {/* Navigation Items */}
           <nav className="flex-1 px-3 py-4 space-y-3 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent hover:scrollbar-thumb-slate-400 scroll-smooth">
 
-            {/* Overview — semua role */}
-            <button
-              onClick={() => handleNavigate('overview')}
-              onMouseEnter={() => handlePrefetchTab('overview')}
-              onFocus={() => handlePrefetchTab('overview')}
-              className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
-                activeTab === '' || activeTab === 'overview' ? btnActive : btnDefault
-              }`}
-            >
-              <div className="transition-transform duration-300 group-hover:scale-110">{icons.overview}</div>
-              <span className="font-medium text-sm">Overview</span>
-            </button>
+            {/* Overview */}
+            {canAccess('overview') && (
+              <button
+                onClick={() => handleNavigate('overview')}
+                onMouseEnter={() => handlePrefetchTab('overview')}
+                onFocus={() => handlePrefetchTab('overview')}
+                className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
+                  activeTab === '' || activeTab === 'overview' ? btnActive : btnDefault
+                }`}
+              >
+                <div className="transition-transform duration-300 group-hover:scale-110">{icons.overview}</div>
+                <span className="font-medium text-sm">Overview</span>
+              </button>
+            )}
 
-            {/* ── ADMIN ONLY: Seksi Admin ── */}
-            {isAdmin && (
+            {/* ── ADMIN / SISTEM (Users, Hak Akses, Laporan, Keuangan) ── */}
+            {(visibleAdminItems.length > 0 || visibleFinanceItems.length > 0) && (
               <div>
                 <SectionLabel label="Admin" />
                 <div className="space-y-1">
-                  {adminItems.map(item => (
+                  {visibleAdminItems.map(item => (
                     <NavButton
                       key={item.id}
                       item={item}
@@ -263,123 +352,127 @@ export const DashboardSidebar: React.FC<SidebarProps> = ({
                     />
                   ))}
 
-                  {/* ── KEUANGAN ACCORDION (Pindah ke Kategori Admin) ── */}
-                  <div>
-                    <button
-                      onClick={() => setFinanceOpen(!financeOpen)}
-                      onMouseEnter={() => handlePrefetchTab('finances')}
-                      onFocus={() => handlePrefetchTab('finances')}
-                      className={`group w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
-                        isFinanceActive ? btnActive : btnDefault
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="transition-transform duration-300 group-hover:scale-110">{icons.finances}</div>
-                        <span className="font-medium text-sm">Keuangan</span>
-                      </div>
-                      <svg className={`w-4 h-4 transition-transform duration-300 ${financeOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </button>
+                  {/* ── KEUANGAN ACCORDION ── */}
+                  {visibleFinanceItems.length > 0 && (
+                    <div>
+                      <button
+                        onClick={() => setFinanceOpen(!financeOpen)}
+                        onMouseEnter={() => handlePrefetchTab('finances')}
+                        onFocus={() => handlePrefetchTab('finances')}
+                        className={`group w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
+                          isFinanceActive ? btnActive : btnDefault
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="transition-transform duration-300 group-hover:scale-110">{icons.finances}</div>
+                          <span className="font-medium text-sm">Keuangan</span>
+                        </div>
+                        <svg className={`w-4 h-4 transition-transform duration-300 ${financeOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
 
-                    {financeOpen && (
-                      <div className="pl-4 space-y-1 mt-1 border-l-2 border-slate-200 ml-3">
-                        {financeItems.map(item => (
-                          <NavButton
-                            key={item.id}
-                            item={item}
-                            active={activeTab === item.id || (item.id === 'finances' && activeTab === 'finances/formfinance') || (item.id === 'finances/printing' && activeTab === 'finances/printing/form')}
-                            activeClass={subBtnActive}
-                            defaultClass={subBtnDefault}
-                            onClick={() => handleNavigate(item.id)}
-                            onPrefetch={() => handlePrefetchTab(item.id)}
-                            small
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                      {financeOpen && (
+                        <div className="pl-4 space-y-1 mt-1 border-l-2 border-slate-200 ml-3">
+                          {visibleFinanceItems.map(item => (
+                            <NavButton
+                              key={item.id}
+                              item={item}
+                              active={activeTab === item.id || (item.id === 'finances' && activeTab === 'finances/formfinance') || (item.id === 'finances/printing' && activeTab === 'finances/printing/form')}
+                              activeClass={subBtnActive}
+                              defaultClass={subBtnDefault}
+                              onClick={() => handleNavigate(item.id)}
+                              onPrefetch={() => handlePrefetchTab(item.id)}
+                              small
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
-            {/* ── KONTEN ── */}
-            <div>
-              <SectionLabel label="Konten" />
-              <div className="space-y-1">
-                {/* Admin-only content items */}
-                {isAdmin && contentAdminItems.map(item => (
-                  <NavButton
-                    key={item.id}
-                    item={item}
-                    active={activeTab === item.id}
-                    activeClass={btnActive}
-                    defaultClass={btnDefault}
-                    onClick={() => handleNavigate(item.id)}
-                    onPrefetch={() => handlePrefetchTab(item.id)}
-                  />
-                ))}
+            {/* ── KONTEN & OPERASIONAL ── */}
+            {(visibleContentAdminItems.length > 0 || visibleContentSharedItems.length > 0) && (
+              <div>
+                <SectionLabel label="Konten" />
+                <div className="space-y-1">
+                  {visibleContentAdminItems.map(item => (
+                    <NavButton
+                      key={item.id}
+                      item={item}
+                      active={activeTab === item.id}
+                      activeClass={btnActive}
+                      defaultClass={btnDefault}
+                      onClick={() => handleNavigate(item.id)}
+                      onPrefetch={() => handlePrefetchTab(item.id)}
+                    />
+                  ))}
 
-                {/* Shared content items (semua role) */}
-                {contentSharedItems.map(item => (
-                  <NavButton
-                    key={item.id}
-                    item={item}
-                    active={activeTab === item.id}
-                    activeClass={btnActive}
-                    defaultClass={btnDefault}
-                    onClick={() => handleNavigate(item.id)}
-                    onPrefetch={() => handlePrefetchTab(item.id)}
-                  />
-                ))}
+                  {visibleContentSharedItems.map(item => (
+                    <NavButton
+                      key={item.id}
+                      item={item}
+                      active={activeTab === item.id}
+                      activeClass={btnActive}
+                      defaultClass={btnDefault}
+                      onClick={() => handleNavigate(item.id)}
+                      onPrefetch={() => handlePrefetchTab(item.id)}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* ── PAKET (Termasuk Paket Affiliate) — semua role ── */}
-            <div>
-              <SectionLabel label="Paket" />
-              <div className="space-y-1">
-                <button
-                  onClick={() => setPkgOpen(!pkgOpen)}
-                  onMouseEnter={() => handlePrefetchTab('paket/website')}
-                  onFocus={() => handlePrefetchTab('paket/website')}
-                  className={`group w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
-                    isPaketActive ? btnActive : btnDefault
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="transition-transform duration-300 group-hover:scale-110">{icons.paket}</div>
-                    <span className="font-medium text-sm">Paket</span>
-                  </div>
-                  <svg className={`w-4 h-4 transition-transform duration-300 ${pkgOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
+            {/* ── PAKET (Termasuk Paket Affiliate) ── */}
+            {visiblePackageItems.length > 0 && (
+              <div>
+                <SectionLabel label="Paket" />
+                <div className="space-y-1">
+                  <button
+                    onClick={() => setPkgOpen(!pkgOpen)}
+                    onMouseEnter={() => handlePrefetchTab('paket/website')}
+                    onFocus={() => handlePrefetchTab('paket/website')}
+                    className={`group w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 ${
+                      isPaketActive ? btnActive : btnDefault
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="transition-transform duration-300 group-hover:scale-110">{icons.paket}</div>
+                      <span className="font-medium text-sm">Paket</span>
+                    </div>
+                    <svg className={`w-4 h-4 transition-transform duration-300 ${pkgOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
 
-                {pkgOpen && (
-                  <div className="pl-4 space-y-1 mt-1 border-l-2 border-slate-200 ml-3">
-                    {packageItems.map(item => (
-                      <NavButton
-                        key={item.id}
-                        item={item}
-                        active={activeTab === item.id}
-                        activeClass={subBtnActive}
-                        defaultClass={subBtnDefault}
-                        onClick={() => handleNavigate(item.id)}
-                        onPrefetch={() => handlePrefetchTab(item.id)}
-                        small
-                      />
-                    ))}
-                  </div>
-                )}
+                  {pkgOpen && (
+                    <div className="pl-4 space-y-1 mt-1 border-l-2 border-slate-200 ml-3">
+                      {visiblePackageItems.map(item => (
+                        <NavButton
+                          key={item.id}
+                          item={item}
+                          active={activeTab === item.id}
+                          activeClass={subBtnActive}
+                          defaultClass={subBtnDefault}
+                          onClick={() => handleNavigate(item.id)}
+                          onPrefetch={() => handlePrefetchTab(item.id)}
+                          small
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
           </nav>
 
           {/* Footer */}
           <div className="px-4 py-3 border-t border-slate-100 text-center flex-shrink-0">
-            <p className="text-slate-400 text-[10px] font-medium tracking-wide">© 2025 NexCube</p>
+            <p className="text-slate-400 text-[10px] font-medium tracking-wide">© 2026 NexCube Digital</p>
           </div>
 
         </div>

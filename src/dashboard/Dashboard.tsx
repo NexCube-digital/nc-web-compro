@@ -18,6 +18,7 @@ const FinanceManagement = lazy(() => import('./pages/FinanceManagement'))
 const ReportManagement = lazy(() => import('./pages/ReportManagement'))
 const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const TeamManagement = lazy(() => import('./pages/TeamManagement'))
+const HakAksesManagement = lazy(() => import('./pages/HakAksesManagement'))
 const PackageManagement = lazy(() => import('./pages/PackageManagement'))
 const PackageForm = lazy(() => import('./pages/PackageForm'))
 const AffiliateManagement = lazy(() => import('./pages/AffiliateManagement'))
@@ -31,6 +32,8 @@ const NO_SCROLL_TABS = ['overview']
 const ADMIN_ONLY_TABS = [
   'team',
   'users',
+  'users/formuser',
+  'hak-akses',
   'reports',
   'clients',
   'clients/formclient',
@@ -159,12 +162,37 @@ export const Dashboard: React.FC = () => {
   )
 
   const renderContent = () => {
-    // Guard: user biasa tidak bisa render halaman admin
-    const isRestricted = ADMIN_ONLY_TABS.some(
-      t => activeTab === t || activeTab.startsWith(t + '/')
-    )
-    if (!isAdmin && isRestricted) {
-      return <DashboardStats userRole={user?.role} userName={displayName} />
+    // Guard: batasi akses non-admin berdasarkan hak akses role
+    if (!isAdmin) {
+      let allowedTabs: string[] = []
+      try {
+        const cached = localStorage.getItem('rolePermissionsCache')
+        if (cached) {
+          const parsed = JSON.parse(cached)
+          allowedTabs = parsed[user?.role || 'user'] || []
+        }
+      } catch {}
+
+      if (allowedTabs.length === 0) {
+        if (user?.role === 'designer') {
+          allowedTabs = ['overview', 'portfolios', 'testimonials', 'paket/desain', 'paket/katalog', 'paket/website']
+        } else if (user?.role === 'teknis') {
+          allowedTabs = ['overview', 'portfolios', 'testimonials', 'paket/website', 'paket/event']
+        } else {
+          allowedTabs = ['overview', 'portfolios', 'testimonials', 'paket/website', 'paket/desain', 'paket/event', 'paket/katalog', 'paket/affiliate']
+        }
+      }
+
+      const isRestrictedAdminOnly = ADMIN_ONLY_TABS.some(
+        t => activeTab === t || activeTab.startsWith(t + '/')
+      )
+      const isExplicitlyAllowed = allowedTabs.some(
+        t => activeTab === t || activeTab.startsWith(t + '/')
+      )
+
+      if (isRestrictedAdminOnly || (!isExplicitlyAllowed && activeTab !== 'overview' && activeTab !== 'profile')) {
+        return <DashboardStats userRole={user?.role} userName={displayName} />
+      }
     }
 
     switch (activeTab) {
@@ -184,13 +212,14 @@ export const Dashboard: React.FC = () => {
       case 'paket/formaffiliate':
         return <AffiliateForm />
       case 'team':
-        return <TeamManagement />
-      case 'clients':
-      case 'clients/formclient':
-        return <ClientManagement />
       case 'users':
       case 'users/formuser':
         return <UserManagement />
+      case 'hak-akses':
+        return <HakAksesManagement />
+      case 'clients':
+      case 'clients/formclient':
+        return <ClientManagement />
       case 'portfolios':
       case 'portfolios/formportfolio':
         return <PortfolioManagement />
