@@ -208,13 +208,15 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                   <p className="font-bold text-slate-900">
                     Rp {Math.round(parseFloat(String(invoice.amount)) || 0).toLocaleString('id-ID')}
                   </p>
-                  {invoice.paymentTerms && (() => {
+                  {(() => {
                     let terms: any[] = []
-                    try {
-                      let p = typeof invoice.paymentTerms === 'string' ? JSON.parse(invoice.paymentTerms) : invoice.paymentTerms
-                      while (typeof p === 'string') { try { p = JSON.parse(p) } catch { break } }
-                      if (Array.isArray(p)) terms = p
-                    } catch {}
+                    if (invoice.paymentTerms) {
+                      try {
+                        let p = typeof invoice.paymentTerms === 'string' ? JSON.parse(invoice.paymentTerms) : invoice.paymentTerms
+                        while (typeof p === 'string') { try { p = JSON.parse(p) } catch { break } }
+                        if (Array.isArray(p)) terms = p
+                      } catch {}
+                    }
                     if (terms.length === 0) return null
                     const paid = Number(invoice.paidAmount) || terms.filter(t => t.status === 'paid').reduce((s, t) => s + (Number(t.amount) || 0), 0)
                     const remaining = Math.max(0, Number(invoice.amount) - paid)
@@ -248,47 +250,73 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
 
                 {/* Status */}
                 <td className="px-6 py-4">
-                  <div className="space-y-1">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold inline-block ${
-                      invoice.status === 'paid' 
-                        ? 'bg-green-100 text-green-700 border border-green-200'
-                        : invoice.status === 'partial'
-                        ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                        : invoice.status === 'sent'
-                        ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                        : invoice.status === 'draft'
-                        ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
-                        : 'bg-red-100 text-red-700 border border-red-200'
-                    }`}>
-                      {invoice.status === 'paid' ? 'Terbayar' :
-                       invoice.status === 'partial' ? 'DP Terbayar' :
-                       invoice.status === 'sent' ? 'Terkirim' :
-                       invoice.status === 'draft' ? 'Draft' : 'Jatuh Tempo'}
-                    </span>
-                    {invoice.paymentTerms && invoice.status !== 'paid' && (
-                      <button
-                        onClick={() => setSelectedTerminInvoice(invoice)}
-                        className="block text-[11px] text-indigo-600 hover:text-indigo-800 font-semibold hover:underline"
-                      >
-                        Kelola Termin →
-                      </button>
-                    )}
-                  </div>
+                  {(() => {
+                    let terms: any[] = []
+                    if (invoice.paymentTerms) {
+                      try {
+                        let p = typeof invoice.paymentTerms === 'string' ? JSON.parse(invoice.paymentTerms) : invoice.paymentTerms
+                        while (typeof p === 'string') { try { p = JSON.parse(p) } catch { break } }
+                        if (Array.isArray(p)) terms = p
+                      } catch {}
+                    }
+                    const hasTerms = terms.length > 0
+
+                    return (
+                      <div className="space-y-1">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold inline-block ${
+                          invoice.status === 'paid' 
+                            ? 'bg-green-100 text-green-700 border border-green-200'
+                            : invoice.status === 'partial'
+                            ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                            : invoice.status === 'sent'
+                            ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                            : invoice.status === 'draft'
+                            ? 'bg-yellow-100 text-yellow-700 border border-yellow-200'
+                            : 'bg-red-100 text-red-700 border border-red-200'
+                        }`}>
+                          {invoice.status === 'paid' ? 'Terbayar' :
+                           invoice.status === 'partial' ? 'DP Terbayar' :
+                           invoice.status === 'sent' ? 'Terkirim' :
+                           invoice.status === 'draft' ? 'Draft' : 'Jatuh Tempo'}
+                        </span>
+                        {hasTerms && invoice.status !== 'paid' && (
+                          <button
+                            onClick={() => setSelectedTerminInvoice(invoice)}
+                            className="block text-[11px] text-indigo-600 hover:text-indigo-800 font-semibold hover:underline"
+                          >
+                            Kelola Termin →
+                          </button>
+                        )}
+                      </div>
+                    )
+                  })()}
                 </td>
 
                 {/* Actions */}
                 <td className="px-6 py-4">
-                  <div className="flex items-center gap-2 justify-center">
-                    {invoice.paymentTerms && (
-                      <button
-                        onClick={() => setSelectedTerminInvoice(invoice)}
-                        disabled={loading}
-                        className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg hover:text-indigo-700 disabled:opacity-50 transition-colors"
-                        title="Kelola Termin & Catat Pembayaran"
-                      >
-                        <CreditCard className="w-5 h-5" />
-                      </button>
-                    )}
+                  {(() => {
+                    let terms: any[] = []
+                    if (invoice.paymentTerms) {
+                      try {
+                        let p = typeof invoice.paymentTerms === 'string' ? JSON.parse(invoice.paymentTerms) : invoice.paymentTerms
+                        while (typeof p === 'string') { try { p = JSON.parse(p) } catch { break } }
+                        if (Array.isArray(p)) terms = p
+                      } catch {}
+                    }
+                    const hasTerms = terms.length > 0
+
+                    return (
+                      <div className="flex items-center gap-2 justify-center">
+                        {hasTerms && (
+                          <button
+                            onClick={() => setSelectedTerminInvoice(invoice)}
+                            disabled={loading}
+                            className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg hover:text-indigo-700 disabled:opacity-50 transition-colors"
+                            title="Kelola Termin & Catat Pembayaran"
+                          >
+                            <CreditCard className="w-5 h-5" />
+                          </button>
+                        )}
                     <button
                       onClick={() => handlePDFPreview(invoice)}
                       disabled={loading}
@@ -320,7 +348,9 @@ export const InvoiceTable: React.FC<InvoiceTableProps> = ({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                     </button>
-                  </div>
+                      </div>
+                    )
+                  })()}
                 </td>
               </tr>
             ))}
