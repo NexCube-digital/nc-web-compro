@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast'
 import apiClient, { User } from '../../services/api'
 import { UserTable } from './user/UserTable'
 import { FormUser, TeamFormData } from './user/FormUser'
-import { Search, Plus, RefreshCw, AlertCircle } from 'lucide-react'
+import { Search, Plus, RefreshCw, AlertCircle, Users, Sparkles } from 'lucide-react'
 
 const emptyTeamData: TeamFormData = {
   position: '',
@@ -28,6 +28,7 @@ export const UserManagement: React.FC = () => {
   const [initialLoading, setInitialLoading] = useState(true)
   const [error, setError] = useState('')
   const [editingId, setEditingId] = useState<number | null>(null)
+  const [editingUserHadTeam, setEditingUserHadTeam] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [deleteLoading, setDeleteLoading] = useState<number | null>(null)
 
@@ -42,10 +43,11 @@ export const UserManagement: React.FC = () => {
     name: '',
     email: '',
     password: '',
-    role: ''
+    role: '',
   })
 
-  // State khusus data profil tim — cuma dipakai kalau role === 'team'
+  // State khusus data profil tim
+  const [isTeamMember, setIsTeamMember] = useState(false)
   const [teamData, setTeamData] = useState<TeamFormData>({ ...emptyTeamData })
 
   // Load users
@@ -79,32 +81,34 @@ export const UserManagement: React.FC = () => {
   }, [])
 
   // Filter users based on search term
-  const filteredUsers = users.filter(user =>
+  const filteredUsers = users.filter((user) =>
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user.teamProfile?.position && user.teamProfile.position.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (user.role && user.role.toLowerCase().includes(searchTerm.toLowerCase()))
   )
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }))
   }
 
-  // Handler khusus input data profil tim (position, bio, expertise, dll)
+  // Handler input data profil tim (position, bio, expertise, dll)
   const handleTeamInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target
-    setTeamData(prev => ({ ...prev, [name]: value }))
+    setTeamData((prev) => ({ ...prev, [name]: value }))
   }
 
-  // Handler upload foto profil tim → dikonversi ke base64 (dikirim sebagai data URL ke BE)
+  // Handler upload foto profil tim -> base64
   const handleTeamImageChange = (file: File | null) => {
     if (!file) return
     const reader = new FileReader()
-    reader.onload = () => setTeamData(prev => ({ ...prev, image: reader.result as string }))
+    reader.onload = () => setTeamData((prev) => ({ ...prev, image: reader.result as string }))
     reader.readAsDataURL(file)
   }
 
@@ -131,9 +135,9 @@ export const UserManagement: React.FC = () => {
       return
     }
 
-    // Validasi tambahan buat role team
-    if (formData.role === 'team' && !teamData.position.trim()) {
-      toast.error('Posisi/jabatan wajib diisi untuk role team')
+    // Validasi profil tim jika diaktifkan
+    if (isTeamMember && !teamData.position.trim()) {
+      toast.error('Posisi/jabatan di tim wajib diisi jika profil tim diaktifkan')
       return
     }
 
@@ -141,11 +145,14 @@ export const UserManagement: React.FC = () => {
       setLoading(true)
       setError('')
 
-      // Payload team cuma disertakan kalau role-nya team
-      const teamPayload = formData.role === 'team' ? { ...teamData } : undefined
+      let teamPayload: any = undefined
+      if (isTeamMember) {
+        teamPayload = { ...teamData, isTeamMember: true }
+      } else if (editingId && editingUserHadTeam) {
+        teamPayload = { removeTeamProfile: true }
+      }
 
       if (editingId) {
-        // Tidak kirim password saat update — backend updateUser tidak menerimanya
         const { password, ...updatePayload } = formData
         const res = await apiClient.updateUser(editingId.toString(), {
           ...updatePayload,
@@ -153,25 +160,24 @@ export const UserManagement: React.FC = () => {
           photoFile,
         })
         if (res.success) {
-          toast.success('User berhasil diupdate')
-          // Update local users state immediately from returned data
+          toast.success('Data pengguna & tim berhasil diperbarui')
           if (res.data) {
-            setUsers(prev => prev.map(u => u.id === editingId ? { ...u, ...res.data } : u))
+            setUsers((prev) => prev.map((u) => (u.id === editingId ? { ...u, ...res.data } : u)))
           }
-          // If admin edited their own account, refresh header
+          // Refresh user context if edited own account
           try {
             const storedUser = JSON.parse(localStorage.getItem('user') || '{}')
             if (storedUser.id === editingId) {
               window.dispatchEvent(new CustomEvent('profileUpdated'))
             }
-          } catch { }
+          } catch {}
         } else {
           throw new Error(res.message || 'Gagal mengupdate user')
         }
       } else {
         const res = await apiClient.createUser({ ...formData, team: teamPayload })
         if (res.success) {
-          toast.success('User berhasil ditambahkan')
+          toast.success('Pengguna baru berhasil ditambahkan')
         } else {
           throw new Error(res.message || 'Gagal menambahkan user')
         }
@@ -182,9 +188,10 @@ export const UserManagement: React.FC = () => {
 
       // Reset form
       setEditingId(null)
+      setEditingUserHadTeam(false)
       setFormData({ name: '', email: '', password: '', role: '' })
+      setIsTeamMember(false)
       setTeamData({ ...emptyTeamData })
-      // Reset photo
       setPhotoFile(null)
       if (photoPreview && photoPreview.startsWith('blob:')) URL.revokeObjectURL(photoPreview)
       setPhotoPreview(null)
@@ -200,13 +207,16 @@ export const UserManagement: React.FC = () => {
 
   const handleEdit = (user: User) => {
     setEditingId(user.id)
+    setEditingUserHadTeam(!!user.teamProfile)
     setFormData({
       name: user.name,
       email: user.email,
-      password: '',          // tidak digunakan saat edit
-      role: user.role ?? ''
+      password: '',
+      role: user.role ?? '',
     })
-    // Isi ulang data profil tim kalau user ini role team & punya teamProfile
+
+    const hasTeam = !!user.teamProfile
+    setIsTeamMember(hasTeam)
     setTeamData({
       position: user.teamProfile?.position || '',
       bio: user.teamProfile?.bio || '',
@@ -218,6 +228,7 @@ export const UserManagement: React.FC = () => {
       status: user.teamProfile?.status || 'active',
       image: user.teamProfile?.image || '',
     })
+
     setCurrentEditingPhoto(user.photo)
     setPhotoFile(null)
     setPhotoPreview(null)
@@ -225,7 +236,7 @@ export const UserManagement: React.FC = () => {
   }
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm('Apakah Anda yakin ingin menghapus user ini?')) {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus akun user ini beserta profil timnya?')) {
       return
     }
 
@@ -249,7 +260,9 @@ export const UserManagement: React.FC = () => {
   const handleCancel = () => {
     navigate('/dashboard/users')
     setEditingId(null)
+    setEditingUserHadTeam(false)
     setFormData({ name: '', email: '', password: '', role: '' })
+    setIsTeamMember(false)
     setTeamData({ ...emptyTeamData })
     setPhotoFile(null)
     if (photoPreview && photoPreview.startsWith('blob:')) URL.revokeObjectURL(photoPreview)
@@ -263,84 +276,111 @@ export const UserManagement: React.FC = () => {
 
   if (initialLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Memuat data users...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <span className="ml-3 text-gray-600 font-medium">Memuat data pengguna...</span>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
       <Helmet>
-        <title>Manajemen User - Dashboard</title>
+        <title>Users & Tim | Dashboard NexCube</title>
       </Helmet>
 
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Manajemen User</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Kelola data pengguna sistem Anda
-          </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2.5 bg-gradient-to-br from-blue-600 to-indigo-600 text-white rounded-xl shadow-md shadow-blue-500/20">
+              <Users className="w-6 h-6" />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                Users & Tim
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-500">
+                Kelola akun pengguna, hak akses role (Admin, Designer, Teknis, User), serta profil publik tim dalam satu tempat.
+              </p>
+            </div>
+          </div>
         </div>
 
-        <button
-          onClick={handleRefresh}
-          disabled={loading}
-          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-          title="Refresh data"
-        >
-          <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleRefresh}
+            disabled={loading}
+            className="flex items-center gap-2 px-3.5 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-xl transition-all disabled:opacity-50"
+            title="Refresh data"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <span>Refresh</span>
+          </button>
+
+          {!showForm && (
+            <button
+              onClick={() => {
+                setEditingId(null)
+                setEditingUserHadTeam(false)
+                setFormData({ name: '', email: '', password: '', role: '' })
+                setIsTeamMember(false)
+                setTeamData({ ...emptyTeamData })
+                navigate('/dashboard/users/formuser')
+              }}
+              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all shadow-md shadow-blue-500/20"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Tambah User</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
-          <AlertCircle className="w-5 h-5" />
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-3 text-sm">
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
           <span>{error}</span>
-          <button
-            onClick={() => loadUsers()}
-            className="ml-auto text-sm font-medium hover:text-red-800"
-          >
-            Coba Lagi
-          </button>
         </div>
       )}
 
-      {/* Search and Add Button */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Cari user berdasarkan nama atau email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow"
-          />
+      {/* Search Bar - Only show on list view */}
+      {!showForm && (
+        <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/80">
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
+            <input
+              type="text"
+              placeholder="Cari berdasarkan nama, email, jabatan tim, atau role..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all bg-slate-50/50"
+            />
+          </div>
         </div>
+      )}
 
-        {!showForm && (
-          <button
-            onClick={() => navigate('/dashboard/users/formuser')}
-            className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors font-medium"
-          >
-            <Plus className="w-5 h-5" />
-            Tambah User Baru
-          </button>
-        )}
-      </div>
-
-      {/* Content */}
+      {/* Content: Form or Table */}
       {showForm ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6">
-            {editingId ? 'Edit User' : 'Tambah User Baru'}
-          </h2>
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-6 sm:p-8">
+          <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-100">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">
+                {editingId ? 'Edit Akun Pengguna & Tim' : 'Tambah Akun Pengguna & Tim Baru'}
+              </h2>
+              <p className="text-xs text-slate-500">
+                Isi informasi akun serta profil tim yang akan tampil di halaman publik website.
+              </p>
+            </div>
+            <button
+              onClick={handleCancel}
+              className="p-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100"
+            >
+              ✕
+            </button>
+          </div>
+
           <FormUser
             formData={formData}
             loading={loading}
@@ -358,15 +398,20 @@ export const UserManagement: React.FC = () => {
             teamData={teamData}
             onTeamChange={handleTeamInputChange}
             onTeamImageChange={handleTeamImageChange}
+            isTeamMember={isTeamMember}
+            onToggleTeamMember={setIsTeamMember}
           />
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="p-4 border-b border-gray-200 bg-gray-50">
-            <p className="text-sm text-gray-600">
-              Total Users: <span className="font-semibold">{filteredUsers.length}</span>
-              {searchTerm && ` (hasil pencarian dari ${users.length} total)`}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 overflow-hidden">
+          <div className="p-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
+            <p className="text-xs sm:text-sm font-medium text-slate-600">
+              Total Pengguna & Tim: <span className="font-bold text-slate-900">{filteredUsers.length}</span>
+              {searchTerm && ` (hasil filter dari ${users.length} total)`}
             </p>
+            <span className="text-xs text-slate-400">
+              {filteredUsers.filter((u) => !!u.teamProfile).length} Anggota Tim Publik
+            </span>
           </div>
 
           <UserTable
@@ -379,13 +424,13 @@ export const UserManagement: React.FC = () => {
 
           {filteredUsers.length === 0 && !loading && (
             <div className="text-center py-12">
-              <p className="text-gray-500">
-                {searchTerm ? 'Tidak ada user yang sesuai dengan pencarian' : 'Belum ada data user'}
+              <p className="text-slate-500 text-sm">
+                {searchTerm ? 'Tidak ada pengguna yang sesuai dengan pencarian' : 'Belum ada data user'}
               </p>
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm('')}
-                  className="mt-2 text-blue-600 hover:text-blue-700 font-medium"
+                  className="mt-2 text-blue-600 hover:text-blue-700 font-semibold text-xs"
                 >
                   Reset Pencarian
                 </button>

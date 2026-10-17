@@ -43,12 +43,14 @@ export interface ApiResponse<T> {
   statusCode: number;
 }
 
+export type UserRole = 'admin' | 'designer' | 'teknis' | 'user' | 'team' | string;
+
 export interface IUser {
   id?: number;
   email: string;
   password?: string;
   name: string;
-  role?: 'admin' | 'user' | 'team';
+  role?: UserRole;
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -63,13 +65,13 @@ export interface User {
   id: number
   name: string
   email: string
-  role: 'admin' | 'user' | 'team' // sebelumnya cuma 'admin' | 'user'
+  role: UserRole
   password?: string
   isActive?: boolean
   photo?: string
   bio?: string
   phone?: string
-  teamProfile?: TeamProfile // ikut kebawa dari BE (include: teamProfile) kalau role === 'team'
+  teamProfile?: TeamProfile // ikut kebawa dari BE (include: teamProfile)
   createdAt?: string
   updatedAt?: string
 }
@@ -986,8 +988,17 @@ async toggleTestimonialStatus(id: number): Promise<ApiResponse<{ testimonial: Te
 }
 
 // Get testimonial statistics
-async getTestimonialStats(): Promise<ApiResponse<{ stats: TestimonialStats }>> {
-  return this.request<{ stats: TestimonialStats }>('/testimonials/stats', 'GET');
+// Role Permissions API
+async getRolePermissions(): Promise<ApiResponse<Record<string, string[]>>> {
+  return this.request<Record<string, string[]>>('/role-permissions', 'GET');
+}
+
+async updateRolePermissions(role: string, permissions: string[]): Promise<ApiResponse<any>> {
+  return this.request<any>(`/role-permissions/${role}`, 'PUT', { permissions });
+}
+
+async resetRolePermissions(): Promise<ApiResponse<Record<string, string[]>>> {
+  return this.request<Record<string, string[]>>('/role-permissions/reset', 'POST');
 }
 
 }

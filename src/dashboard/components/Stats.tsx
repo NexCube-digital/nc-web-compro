@@ -35,7 +35,7 @@ interface InvoiceData {
   clientName?: string
   clientId?: number
   amount: number
-  status: 'draft' | 'sent' | 'paid' | 'overdue'
+  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'expired' | 'partial' | string
   issueDate: string
   dueDate: string
 }
@@ -181,7 +181,7 @@ const UserWelcomePage: React.FC<{ userName?: string }> = ({ userName }) => {
 
 // ─── Main DashboardStats ───────────────────────────────────────────────────────
 interface DashboardStatsProps {
-  userRole?: 'admin' | 'user'
+  userRole?: string
   userName?: string
 }
 
