@@ -255,19 +255,43 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ userRole = 'admi
         const finances: any[] = financesResponse.status === 'fulfilled' && Array.isArray(financesResponse.value.data)
           ? financesResponse.value.data : []
 
+        const isInvoiceFinance = (f: any) => {
+          const notes = String(f.notes || '')
+          const desc = String(f.description || '')
+          return notes.includes('[Invoice #') || notes.includes('Invoice #') || desc.includes('Invoice #')
+        }
+
         const totalInvoices = invoices.length
         const overdueInvoices = invoices.filter(inv => String(inv.status).toLowerCase() === 'overdue').length
         const totalRevenue = invoices.reduce((sum, inv) => sum + Number(inv.amount || 0), 0)
 
-        const totalPemasukan = invoices
+        // Hanya transaksi yang completed yang dihitung ke kas
+        const completedFinances = finances.filter((f: any) => String(f.status || 'completed').toLowerCase() === 'completed')
+
+        // Pemasukan invoice (dari finance yang tersinkron, atau invoice paid yang belum tersinkron)
+        const invoiceFinancesIncome = completedFinances
+          .filter((f: any) => String(f.type || '').toLowerCase() === 'income' && isInvoiceFinance(f))
+          .reduce((sum, f: any) => sum + Number(f.amount || 0), 0)
+
+        const unrecordedInvoiceIncome = invoices
           .filter(inv => {
             const st = String(inv.status || '').toLowerCase()
-            return st === 'paid' || st === 'lunas' || st === 'settlement'
+            const isPaid = st === 'paid' || st === 'lunas' || st === 'settlement'
+            return isPaid && !finances.some(f => String(f.notes || '').includes(inv.invoiceNumber) || String(f.description || '').includes(inv.invoiceNumber))
           })
           .reduce((sum, inv) => sum + Number(inv.amount || 0), 0)
 
-        const pemasukanLainnya = finances.reduce((sum, f: any) => sum + (String(f.type || '').toLowerCase() === 'income' ? Number(f.amount || 0) : 0), 0)
-        const totalPengeluaran = finances.reduce((sum, f: any) => sum + (String(f.type || '').toLowerCase() === 'expense' ? Number(f.amount || 0) : 0), 0)
+        const totalPemasukan = invoiceFinancesIncome + unrecordedInvoiceIncome
+
+        // Pemasukan Lainnya (MURNI non-invoice)
+        const pemasukanLainnya = completedFinances
+          .filter((f: any) => String(f.type || '').toLowerCase() === 'income' && !isInvoiceFinance(f))
+          .reduce((sum, f: any) => sum + Number(f.amount || 0), 0)
+
+        const totalPengeluaran = completedFinances
+          .filter((f: any) => String(f.type || '').toLowerCase() === 'expense')
+          .reduce((sum, f: any) => sum + Number(f.amount || 0), 0)
+
         const saldo = totalPemasukan + pemasukanLainnya - totalPengeluaran
 
         const recentInvoices = invoices
@@ -284,9 +308,22 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ userRole = 'admi
           const targetMonth = target.getMonth()
           const label = target.toLocaleString('id-ID', { month: 'short' })
 
-          const invoiceSum = invoices.reduce((sum: number, inv: any) => {
+          // Hitung pemasukan dari finance (yang sudah mencakup termin invoice & non-invoice)
+          const financeIncomeSum = completedFinances.reduce((sum: number, f: any) => {
+            if (String(f.type || '').toLowerCase() !== 'income') return sum
+            const dateInfo = getYearMonth(f.date || f.createdAt)
+            if (dateInfo && dateInfo.year === targetYear && dateInfo.month === targetMonth) {
+              return sum + Number(f.amount || 0)
+            }
+            return sum
+          }, 0)
+
+          // Tambah invoice paid yang belum tercatat di finance pada bulan tersebut
+          const unrecordedSum = invoices.reduce((sum: number, inv: any) => {
             const st = String(inv.status || '').toLowerCase()
             if (st !== 'paid' && st !== 'lunas' && st !== 'settlement') return sum
+            const isRecorded = finances.some(f => String(f.notes || '').includes(inv.invoiceNumber) || String(f.description || '').includes(inv.invoiceNumber))
+            if (isRecorded) return sum
             const dateInfo = getYearMonth(inv.paidAt || inv.issueDate || inv.createdAt)
             if (dateInfo && dateInfo.year === targetYear && dateInfo.month === targetMonth) {
               return sum + Number(inv.amount || 0)
@@ -294,16 +331,7 @@ export const DashboardStats: React.FC<DashboardStatsProps> = ({ userRole = 'admi
             return sum
           }, 0)
 
-          const financeSum = finances.reduce((sum: number, f: any) => {
-            if (String(f.type || '').toLowerCase() !== 'income') return sum
-            const dateInfo = getYearMonth(f.date || f.createdAt || f.issueDate)
-            if (dateInfo && dateInfo.year === targetYear && dateInfo.month === targetMonth) {
-              return sum + Number(f.amount || 0)
-            }
-            return sum
-          }, 0)
-
-          return { label, value: invoiceSum + financeSum }
+          return { label, value: financeIncomeSum + unrecordedSum }
         })
 
         setMonthlyData(totals)
